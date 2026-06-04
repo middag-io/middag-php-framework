@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Http\Request;
 
-use JsonException;
 use Middag\Framework\Exception\MiddagDomainException;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Contract\FormRequestInterface;
@@ -140,32 +139,7 @@ abstract class AbstractFormRequest implements FormRequestInterface
      */
     public function input(): array
     {
-        $contentType = $this->request->headers->get('Content-Type', '');
-
-        if (str_contains($contentType, 'application/json')) {
-            $content = $this->request->getContent();
-
-            // An absent/whitespace-only body is "no JSON input", not malformed:
-            // fall back to the query string so empty posts still reach validation.
-            if (trim($content) === '') {
-                return $this->request->query->all();
-            }
-
-            try {
-                $json = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-            } catch (JsonException $jsonException) {
-                throw new MiddagDomainException('Malformed JSON in request body.', $jsonException->getCode(), previous: $jsonException);
-            }
-
-            return is_array($json)
-                ? array_merge($this->request->query->all(), $json)
-                : $this->request->query->all();
-        }
-
-        return array_merge(
-            $this->request->query->all(),
-            $this->request->request->all(),
-        );
+        return RequestPayload::extract($this->request);
     }
 
     private function validator(): ValidatorInterface
