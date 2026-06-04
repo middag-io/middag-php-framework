@@ -26,9 +26,9 @@ use Throwable;
 class MiddagValidationException extends MiddagDomainException
 {
     /**
-     * @param string                         $message  human-readable summary
-     * @param array<string, string|TranslatableMessage|list<string|TranslatableMessage>> $errors   field => error(s) map
-     * @param null|Throwable                 $previous chained exception
+     * @param string                                                                     $message  human-readable summary
+     * @param array<string, list<string|TranslatableMessage>|string|TranslatableMessage> $errors   field => error(s) map
+     * @param null|Throwable                                                             $previous chained exception
      */
     public function __construct(
         string $message = 'Validation failed',
@@ -39,7 +39,7 @@ class MiddagValidationException extends MiddagDomainException
     }
 
     /**
-     * @return array<string, string|TranslatableMessage|list<string|TranslatableMessage>>
+     * @return array<string, list<string|TranslatableMessage>|string|TranslatableMessage>
      */
     public function errors(): array
     {

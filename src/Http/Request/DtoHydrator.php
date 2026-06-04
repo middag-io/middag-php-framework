@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Http\Request;
 
 use Middag\Framework\Exception\MiddagValidationException;
+use Middag\Framework\Http\HttpKernel;
 use Middag\Framework\Http\Resolver\ValidatedDtoResolver;
 use Middag\Framework\Translation\TranslatableMessage;
 use ReflectionClass;
@@ -43,7 +44,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * Validation errors are emitted as {@see TranslatableMessage} values via
  * {@see ValidationErrorBag}; translation happens at the HTTP boundary
- * ({@see \Middag\Framework\Http\HttpKernel}).
+ * ({@see HttpKernel}).
  *
  * @internal
  */
@@ -64,7 +65,8 @@ final readonly class DtoHydrator
     public function hydrate(string $dtoClass, array $input): object
     {
         $bag = new ValidationErrorBag();
-        /** @var array<string, TranslatableMessage|list<TranslatableMessage>> $errors */
+
+        /** @var array<string, list<TranslatableMessage>|TranslatableMessage> $errors */
         $errors = [];
         $dto = null;
 

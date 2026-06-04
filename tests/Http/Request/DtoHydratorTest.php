@@ -99,8 +99,8 @@ final class DtoHydratorTest extends TestCase
                 'customer_id' => 5,
             ]);
             self::fail('expected MiddagValidationException');
-        } catch (MiddagValidationException $exception) {
-            $priority = $exception->errors()['priority'];
+        } catch (MiddagValidationException $middagValidationException) {
+            $priority = $middagValidationException->errors()['priority'];
             self::assertInstanceOf(TranslatableMessage::class, $priority);
             self::assertSame('validators', $priority->domain);
             self::assertStringStartsWith('validation.', $priority->key);
@@ -117,8 +117,8 @@ final class DtoHydratorTest extends TestCase
                 'customer_id' => 'not-a-number',
             ]);
             self::fail('expected MiddagValidationException');
-        } catch (MiddagValidationException $exception) {
-            $raw = $exception->errors()['customer_id'];
+        } catch (MiddagValidationException $middagValidationException) {
+            $raw = $middagValidationException->errors()['customer_id'];
             // The field may carry a single TranslatableMessage or a list when additional
             // constraint violations fire on the same field (e.g. NotNull after type error).
             $first = is_array($raw) ? $raw[0] : $raw;

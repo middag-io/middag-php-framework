@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Middag\Framework\Translation;
 
 use JsonSerializable;
+use Middag\Framework\Http\ValidationErrorSerializer;
+use Middag\Ui\Shared\Data\Translatable;
 use Symfony\Contracts\Translation\TranslatableInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -21,10 +23,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * (`domain`), interpolation `params`, and a resolved English `defaultMessage`
  * fallback.
  *
- * The framework-owned twin of {@see \Middag\Ui\Shared\Data\Translatable} and of
+ * The framework-owned twin of {@see Translatable} and of
  * Symfony's `TranslatableMessage`, plus a Spring-style `defaultMessage` so the
  * wire always carries a human string even when no catalogue resolves the key.
- * Validation errors carry it; {@see \Middag\Framework\Http\ValidationErrorSerializer}
+ * Validation errors carry it; {@see ValidationErrorSerializer}
  * resolves it at the HTTP boundary.
  *
  * @api

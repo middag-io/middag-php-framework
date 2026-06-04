@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Http\Request;
 
+use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Translation\Resolver\ViolationKeyMap;
 use Middag\Framework\Translation\TranslatableMessage;
 use Symfony\Component\Validator\ConstraintViolationInterface;
@@ -19,7 +20,7 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * Builds the field-keyed validation-error map carried by
- * {@see \Middag\Framework\Exception\MiddagValidationException}: each entry is a
+ * {@see MiddagValidationException}: each entry is a
  * {@see TranslatableMessage} (or a list when a field has several errors).
  *
  * Shared by {@see AbstractFormRequest} and {@see DtoHydrator} so both produce an
@@ -35,11 +36,11 @@ final readonly class ValidationErrorBag
     ) {}
 
     /**
-     * @return array<string, TranslatableMessage|list<TranslatableMessage>>
+     * @return array<string, list<TranslatableMessage>|TranslatableMessage>
      */
     public function fromViolations(ConstraintViolationListInterface $violations): array
     {
-        /** @var array<string, TranslatableMessage|list<TranslatableMessage>> $errors */
+        /** @var array<string, list<TranslatableMessage>|TranslatableMessage> $errors */
         $errors = [];
 
         foreach ($violations as $violation) {
@@ -76,7 +77,7 @@ final readonly class ValidationErrorBag
      * Append a message to a field's entry: the first stays scalar, a second
      * promotes the entry to a list.
      *
-     * @param array<string, TranslatableMessage|list<TranslatableMessage>> $errors
+     * @param array<string, list<TranslatableMessage>|TranslatableMessage> $errors
      */
     public function add(array &$errors, string $field, TranslatableMessage $message): void
     {

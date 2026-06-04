@@ -12,11 +12,12 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Http;
 
+use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\TranslatableMessage;
 
 /**
- * Resolves a {@see \Middag\Framework\Exception\MiddagValidationException} error
+ * Resolves a {@see MiddagValidationException} error
  * map to its wire form: each {@see TranslatableMessage} becomes
  * `{message, key, domain, params}` (RFC 9457 / Symfony-violation shape), with
  * `message` resolved through the bound translator and falling back to the
@@ -31,9 +32,9 @@ final readonly class ValidationErrorSerializer
     ) {}
 
     /**
-     * @param array<string, string|TranslatableMessage|list<string|TranslatableMessage>> $errors
+     * @param array<string, list<string|TranslatableMessage>|string|TranslatableMessage> $errors
      *
-     * @return array<string, string|array<string, mixed>|list<string|array<string, mixed>>>
+     * @return array<string, array<string, mixed>|list<array<string, mixed>|string>|string>
      */
     public function serialize(array $errors): array
     {
@@ -41,7 +42,7 @@ final readonly class ValidationErrorSerializer
 
         foreach ($errors as $field => $value) {
             $out[$field] = is_array($value)
-                ? array_map(fn (string|TranslatableMessage $entry): string|array => $this->entry($entry), $value)
+                ? array_map(fn (string|TranslatableMessage $entry): array|string => $this->entry($entry), $value)
                 : $this->entry($value);
         }
 
@@ -49,9 +50,9 @@ final readonly class ValidationErrorSerializer
     }
 
     /**
-     * @return string|array<string, mixed>
+     * @return array<string, mixed>|string
      */
-    private function entry(string|TranslatableMessage $error): string|array
+    private function entry(string|TranslatableMessage $error): array|string
     {
         if (is_string($error)) {
             return $error;

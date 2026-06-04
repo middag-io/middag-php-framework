@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Translation\Resolver;
 
 use ReflectionClass;
+use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
@@ -54,7 +55,7 @@ final class ViolationKeyMap
 
         $constraint = $violation->getConstraint();
 
-        if ($constraint === null) {
+        if (!$constraint instanceof Constraint) {
             return 'validation.invalid';
         }
 
