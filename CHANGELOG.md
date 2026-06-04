@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.10.4](https://github.com/middag-io/middag-php-framework/compare/v0.10.3...v0.10.4) (2026-06-04)
+
+
+### Features
+
+* **http:** bind typed DTO requests via #[ValidatedDto] ([02cf0ad](https://github.com/middag-io/middag-php-framework/commit/02cf0ad52c6114d8dc0a9cf493df9d78cb4f5e5d))
+* **http:** typed DTO request binding via #[ValidatedDto] ([0bbf20f](https://github.com/middag-io/middag-php-framework/commit/0bbf20f239004085585f63865ec76a2ea094d9da))
+
+
+### Bug Fixes
+
+* **http:** coerce DTO scalars without relying on serializer 8.1 ([15fe2dc](https://github.com/middag-io/middag-php-framework/commit/15fe2dc95ba1937a0352874a5606663a19f7d65f))
+
+
+### Miscellaneous
+
+* ignore .gstack/ state dir ([44bbc0b](https://github.com/middag-io/middag-php-framework/commit/44bbc0b1c895df8537ebeaf76b11231b7e8a2db7))
+
 ## [0.10.3](https://github.com/middag-io/middag-php-framework/compare/v0.10.2...v0.10.3) (2026-06-04)
 
 
