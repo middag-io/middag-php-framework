@@ -16,6 +16,8 @@ use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\HttpKernel;
 use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
+use Middag\Framework\Translation\Contract\TranslatorInterface;
+use Middag\Framework\Translation\TranslatableMessage;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -165,12 +167,70 @@ final class RedirectFlowKernelTest extends TestCase
         $this->assertSame(422, $response->getStatusCode());
     }
 
-    private function kernel(RouteCollection $routes, ?FlashBag $flash = null): HttpKernel
+    #[Test]
+    public function validationErrorsSerialiseToMessageKeyDomainParams(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('store', (new Route('/tasks', ['_controller' => static function (): never {
+            throw new MiddagValidationException('Validation failed', [
+                'title' => new TranslatableMessage('validation.not_blank', 'validators', [], 'This value should not be blank.'),
+            ]);
+        }]))->setMethods(['POST']));
+
+        $response = $this->kernel($routes)->handle(
+            (new ServerRequest('POST', '/tasks'))->withHeader('Accept', 'application/json'),
+        );
+
+        $this->assertSame(422, $response->getStatusCode());
+        $payload = json_decode((string) $response->getBody(), true);
+
+        $this->assertSame('validation_failed', $payload['error']);
+        $first = $payload['errors']['title'];
+        $this->assertArrayHasKey('message', $first);
+        $this->assertArrayHasKey('key', $first);
+        $this->assertSame('validators', $first['domain']);
+        $this->assertArrayHasKey('params', $first);
+        $this->assertStringStartsWith('validation.', $first['key']);
+    }
+
+    #[Test]
+    public function translatorBoundInContainerResolvesTheMessage(): void
+    {
+        $translator = new class implements TranslatorInterface {
+            public function get(string $key, string $component = '', array $params = []): string
+            {
+                return 'PT:' . $key;
+            }
+
+            public function has(string $key, string $component = ''): bool
+            {
+                return true;
+            }
+        };
+
+        $routes = new RouteCollection();
+        $routes->add('store', (new Route('/tasks', ['_controller' => static function (): never {
+            throw new MiddagValidationException('Validation failed', [
+                'title' => new TranslatableMessage('validation.not_blank', 'validators', [], 'This value should not be blank.'),
+            ]);
+        }]))->setMethods(['POST']));
+
+        $response = $this->kernel($routes, null, $translator)->handle(
+            (new ServerRequest('POST', '/tasks'))->withHeader('Accept', 'application/json'),
+        );
+
+        $this->assertSame(422, $response->getStatusCode());
+        $payload = json_decode((string) $response->getBody(), true);
+        $first = $payload['errors']['title'];
+        $this->assertSame('PT:validation.not_blank', $first['message']);
+    }
+
+    private function kernel(RouteCollection $routes, ?FlashBag $flash = null, ?TranslatorInterface $translator = null): HttpKernel
     {
         $psr17 = new Psr17Factory();
 
         return new HttpKernel(
-            $this->container($flash),
+            $this->container($flash, $translator),
             $routes,
             new RequestContext(),
             new HttpFoundationFactory(),
@@ -178,10 +238,13 @@ final class RedirectFlowKernelTest extends TestCase
         );
     }
 
-    private function container(?FlashBag $flash): ContainerInterface
+    private function container(?FlashBag $flash, ?TranslatorInterface $translator = null): ContainerInterface
     {
-        return new class($flash) implements ContainerInterface {
-            public function __construct(private readonly ?FlashBag $flash) {}
+        return new class($flash, $translator) implements ContainerInterface {
+            public function __construct(
+                private readonly ?FlashBag $flash,
+                private readonly ?TranslatorInterface $translator,
+            ) {}
 
             public function get(string $id): mixed
             {
@@ -189,12 +252,17 @@ final class RedirectFlowKernelTest extends TestCase
                     return $this->flash;
                 }
 
+                if ($id === TranslatorInterface::class && $this->translator instanceof TranslatorInterface) {
+                    return $this->translator;
+                }
+
                 throw new RuntimeException('Unbound service: ' . $id);
             }
 
             public function has(string $id): bool
             {
-                return $id === FlashBag::class && $this->flash instanceof FlashBag;
+                return ($id === FlashBag::class && $this->flash instanceof FlashBag)
+                    || ($id === TranslatorInterface::class && $this->translator instanceof TranslatorInterface);
             }
         };
     }

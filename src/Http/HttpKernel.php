@@ -37,6 +37,8 @@ use Middag\Framework\Http\Resolver\ValidatedDtoResolver;
 use Middag\Framework\Http\Response\CacheHeaderApplier;
 use Middag\Framework\Http\Response\CorsHeaderApplier;
 use Middag\Framework\Http\Session\FlashBag;
+use Middag\Framework\Translation\Contract\TranslatorInterface;
+use Middag\Framework\Translation\FallbackTranslator;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -461,14 +463,16 @@ class HttpKernel implements HttpKernelInterface
      */
     private function createValidationResponse(MiddagValidationException $exception, Request $request, bool $isJson): Response
     {
+        $serialized = (new ValidationErrorSerializer($this->resolveTranslator()))->serialize($exception->errors());
+
         // Inertia error bags: when the originating request scoped its form to a
         // named bag (X-Inertia-Error-Bag), nest the field map under it so the
         // client's useForm(bag) reads its own errors. Absent the header the
         // shape stays flat (the common single-form / API case).
         $errorBag = $request->headers->get('X-Inertia-Error-Bag');
         $errors = is_string($errorBag) && $errorBag !== ''
-            ? [$errorBag => $exception->errors()]
-            : $exception->errors();
+            ? [$errorBag => $serialized]
+            : $serialized;
 
         $flash = $this->container->has(FlashBag::class) ? $this->container->get(FlashBag::class) : null;
 
@@ -485,6 +489,19 @@ class HttpKernel implements HttpKernelInterface
             'message' => $exception->getMessage(),
             'errors' => $errors,
         ], $exception->getStatusCode());
+    }
+
+    private function resolveTranslator(): TranslatorInterface
+    {
+        if ($this->container->has(TranslatorInterface::class)) {
+            $candidate = $this->container->get(TranslatorInterface::class);
+
+            if ($candidate instanceof TranslatorInterface) {
+                return $candidate;
+            }
+        }
+
+        return new FallbackTranslator();
     }
 
     /**
