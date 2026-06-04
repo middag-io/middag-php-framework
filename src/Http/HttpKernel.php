@@ -612,7 +612,7 @@ class HttpKernel implements HttpKernelInterface
             new RequestResolver($request),
             new FormRequestResolver($this->container, $request),
             new FormResolver($this->container, $request),
-            new ValidatedDtoResolver($this->container, $request),
+            new ValidatedDtoResolver($request),
             new ContainerResolver($this->container),
             new InertiaResolver($this->container),
             new RouteParameterResolver(),

@@ -17,8 +17,6 @@ use Middag\Framework\Http\Attribute\ValidatedDto;
 use Middag\Framework\Http\Contract\MethodArgumentResolverInterface;
 use Middag\Framework\Http\Request\DtoHydrator;
 use Middag\Framework\Http\Request\RequestPayload;
-use Middag\Framework\Translation\Contract\TranslatorInterface;
-use Psr\Container\ContainerInterface;
 use ReflectionNamedType;
 use ReflectionParameter;
 use Symfony\Component\HttpFoundation\Request;
@@ -46,7 +44,6 @@ use Symfony\Component\HttpFoundation\Request;
 final readonly class ValidatedDtoResolver implements MethodArgumentResolverInterface
 {
     public function __construct(
-        private ContainerInterface $container,
         private Request $request,
     ) {}
 
@@ -72,18 +69,6 @@ final readonly class ValidatedDtoResolver implements MethodArgumentResolverInter
         /** @var class-string $fqcn */
         $fqcn = $type->getName();
 
-        return $this->hydrator()->hydrate($fqcn, RequestPayload::extract($this->request));
-    }
-
-    private function hydrator(): DtoHydrator
-    {
-        $translator = null;
-
-        if ($this->container->has(TranslatorInterface::class)) {
-            $candidate = $this->container->get(TranslatorInterface::class);
-            $translator = $candidate instanceof TranslatorInterface ? $candidate : null;
-        }
-
-        return new DtoHydrator($translator);
+        return (new DtoHydrator())->hydrate($fqcn, RequestPayload::extract($this->request));
     }
 }
