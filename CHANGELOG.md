@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.5](https://github.com/middag-io/middag-php-framework/compare/v0.10.4...v0.10.5) (2026-06-04)
+
+
+### Bug Fixes
+
+* **http:** coerce blank request input to null (Laravel parity) ([e92465a](https://github.com/middag-io/middag-php-framework/commit/e92465afe638f835e861f08512739144046b0a7b))
+* **http:** coerce blank request input to null (Laravel parity) ([d84a33c](https://github.com/middag-io/middag-php-framework/commit/d84a33c204f48a5df18b46719eaf369b363a4fb0))
+
 ## [0.10.4](https://github.com/middag-io/middag-php-framework/compare/v0.10.3...v0.10.4) (2026-06-04)
 
 
