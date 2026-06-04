@@ -36,7 +36,7 @@ final class ViolationKeyMap
      *
      * @var array<string, string>
      */
-    private const array CODE_REFINEMENTS = [
+    private const CODE_REFINEMENTS = [
         Assert\Length::TOO_SHORT_ERROR => 'length.too_short',
         Assert\Length::TOO_LONG_ERROR => 'length.too_long',
         Assert\Range::TOO_LOW_ERROR => 'range.too_low',
