@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.11.0](https://github.com/middag-io/middag-php-framework/compare/v0.10.5...v0.11.0) (2026-06-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **http:** MiddagValidationException::errors() values and the 422 errors[field] payload change from string|string[] to an object {message,key,domain,params} (a list when a field has several errors).
+
+### Features
+
+* **http:** add ValidationErrorBag (violations to TranslatableMessage map) ([ac77a36](https://github.com/middag-io/middag-php-framework/commit/ac77a367acf36d2a655639ab1007e27e5bbd8cb9))
+* **http:** add ValidationErrorSerializer (errors to {message,key,domain,params}) ([be72a04](https://github.com/middag-io/middag-php-framework/commit/be72a04e4d27f13a7a6ec07aa578f285fcbb03bc))
+* **http:** resolve validation errors to {message,key,domain,params} on the wire ([29526cf](https://github.com/middag-io/middag-php-framework/commit/29526cf5c410eb115f694eefa0d459e92060c012))
+* **translation:** add TranslatableMessage deferred-translation value object ([6012d84](https://github.com/middag-io/middag-php-framework/commit/6012d84c6cb9e74941bee54c7ff4ae55c8bcafbc))
+* **translation:** add ViolationKeyMap (constraint violation to short key) ([fff3abc](https://github.com/middag-io/middag-php-framework/commit/fff3abcc5876a55991db5d785bba69d8fc91abdc))
+* validation-error i18n contract (deferred-translation) ([cf6dcd0](https://github.com/middag-io/middag-php-framework/commit/cf6dcd0790aa45418c4c3851829ee76126632a66))
+
+
+### Bug Fixes
+
+* **http:** DtoHydrator routes denormalization errors through the translator ([8fe5d68](https://github.com/middag-io/middag-php-framework/commit/8fe5d68e8f0eccb2de1ed812d49187c3a666efcb))
+* **translation:** drop typed class constant so ViolationKeyMap parses on PHP 8.2 ([7066939](https://github.com/middag-io/middag-php-framework/commit/706693929415b7f1e9da06bdcc301a9d1ccf7ad7))
+
+
+### Refactoring
+
+* **exception:** widen MiddagValidationException errors to TranslatableMessage union ([e301418](https://github.com/middag-io/middag-php-framework/commit/e30141888028ff82ec5f3cfd10b048590d4c517b))
+* **http:** AbstractFormRequest emits TranslatableMessage errors, drop in-request translation ([14b7059](https://github.com/middag-io/middag-php-framework/commit/14b70592e41dfcaa7375719c366e82f565f84161))
+
+
+### Miscellaneous
+
+* ignore docs/superpowers (local agent/brainstorming specs) ([e3a9ea2](https://github.com/middag-io/middag-php-framework/commit/e3a9ea2503f86fbe07349d67956815d65e8a921f))
+
 ## [0.10.5](https://github.com/middag-io/middag-php-framework/compare/v0.10.4...v0.10.5) (2026-06-04)
 
 
