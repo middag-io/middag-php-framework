@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.3](https://github.com/middag-io/middag-php-framework/compare/v0.10.2...v0.10.3) (2026-06-04)
+
+
+### Features
+
+* **form:** ship the default EntitySourceRegistry over EntitySourceInterface ([f3d3cf9](https://github.com/middag-io/middag-php-framework/commit/f3d3cf966640f2e4268ac97ba36c3a11412231f5))
+* **form:** ship the default EntitySourceRegistry over EntitySourceInterface ([96be563](https://github.com/middag-io/middag-php-framework/commit/96be56386a29d9d24981b5c133a24bd323844107))
+
 ## [0.10.2](https://github.com/middag-io/middag-php-framework/compare/v0.10.1...v0.10.2) (2026-06-04)
 
 
