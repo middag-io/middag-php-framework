@@ -89,6 +89,23 @@ final class AbstractFormRequestTest extends TestCase
     }
 
     #[Test]
+    public function blankOptionalFieldIsCoercedToNullAndPasses(): void
+    {
+        // HTML submits an untouched optional field as '' (present, not absent), so
+        // Assert\Optional alone would not skip it and Type('numeric') would reject
+        // the blank — the /tickets/new agent_id bug. Blank input is coerced to null,
+        // which Symfony's Type/Choice/... treat as valid.
+        $form = new FixtureFormRequest(
+            $this->request(['agent_id' => '']),
+            ['agent_id' => new Assert\Optional(new Assert\Type('numeric'))],
+        );
+
+        $form->validate();
+
+        self::assertNull($form->validated()['agent_id']);
+    }
+
+    #[Test]
     public function onlyDeclaredFieldsReachValidatedData(): void
     {
         $form = new FixtureFormRequest(

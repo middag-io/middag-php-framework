@@ -30,6 +30,8 @@ use Symfony\Component\HttpFoundation\Request;
  * dropped. An empty body falls back to the query string. For other content
  * types the query string and request body are merged.
  *
+ * Blank values are normalised to `null` (see {@see self::nullifyBlanks()}).
+ *
  * @internal
  */
 final class RequestPayload
@@ -40,6 +42,16 @@ final class RequestPayload
      * @throws MiddagDomainException when the JSON body is present but malformed
      */
     public static function extract(Request $request): array
+    {
+        return self::nullifyBlanks(self::read($request));
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws MiddagDomainException when the JSON body is present but malformed
+     */
+    private static function read(Request $request): array
     {
         $contentType = $request->headers->get('Content-Type', '');
 
@@ -67,5 +79,33 @@ final class RequestPayload
             $request->query->all(),
             $request->request->all(),
         );
+    }
+
+    /**
+     * Normalise blank string values to `null`, recursively.
+     *
+     * HTML forms submit an untouched optional field as `""` (present-but-empty),
+     * not by omitting it — so `Assert\Optional` (which only skips *absent* keys)
+     * and nullable DTO properties would otherwise reject the blank against a
+     * `Type`/`Choice`/… constraint. Coercing `""` to `null` lets those optional
+     * constraints pass (Symfony treats `null` as valid for them) while required
+     * fields still fail via `NotBlank`/`NotNull` (both reject `null`). Mirrors
+     * Laravel's `ConvertEmptyStringsToNull`.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private static function nullifyBlanks(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = self::nullifyBlanks($value);
+            } elseif ($value === '') {
+                $data[$key] = null;
+            }
+        }
+
+        return $data;
     }
 }
