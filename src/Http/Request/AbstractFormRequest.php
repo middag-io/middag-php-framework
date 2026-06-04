@@ -15,9 +15,6 @@ namespace Middag\Framework\Http\Request;
 use Middag\Framework\Exception\MiddagDomainException;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Contract\FormRequestInterface;
-use Middag\Framework\Http\Resolver\FormRequestResolver;
-use Middag\Framework\Translation\Contract\TranslatorInterface;
-use Middag\Framework\Translation\SymfonyTranslatorAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -55,25 +52,9 @@ abstract class AbstractFormRequest implements FormRequestInterface
     /** @var array<string, mixed> */
     private array $validatedData = [];
 
-    private ?TranslatorInterface $translator = null;
-
     public function __construct(
         protected readonly Request $request,
     ) {}
-
-    /**
-     * Wire the host translator used to localise validation messages.
-     *
-     * Called by {@see FormRequestResolver} during
-     * resolution; standalone apps without a translator keep the default English
-     * messages.
-     *
-     * @internal
-     */
-    public function setTranslator(?TranslatorInterface $translator): void
-    {
-        $this->translator = $translator;
-    }
 
     /**
      * Define validation constraints for this request.
@@ -99,18 +80,7 @@ abstract class AbstractFormRequest implements FormRequestInterface
         ));
 
         if (count($violations) > 0) {
-            $errors = [];
-
-            foreach ($violations as $violation) {
-                $field = trim($violation->getPropertyPath(), '[]');
-                $message = (string) $violation->getMessage();
-
-                $errors[$field] = isset($errors[$field])
-                    ? [...(array) $errors[$field], $message]
-                    : $message;
-            }
-
-            throw new MiddagValidationException('Validation failed', $errors);
+            throw new MiddagValidationException('Validation failed', (new ValidationErrorBag())->fromViolations($violations));
         }
 
         $this->validatedData = array_intersect_key($data, $rules);
@@ -144,13 +114,6 @@ abstract class AbstractFormRequest implements FormRequestInterface
 
     private function validator(): ValidatorInterface
     {
-        if (!$this->translator instanceof TranslatorInterface) {
-            return Validation::createValidator();
-        }
-
-        return Validation::createValidatorBuilder()
-            ->setTranslator(new SymfonyTranslatorAdapter($this->translator))
-            ->setTranslationDomain('validators')
-            ->getValidator();
+        return Validation::createValidator();
     }
 }

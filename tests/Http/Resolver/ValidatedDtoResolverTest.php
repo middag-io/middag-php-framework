@@ -19,7 +19,6 @@ use Middag\Framework\Tests\Http\Fixture\ValidatedTicketDto;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use ReflectionMethod;
 use ReflectionParameter;
 use RuntimeException;
@@ -34,7 +33,7 @@ final class ValidatedDtoResolverTest extends TestCase
     #[Test]
     public function supportsAnnotatedClassParameter(): void
     {
-        $resolver = new ValidatedDtoResolver($this->container(), Request::create('/'));
+        $resolver = new ValidatedDtoResolver(Request::create('/'));
 
         self::assertTrue($resolver->supports($this->param('store', 'ticket')));
     }
@@ -42,7 +41,7 @@ final class ValidatedDtoResolverTest extends TestCase
     #[Test]
     public function doesNotSupportUnannotatedParameter(): void
     {
-        $resolver = new ValidatedDtoResolver($this->container(), Request::create('/'));
+        $resolver = new ValidatedDtoResolver(Request::create('/'));
 
         self::assertFalse($resolver->supports($this->param('store', 'plain')));
     }
@@ -50,7 +49,7 @@ final class ValidatedDtoResolverTest extends TestCase
     #[Test]
     public function doesNotSupportAnnotatedBuiltin(): void
     {
-        $resolver = new ValidatedDtoResolver($this->container(), Request::create('/'));
+        $resolver = new ValidatedDtoResolver(Request::create('/'));
 
         self::assertFalse($resolver->supports($this->param('store', 'annotatedBuiltin')));
     }
@@ -63,7 +62,7 @@ final class ValidatedDtoResolverTest extends TestCase
             'priority' => 'urgent',
             'customer_id' => '3',
         ]);
-        $resolver = new ValidatedDtoResolver($this->container(), $request);
+        $resolver = new ValidatedDtoResolver($request);
 
         $dto = $resolver->resolve($this->param('store', 'ticket'), []);
 
@@ -76,7 +75,7 @@ final class ValidatedDtoResolverTest extends TestCase
     public function resolveThrowsOnInvalidPayload(): void
     {
         $request = Request::create('/api/tickets', 'POST', ['priority' => 'nope']);
-        $resolver = new ValidatedDtoResolver($this->container(), $request);
+        $resolver = new ValidatedDtoResolver($request);
 
         $this->expectException(MiddagValidationException::class);
 
@@ -92,21 +91,6 @@ final class ValidatedDtoResolverTest extends TestCase
         }
 
         throw new RuntimeException('parameter not found: ' . $name);
-    }
-
-    private function container(): ContainerInterface
-    {
-        return new class implements ContainerInterface {
-            public function get(string $id): object
-            {
-                throw new RuntimeException('service not bound: ' . $id);
-            }
-
-            public function has(string $id): bool
-            {
-                return false;
-            }
-        };
     }
 }
 

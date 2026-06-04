@@ -13,9 +13,9 @@ declare(strict_types=1);
 namespace Middag\Framework\Http\Request;
 
 use Middag\Framework\Exception\MiddagValidationException;
+use Middag\Framework\Http\HttpKernel;
 use Middag\Framework\Http\Resolver\ValidatedDtoResolver;
-use Middag\Framework\Translation\Contract\TranslatorInterface;
-use Middag\Framework\Translation\SymfonyTranslatorAdapter;
+use Middag\Framework\Translation\TranslatableMessage;
 use ReflectionClass;
 use ReflectionNamedType;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -42,18 +42,14 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * keyed by the snake_case field name so the shape matches
  * {@see AbstractFormRequest}'s `rules()`-array errors.
  *
- * Validation messages are localised through the host translator when one is
- * provided (mirroring {@see AbstractFormRequest}); standalone apps without a
- * translator keep the default English messages.
+ * Validation errors are emitted as {@see TranslatableMessage} values via
+ * {@see ValidationErrorBag}; translation happens at the HTTP boundary
+ * ({@see HttpKernel}).
  *
  * @internal
  */
 final readonly class DtoHydrator
 {
-    public function __construct(
-        private ?TranslatorInterface $translator = null,
-    ) {}
-
     /**
      * Hydrate + validate the input into an instance of $dtoClass.
      *
@@ -68,7 +64,9 @@ final readonly class DtoHydrator
      */
     public function hydrate(string $dtoClass, array $input): object
     {
-        /** @var array<string, list<string>|string> $errors */
+        $bag = new ValidationErrorBag();
+
+        /** @var array<string, list<TranslatableMessage>|TranslatableMessage> $errors */
         $errors = [];
         $dto = null;
 
@@ -87,16 +85,21 @@ final readonly class DtoHydrator
             // is deprecated in 8.1 for getNotNormalizableValueErrors(), which does
             // not exist before 8.1 — revisit when the version floor moves to ^9.
             foreach ($partialDenormalizationException->getErrors() as $error) {
-                $this->addError($errors, $this->fieldName($error->getPath()), 'This value is not valid.');
+                $bag->add($errors, $bag->fieldName($error->getPath()), $bag->denormalizationMessage());
             }
         }
 
         if (!is_object($dto)) {
-            throw new MiddagValidationException('Validation failed', $errors === [] ? ['_' => 'Invalid request payload.'] : $errors);
+            throw new MiddagValidationException(
+                'Validation failed',
+                $errors === []
+                    ? ['_' => new TranslatableMessage('validation.invalid_payload', 'validators', [], 'Invalid request payload.')]
+                    : $errors,
+            );
         }
 
         foreach ($this->validator()->validate($dto) as $violation) {
-            $this->addError($errors, $this->fieldName($violation->getPropertyPath()), (string) $violation->getMessage());
+            $bag->add($errors, $bag->fieldName($violation->getPropertyPath()), $bag->messageFor($violation));
         }
 
         if ($errors !== []) {
@@ -155,40 +158,6 @@ final readonly class DtoHydrator
         return $input;
     }
 
-    /**
-     * Append a message to a field's error list, matching AbstractFormRequest's
-     * shape: the first message is a string, subsequent ones promote to a list.
-     *
-     * @param array<string, list<string>|string> $errors
-     */
-    private function addError(array &$errors, string $field, string $message): void
-    {
-        if (!isset($errors[$field])) {
-            $errors[$field] = $message;
-
-            return;
-        }
-
-        $errors[$field] = [...(array) $errors[$field], $message];
-    }
-
-    /**
-     * Map a property path (camelCase, possibly bracketed) to its wire field
-     * name (snake_case), so errors are keyed by the name the client sent.
-     */
-    private function fieldName(?string $path): string
-    {
-        $path = trim((string) $path, '[]');
-
-        if ($path === '') {
-            return '_';
-        }
-
-        $snake = preg_replace('/[A-Z]/', '_$0', $path) ?? $path;
-
-        return strtolower(ltrim($snake, '_'));
-    }
-
     private function serializer(): Serializer
     {
         $normalizer = new ObjectNormalizer(
@@ -205,13 +174,6 @@ final readonly class DtoHydrator
 
     private function validator(): ValidatorInterface
     {
-        $builder = Validation::createValidatorBuilder()->enableAttributeMapping();
-
-        if ($this->translator instanceof TranslatorInterface) {
-            $builder->setTranslator(new SymfonyTranslatorAdapter($this->translator))
-                ->setTranslationDomain('validators');
-        }
-
-        return $builder->getValidator();
+        return Validation::createValidatorBuilder()->enableAttributeMapping()->getValidator();
     }
 }

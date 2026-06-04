@@ -15,7 +15,6 @@ namespace Middag\Framework\Tests\Http\Request;
 use Middag\Framework\Exception\MiddagDomainException;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Request\AbstractFormRequest;
-use Middag\Framework\Translation\Contract\TranslatorInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -168,25 +167,6 @@ final class AbstractFormRequestTest extends TestCase
         $form->validate();
 
         self::assertSame([], $form->validated());
-    }
-
-    #[Test]
-    public function routesValidationMessagesThroughTheTranslator(): void
-    {
-        $form = new FixtureFormRequest($this->request(['title' => '']), ['title' => new Assert\NotBlank()]);
-        $form->setTranslator(new class implements TranslatorInterface {
-            public function get(string $key, string $component = '', array $params = []): string
-            {
-                return 'TRANSLATED:' . $component;
-            }
-
-            public function has(string $key, string $component = ''): bool
-            {
-                return true;
-            }
-        });
-
-        self::assertSame('TRANSLATED:validators', $this->validationErrors($form)['title']);
     }
 
     /**

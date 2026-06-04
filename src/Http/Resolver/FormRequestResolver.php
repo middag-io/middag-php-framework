@@ -14,8 +14,6 @@ namespace Middag\Framework\Http\Resolver;
 
 use Middag\Framework\Http\Contract\FormRequestInterface;
 use Middag\Framework\Http\Contract\MethodArgumentResolverInterface;
-use Middag\Framework\Http\Request\AbstractFormRequest;
-use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Psr\Container\ContainerInterface;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -71,16 +69,6 @@ final readonly class FormRequestResolver implements MethodArgumentResolverInterf
             // 2. Fallback: manual instantiation.
             //    Assumes the FormRequest constructor only accepts the Request object.
             $instance = new $fqcn($this->request);
-        }
-
-        // Wire the host translator (when bound) so validation messages are
-        // localised through the host i18n system; absent it, English defaults.
-        if ($instance instanceof AbstractFormRequest && $this->container->has(TranslatorInterface::class)) {
-            $translator = $this->container->get(TranslatorInterface::class);
-
-            if ($translator instanceof TranslatorInterface) {
-                $instance->setTranslator($translator);
-            }
         }
 
         $instance->validate();

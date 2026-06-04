@@ -15,6 +15,7 @@ namespace Middag\Framework\Tests\Http\Request;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Request\DtoHydrator;
 use Middag\Framework\Tests\Http\Fixture\ValidatedTicketDto;
+use Middag\Framework\Translation\TranslatableMessage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -86,6 +87,44 @@ final class DtoHydratorTest extends TestCase
             self::fail('expected MiddagValidationException');
         } catch (MiddagValidationException $middagValidationException) {
             self::assertArrayHasKey('customer_id', $middagValidationException->errors());
+        }
+    }
+
+    #[Test]
+    public function constraintErrorsAreTranslatableMessages(): void
+    {
+        try {
+            (new DtoHydrator())->hydrate(ValidatedTicketDto::class, [
+                'priority' => 'bogus',
+                'customer_id' => 5,
+            ]);
+            self::fail('expected MiddagValidationException');
+        } catch (MiddagValidationException $middagValidationException) {
+            $priority = $middagValidationException->errors()['priority'];
+            self::assertInstanceOf(TranslatableMessage::class, $priority);
+            self::assertSame('validators', $priority->domain);
+            self::assertStringStartsWith('validation.', $priority->key);
+        }
+    }
+
+    #[Test]
+    public function denormalizationErrorRoutesThroughTheTranslatorNotAHardcodedString(): void
+    {
+        try {
+            (new DtoHydrator())->hydrate(ValidatedTicketDto::class, [
+                'subject' => 'Disk full',
+                'priority' => 'normal',
+                'customer_id' => 'not-a-number',
+            ]);
+            self::fail('expected MiddagValidationException');
+        } catch (MiddagValidationException $middagValidationException) {
+            $raw = $middagValidationException->errors()['customer_id'];
+            // The field may carry a single TranslatableMessage or a list when additional
+            // constraint violations fire on the same field (e.g. NotNull after type error).
+            $first = is_array($raw) ? $raw[0] : $raw;
+            self::assertInstanceOf(TranslatableMessage::class, $first);
+            self::assertSame('validation.invalid_type', $first->key);  // was hardcoded 'This value is not valid.'
+            self::assertSame('This value is not valid.', $first->defaultMessage);
         }
     }
 }
