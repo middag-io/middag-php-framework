@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.1](https://github.com/middag-io/middag-php-framework/compare/v0.10.0...v0.10.1) (2026-06-04)
+
+
+### Bug Fixes
+
+* **deps:** require the reviewed middag-io/ui ^0.9 ([41d077f](https://github.com/middag-io/middag-php-framework/commit/41d077f6b58016fc4e077aa18a72e4a4b36e48ce))
+* **deps:** require the reviewed middag-io/ui ^0.9 ([c3f5554](https://github.com/middag-io/middag-php-framework/commit/c3f5554c5cb943f3ce47208653f9c8f641cbfbda))
+
 ## 0.10.0 (2026-06-04)
 
 Initial public release.
