@@ -33,6 +33,7 @@ use Middag\Framework\Http\Resolver\InertiaResolver;
 use Middag\Framework\Http\Resolver\MethodParameterResolver;
 use Middag\Framework\Http\Resolver\RequestResolver;
 use Middag\Framework\Http\Resolver\RouteParameterResolver;
+use Middag\Framework\Http\Resolver\ValidatedDtoResolver;
 use Middag\Framework\Http\Response\CacheHeaderApplier;
 use Middag\Framework\Http\Response\CorsHeaderApplier;
 use Middag\Framework\Http\Session\FlashBag;
@@ -611,6 +612,7 @@ class HttpKernel implements HttpKernelInterface
             new RequestResolver($request),
             new FormRequestResolver($this->container, $request),
             new FormResolver($this->container, $request),
+            new ValidatedDtoResolver($this->container, $request),
             new ContainerResolver($this->container),
             new InertiaResolver($this->container),
             new RouteParameterResolver(),

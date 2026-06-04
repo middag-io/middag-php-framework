@@ -319,7 +319,7 @@ resolution belongs to the tier above. Documented for architectural honesty.
 |----------|----------------------|-----------------|
 | Multi-plugin collision (same host, different versions) | per-instance state (no `static`) | Product (PHP-Scoper/Mozart at build) |
 | No built-in rate limiting | `#[Middleware]` (+ `suggest symfony/rate-limiter`) | Adapter/Product/Core |
-| Input sanitisation not centralised (validation only) | `AbstractFormRequest::rules()` | Controller/Adapter |
+| Input sanitisation not centralised (validation only) | `AbstractFormRequest::rules()` / `#[ValidatedDto]` | Controller/Adapter |
 | No boundary linter (host → domain) | convention + PHPStan | deptrac in Product/Core |
 | Forward-only migrations (no `down()`) | `MigrationRunner::onUpgrade()` | Adapter (xmldb/dbDelta) |
 | No service-locator guard (Facades are service locators) | discipline + `composer check` | PR convention / dev-tools PHPStan rule |
@@ -351,7 +351,7 @@ binding is **product opt-in**.
   (`RotatingStreamHandler`, secret redaction default-on) · errors (`mapThrowable`
   + status-mapped `MiddagException`, opt-in `FatalErrorHandler`, debug renderer
   default-off) · command bus (+ `InMemoryTransport` + `CommandWorker`) · API
-  surface (`#[Route]`, `AbstractFormRequest`, null-safe `toArray`) · schema
+  surface (`#[Route]`, `AbstractFormRequest`/`#[ValidatedDto]`, null-safe `toArray`) · schema
   (`SchemaBuilder`, forward-only `MigrationRunner`, `transaction`) · infra ports
   with OSS defaults (`Clock`, `Filesystem`/`LocalFilesystem`, `Mailer`/`NullMailer`,
   `Session`, `EnvConfigResolver`, `Translator`/`FallbackTranslator`, PSR-16 cache,
@@ -396,6 +396,19 @@ the class-level one — first non-empty wins), while `#[Middleware]` is *stackin
 (class-level and method-level accumulate; class is outermost, method innermost, each
 in declaration order). Effective request order: route match → auth flags → auth gate
 → `preHandle()` → [class middleware → method middleware → action].
+
+**Request validation has two styles, one resolver chain.** A controller validates
+input either by type-hinting an `AbstractFormRequest` subclass (declarative `rules()`
+returning a `field => Symfony Constraint` map, validated as an `Assert\Collection`
+over the input array) or by marking a parameter `#[ValidatedDto]` (a plain class
+whose properties carry `#[Assert\*]`; `ValidatedDtoResolver` reads the input via the
+shared `RequestPayload`, hydrates it into the typed object — snake_case input →
+camelCase properties, scalar coercion — then validates the object). Both throw
+`MiddagValidationException` (HTTP 422) before the action runs and share one error-map
+shape. The DTO stays a plain, reusable class with no framework base: the same
+properties can also carry `#[Field]` (form schema), so one DTO is the single source
+of truth for shape and validation. Reach for the array style for dynamic/loosely
+shaped input; reach for the DTO for a typed contract.
 
 ## 10. Pre-PR boundary checklist
 
