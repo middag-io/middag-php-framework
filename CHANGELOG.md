@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.2](https://github.com/middag-io/middag-php-framework/compare/v0.10.1...v0.10.2) (2026-06-04)
+
+
+### Bug Fixes
+
+* **deps:** require the stable middag-io/ui ^1.0 ([12e9118](https://github.com/middag-io/middag-php-framework/commit/12e9118c4eada929cca71f31860427b59f1b4840))
+* **deps:** require the stable middag-io/ui ^1.0 ([60ebe39](https://github.com/middag-io/middag-php-framework/commit/60ebe39191f0779610719439f92b5784742351ae))
+
 ## [0.10.1](https://github.com/middag-io/middag-php-framework/compare/v0.10.0...v0.10.1) (2026-06-04)
 
 
