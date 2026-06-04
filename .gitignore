@@ -1,0 +1,13 @@
+/vendor/
+composer.lock
+.phpunit.result.cache
+.phpunit.cache/
+.cache/
+.idea/
+
+# Agent / harness config — not part of the public release
+/.claude/
+/.specify/
+
+# Tooling temp artifacts
+.phpstan.neon.tmp

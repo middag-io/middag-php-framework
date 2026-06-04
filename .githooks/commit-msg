@@ -1,0 +1,44 @@
+#!/bin/sh
+# commit-msg — enforce Conventional Commits on the subject line.
+#
+# Why this exists: release-please derives the next version and the CHANGELOG
+# straight from the commit history, so the subject MUST be a valid Conventional
+# Commit or the release automation silently misbehaves.
+#
+# Rules enforced (subject / first line only — the body and footers are free):
+#   * one of the known types (the same set release-please-config.json maps to
+#     CHANGELOG sections),
+#   * an OPTIONAL single, lowercase scope in parentheses (one scope per commit —
+#     no comma-separated multi-scope, by project convention),
+#   * an OPTIONAL "!" breaking-change marker before the colon,
+#   * ": " then a description of at least 3 chars.
+#
+# Breaking changes: mark them with "!" (e.g. feat!: / feat(kernel)!:) OR a
+# "BREAKING CHANGE:" footer in the body. release-please picks up either.
+#
+# Versioning (see CONTRIBUTING.md "Versioning"): while the package is < 1.0.0,
+# release-please-config.json sets bump-minor-pre-major + bump-patch-for-minor-
+# pre-major, so feat/fix bump PATCH and a breaking change bumps MINOR. A MAJOR
+# (1.0.0) release is cut deliberately — it is NOT produced by "!" alone while 0.x.
+
+MSG=$(head -1 "$1")
+
+# type(scope)!: desc | type!: desc | type(scope): desc | type: desc
+PATTERN="^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([a-z0-9_-]+\))?!?: .{3,}"
+
+if ! echo "$MSG" | grep -qE "$PATTERN"; then
+    echo "[commit-msg] BLOCKED: Message must follow Conventional Commits."
+    echo ""
+    echo "  Format: type(scope): description     (scope optional, single + lowercase)"
+    echo "  Types:  feat, fix, chore, docs, style, refactor, perf, test, build, ci, revert"
+    echo "  Breaking: add '!' before the colon, or a 'BREAKING CHANGE:' footer."
+    echo ""
+    echo "  Examples:"
+    echo "    feat(kernel): add service auto-discovery"
+    echo "    fix: resolve container circular dependency"
+    echo "    feat(http)!: drop the legacy router (breaking)"
+    echo "    chore: update dependencies"
+    echo ""
+    echo "  Got: $MSG"
+    exit 1
+fi

@@ -1,0 +1,132 @@
+{
+  "name": "middag-io/framework",
+  "description": "MIDDAG PHP Framework — DDD kernel, container, Inertia adapter, router, form engine, and domain abstractions",
+  "type": "library",
+  "license": "Apache-2.0",
+  "keywords": [
+    "framework",
+    "ddd",
+    "kernel",
+    "container",
+    "router",
+    "form-engine",
+    "inertia",
+    "moodle",
+    "wordpress",
+    "psr-15",
+    "standalone"
+  ],
+  "homepage": "https://github.com/middag-io/middag-php-framework",
+  "authors": [
+    {
+      "name": "Michael Meneses",
+      "email": "michael@middag.io",
+      "homepage": "https://middag.io",
+      "role": "Lead Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/middag-io/middag-php-framework/issues",
+    "source": "https://github.com/middag-io/middag-php-framework",
+    "security": "https://github.com/middag-io/middag-php-framework/security/policy"
+  },
+  "require": {
+    "php": "^8.2",
+    "ext-curl": "*",
+    "ext-intl": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-pdo": "*",
+    "middag-io/ui": "^0.8",
+    "monolog/monolog": "^3.0",
+    "nyholm/psr7": "^1.8",
+    "psr/clock": "^1.0",
+    "psr/container": "^2.0",
+    "psr/http-client": "^1.0",
+    "psr/http-factory": "^1.0",
+    "psr/http-message": "^2.0",
+    "psr/http-server-handler": "^1.0",
+    "psr/http-server-middleware": "^1.0",
+    "psr/log": "^3.0",
+    "psr/simple-cache": "^3.0",
+    "symfony/cache": "^7.0 || ^8.0",
+    "symfony/clock": "^7.0 || ^8.0",
+    "symfony/dependency-injection": "^7.0 || ^8.0",
+    "symfony/deprecation-contracts": "^3.7",
+    "symfony/event-dispatcher-contracts": "^3.0",
+    "symfony/http-client": "^7.0 || ^8.0",
+    "symfony/http-foundation": "^7.0 || ^8.0",
+    "symfony/http-kernel": "^7.0 || ^8.0",
+    "symfony/messenger": "^7.0 || ^8.0",
+    "symfony/property-access": "^7.0 || ^8.0",
+    "symfony/psr-http-message-bridge": "^7.0 || ^8.0",
+    "symfony/routing": "^7.0 || ^8.0",
+    "symfony/serializer": "^7.0 || ^8.0",
+    "symfony/uid": "^7.0 || ^8.0",
+    "symfony/validator": "^7.0 || ^8.0"
+  },
+  "require-dev": {
+    "doctrine/dbal": "^4.0",
+    "fakerphp/faker": "^1.23",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "phpstan/phpstan": "^2.0",
+    "phpunit/phpunit": "^11.0",
+    "rector/rector": "^2.0",
+    "zircote/swagger-php": "^4.0"
+  },
+  "suggest": {
+    "doctrine/dbal": "Standalone DB via DBAL (^4.0)",
+    "illuminate/database": "Standalone DB via Eloquent (^10.0)",
+    "league/flysystem": "Flysystem-backed FilesystemInterface impl for cloud/abstract storage (^3.0)",
+    "middag-io/moodle": "Moodle host adapter (^0.5)",
+    "middag-io/wordpress": "WordPress host adapter (^0.5)",
+    "sentry/sentry": "Error reporting via ErrorReporterInterface (^4.0)",
+    "symfony/amqp-messenger": "AMQP/RabbitMQ async transport for the command worker (^7.0 || ^8.0)",
+    "symfony/console": "CLI worker for async commands and scheduled-command runner (^7.0 || ^8.0)",
+    "symfony/doctrine-messenger": "Persistent DB-backed async transport / outbox for the command worker (^7.0 || ^8.0)",
+    "symfony/lock": "Single-run locking for the command worker and scheduled commands (^7.0 || ^8.0)",
+    "symfony/rate-limiter": "Rate limiting / throttling via Symfony's rate-limiter component (^7.0 || ^8.0)",
+    "symfony/redis-messenger": "Redis async transport for the command worker (^7.0 || ^8.0)",
+    "symfony/scheduler": "Standalone recurring scheduling for #[Schedule] commands via the messenger bus (^7.0 || ^8.0)"
+  },
+  "autoload": {
+    "psr-4": {
+      "Middag\\Framework\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Middag\\Framework\\Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "post-install-cmd": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "post-update-cmd": "git config core.hooksPath .githooks 2>/dev/null || true",
+    "check": [
+      "@check:style",
+      "@check:rector",
+      "@check:stan"
+    ],
+    "check:stan": "phpstan analyse --configuration=.phpstan.neon",
+    "check:style": "php-cs-fixer fix --dry-run --verbose --config=.php-cs-fixer.dist.php",
+    "check:rector": "rector process --dry-run --config=.php-rector.php",
+    "fix": [
+      "@fix:style",
+      "@fix:rector"
+    ],
+    "fix:all": [
+      "@fix:style",
+      "@fix:rector",
+      "@fix:style"
+    ],
+    "fix:style": "php-cs-fixer fix --verbose --show-progress=none --config=.php-cs-fixer.dist.php",
+    "fix:rector": "rector process --config=.php-rector.php --no-progress-bar",
+    "test": "phpunit",
+    "test:cov": "phpunit --coverage-html coverage/"
+  }
+}
