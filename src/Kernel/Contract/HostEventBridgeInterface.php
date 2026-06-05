@@ -17,25 +17,28 @@ use Middag\Framework\Kernel\Manager\HookManager;
 /**
  * Generic synchronous host event bridge.
  *
- * The platform-agnostic seam an adapter MAY implement to bridge the host's
- * native eventing. Events are keyed by a dot-separated name (e.g.
+ * The public, stable OSS seam for synchronous in-process broadcast of named
+ * host events. Events are keyed by a dot-separated name (e.g.
  * 'organization.created') and carry a positional payload array passed straight
  * to listeners — no event object required. Execution is synchronous and
- * in-process.
+ * in-process; listeners return nothing.
+ *
+ * Adapters implement this contract by exposing the host's native eventing; the
+ * reference implementation is `MoodleHostEventBridge` in `middag-io/moodle`,
+ * which delegates to {@see HookManager}. Governed listeners (CORE and
+ * products) register against this contract, so the adapter never has to import
+ * CORE to wire them up.
  *
  * Distinct from the richer reaction layers:
- * - `Bus\Contract\SignalDispatcherInterface` — object-as-signal publish side
- *   (the 3-tier signal layer: SignalDispatcher/hooks/outbox lives in
- *   `middag-io/core`); takes any object and returns it, no string keys.
- * - {@see HookManager} — filter/action hooks
- *   that transform a value and can be chained by priority; this bridge only
+ * - `Bus\Contract\SignalDispatcherInterface` — the object-as-signal publish
+ *   side (the premium 3-tier signal layer — SignalDispatcher/hooks/outbox —
+ *   lives in `middag-io/core`); takes any object and returns it, no string
+ *   keys.
+ * - {@see HookManager} — filter/action hooks that transform a value and can be
+ *   chained by priority, returning the filtered value; this bridge only
  *   broadcasts named events to void listeners.
  *
- * No implementation ships yet, and the reaction path used in practice is the
- * signal layer above; this stays an experimental seam until a real adapter
- * validates its shape. Treat the signature as unstable.
- *
- * @internal
+ * @api
  */
 interface HostEventBridgeInterface
 {
