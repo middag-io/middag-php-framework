@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.1](https://github.com/middag-io/middag-php-framework/compare/v0.11.0...v0.11.1) (2026-06-06)
+
+
+### Features
+
+* **bus:** add attribute-driven command handler resolution ([d8b0518](https://github.com/middag-io/middag-php-framework/commit/d8b05188284f88b60202c6716c2ac6c6f0d57427))
+
+
+### Refactoring
+
+* **framework:** promote host event bridge seam to public api ([0cdc7d6](https://github.com/middag-io/middag-php-framework/commit/0cdc7d6456bc13290280ec511724e72f36afbc3f))
+
 ## [0.11.0](https://github.com/middag-io/middag-php-framework/compare/v0.10.5...v0.11.0) (2026-06-04)
 
 
