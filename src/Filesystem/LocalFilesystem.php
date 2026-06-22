@@ -35,7 +35,11 @@ final readonly class LocalFilesystem implements FilesystemInterface
      */
     public function __construct(string $root)
     {
-        $this->root = rtrim($root, '/');
+        // Collapse redundant separators before storing: resolve() normalises
+        // every path lexically, so a root carrying "//" (e.g. a base dir that
+        // already ends in "/") would otherwise never match the prefix check
+        // and reject every operation as escaping the root.
+        $this->root = rtrim((string) preg_replace('#/+#', '/', $root), '/');
     }
 
     public function exists(string $path): bool
