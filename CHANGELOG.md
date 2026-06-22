@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.11.2](https://github.com/middag-io/middag-php-framework/compare/v0.11.1...v0.11.2) (2026-06-22)
+
+
+### Features
+
+* **kernel:** add neutral host component context contract + registry ([ba9e492](https://github.com/middag-io/middag-php-framework/commit/ba9e4923be8e70531d41f5c5920b26430fe2232b))
+
+
+### Bug Fixes
+
+* **filesystem:** normalize redundant separators in root path ([9f0e674](https://github.com/middag-io/middag-php-framework/commit/9f0e67412073c1674f988dcc79e03722f5aa7398))
+
+
+### Documentation
+
+* **kernel:** document HostComponentContextInterface bridge contract ([f4e24a2](https://github.com/middag-io/middag-php-framework/commit/f4e24a28c5950da2477fa3f7fdc815becf0a586a))
+
 ## [0.11.1](https://github.com/middag-io/middag-php-framework/compare/v0.11.0...v0.11.1) (2026-06-06)
 
 
