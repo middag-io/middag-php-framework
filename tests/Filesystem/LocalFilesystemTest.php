@@ -58,6 +58,22 @@ final class LocalFilesystemTest extends TestCase
         self::assertTrue($this->fs->exists('present.txt'));
     }
 
+    public function testRootWithRedundantInternalSeparatorIsNormalized(): void
+    {
+        // A redundant internal separator in the root — e.g. when the caller's
+        // base dir already ends in "/", as some sys_get_temp_dir() values do —
+        // must be normalized so lexical path confinement does not reject every
+        // path as escaping the root.
+        $child = $this->root . '/child';
+        mkdir($child, 0o775, true);
+
+        $fs = new LocalFilesystem($this->root . '//child');
+        $fs->write('note.txt', 'hi');
+
+        self::assertSame('hi', $fs->read('note.txt'));
+        self::assertTrue($fs->exists('note.txt'));
+    }
+
     public function testWriteCreatesNestedDirectories(): void
     {
         $this->fs->write('a/b/c.txt', 'deep');
