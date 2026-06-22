@@ -55,9 +55,27 @@ The adapter (Moodle/WordPress) is what plugs the host in. It implements:
 | `UserContextResolverInterface` | host user identity                                                 | `MoodleUserContext`                                  | `WpUserContext`            |
 | `TranslatorInterface`          | host i18n                                                          | `get_string()` wrap                                  | `__()` wrap                |
 | `HostEventBridgeInterface` *(experimental)* | translate an event ↔ native hook (the core signal layer is used in practice) | —                                  | —     |
+| `HostComponentContextInterface` | neutral host component identity (`componentName()`) + `assetVersion()` + `basePath()`, registered once by the composition root via `HostContext::set()` | `MoodleHostContext`                | `WpComponentContext`       |
 
-> The names `MoodleBootstrap`/`WordPressBootstrap` live in the **adapter repos** (`middag-php-moodle`,
-> `middag-php-wordpress`) — they do **not** exist in this OSS repo (the adapters are not built yet).
+> The names `MoodleBootstrap`/`WordPressBootstrap` (and likewise `MoodleHostContext`/`WpComponentContext`)
+> live in the **adapter repos** (`middag-php-moodle`, `middag-php-wordpress`) — they do **not** exist in
+> this OSS repo (the adapters are not built yet).
+
+> **Host context registration.** The host composition root calls `HostContext::set()` **once** during
+> bootstrap, before any Inertia/bootstrap logic reads it. `HostContext` is a composition-root registry,
+> **not** a synthetic in the DI graph: static adapter helpers that live outside the container read the
+> active context via `HostContext::get()`, which returns `null` when no host has configured one — so
+> those callers degrade gracefully instead of failing.
+>
+> **Relationship to `ComponentNameResolverInterface`.** Both surface the identifier of the host component
+> that owns the boot cycle (a Moodle frankenstyle like `local_example`, or a WordPress plugin slug), but
+> for different consumers. `ComponentNameResolverInterface::nativeComponent()` exists solely so the
+> boot-failure policy (`BootRethrowFailurePolicy`) can classify a failing class as native vs third-party
+> during fatal-boot isolation. `HostComponentContextInterface::componentName()` exposes that same identity
+> as one field of the broader neutral runtime-context descriptor (alongside `assetVersion()` and
+> `basePath()`) that adapter helpers read through `HostContext`. The two **overlap only on the identifier
+> value**: they are separate contracts, resolved/registered independently, because they serve distinct
+> seams (boot-failure classification vs. neutral context lookup).
 
 ## 4. Concrete flow: how the product boots the kernel
 

@@ -197,6 +197,7 @@ ships an **OSS default** for each, so it runs standalone with no adapter.
 | `BootstrapInterface`           | `Kernel/Contract/`                                     | MoodleBootstrap         | WordPressBootstrap    |
 | `ConfigResolverInterface`      | `Kernel/Contract/` — default `EnvConfigResolver`       | MoodleConfigResolver    | WpConfigResolver      |
 | `HostEventBridgeInterface` *(experimental)* | `Kernel/Contract/` — generic sync bridge, no default; the core signal layer is used in practice | —       | —  |
+| `HostComponentContextInterface` | `Kernel/Contract/` — neutral component identity (`componentName`/`assetVersion`/`basePath`); registered once via `Kernel/HostContext::set()`, read via `::get()` (null when unset) | MoodleHostContext | WpComponentContext |
 | `ConnectionAdapterInterface`          | `Database/Contract/` — default `PdoConnectionAdapter`  | MoodleConnectionAdapter | WpdbConnectionAdapter |
 | `UserContextResolverInterface` | `Bus/Contract/` — default `NullUserContextResolver`    | MoodleUserContext       | WpUserContext         |
 | `MaintenanceGateInterface`     | `Kernel/Contract/` — default `NullMaintenanceGate`     | `$CFG->upgraderunning`  | `wp_is_maintenance_mode()` |
@@ -309,6 +310,12 @@ habits blindly breaks.
 - **D5** — async convergence: one sync bus + async via Messenger + routing.
   Signal/outbox → core.
 - **D6** — a `ConnectorRegistry` interface + a `NullConnector` in the framework.
+- **D7** — neutral host identity via `HostComponentContextInterface`
+  (`componentName`/`assetVersion`/`basePath`), registered **once** at boot in the
+  `HostContext` composition-root registry (`set()`/`get()`, `get()` returns null
+  when unset) so static adapter helpers outside the DI graph degrade gracefully.
+  Distinct from `ComponentNameResolverInterface` (boot-failure classification) —
+  they overlap only on the component identifier.
 
 ## 9. Known OSS boundaries (seams, not bugs)
 
