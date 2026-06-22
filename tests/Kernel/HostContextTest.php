@@ -60,6 +60,19 @@ final class HostContextTest extends TestCase
         self::assertNull(HostContext::get());
     }
 
+    #[Test]
+    public function getReturnsContextWhoseBasePathIsNull(): void
+    {
+        $context = $this->fakeContextWithNullBasePath();
+
+        HostContext::set($context);
+
+        self::assertSame($context, HostContext::get());
+        self::assertNull(HostContext::get()?->basePath());
+        self::assertSame('example', HostContext::get()?->componentName());
+        self::assertSame('1.2.3', HostContext::get()?->assetVersion());
+    }
+
     private function fakeContext(): HostComponentContextInterface
     {
         return new class implements HostComponentContextInterface {
@@ -76,6 +89,26 @@ final class HostContextTest extends TestCase
             public function basePath(): string
             {
                 return '/srv/example';
+            }
+        };
+    }
+
+    private function fakeContextWithNullBasePath(): HostComponentContextInterface
+    {
+        return new class implements HostComponentContextInterface {
+            public function componentName(): string
+            {
+                return 'example';
+            }
+
+            public function assetVersion(): string
+            {
+                return '1.2.3';
+            }
+
+            public function basePath(): ?string
+            {
+                return null;
             }
         };
     }
