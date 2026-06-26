@@ -15,7 +15,7 @@ namespace Middag\Framework\Kernel\Contract;
 /**
  * Contract for module loaders.
  *
- * @internal
+ * @api
  */
 interface ModuleLoaderInterface extends LoaderInterface
 {

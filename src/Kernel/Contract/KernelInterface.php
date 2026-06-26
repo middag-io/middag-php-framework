@@ -27,7 +27,7 @@ use Psr\Container\ContainerInterface;
  * WordPress) and the standalone runtime provide the concrete kernel. The spec is
  * intentional, not aspirational — it pins the lifecycle every host must satisfy.
  *
- * @internal
+ * @api
  */
 interface KernelInterface
 {

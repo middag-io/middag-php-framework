@@ -134,6 +134,8 @@ Git hooks are wired automatically on install; the `commit-msg` hook enforces [Co
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, coding standards and quality pipeline. Please also read the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Found a security issue? Follow [`SECURITY.md`](SECURITY.md).
 
+Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the versioning policy for `0.x`, and the host-neutral contracts frozen ahead of `1.0`.
+
 ## License
 
 Licensed under the Apache License, Version 2.0. See [`LICENSE`](LICENSE). Copyright 2026 MIDDAG.

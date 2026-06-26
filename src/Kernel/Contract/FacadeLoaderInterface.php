@@ -18,6 +18,6 @@ namespace Middag\Framework\Kernel\Contract;
  * Implementations scan namespaces to register facade definitions discovered
  * during kernel bootstrap.
  *
- * @internal
+ * @api
  */
 interface FacadeLoaderInterface extends LoaderInterface {}

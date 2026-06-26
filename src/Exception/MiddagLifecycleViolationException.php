@@ -22,6 +22,6 @@ use Middag\Framework\Kernel\ContainerFactory;
  * called after {@see ContainerFactory::build()} has
  * compiled the container. This is a developer error, not a runtime failure.
  *
- * @internal — exclusive use by kernel, not for modules
+ * @api
  */
 class MiddagLifecycleViolationException extends MiddagException {}

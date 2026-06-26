@@ -13,7 +13,7 @@ jobs:
     name: Static analysis & style
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -25,9 +25,7 @@ jobs:
       - name: Validate composer.json
         run: composer validate --no-check-publish --no-check-lock
 
-      # NOTE: requires `middag-io/ui` to be resolvable in CI — publish it to
-      # Packagist or configure the MIDDAG Satis repository + auth (COMPOSER_AUTH
-      # secret) before this goes green.
+      # `middag-io/ui` resolves from public Packagist (Apache-2.0); no auth needed.
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
@@ -42,7 +40,7 @@ jobs:
       matrix:
         php: ['8.2', '8.3', '8.4']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: shivammathur/setup-php@v2
         with:

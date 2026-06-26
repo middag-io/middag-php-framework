@@ -21,7 +21,7 @@ use stdClass;
  * Prevents values from core or database (usually strings) from reaching higher layers
  * without proper typing (int/bool/float), ensuring adherence to service contracts.
  *
- * @internal
+ * @api
  */
 class Typing
 {

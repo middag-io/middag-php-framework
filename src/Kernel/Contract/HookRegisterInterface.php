@@ -18,7 +18,7 @@ namespace Middag\Framework\Kernel\Contract;
  * Any class placed in a module's hook/ directory must implement this interface
  * so that the framework's auto-discovery mechanism can call register() at boot time.
  *
- * @internal
+ * @api
  */
 interface HookRegisterInterface
 {

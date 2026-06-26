@@ -18,6 +18,6 @@ namespace Middag\Framework\Kernel\Contract;
  * Implementations locate service classes and register them with the container
  * including autowiring metadata.
  *
- * @internal
+ * @api
  */
 interface ServiceLoaderInterface extends LoaderInterface {}
