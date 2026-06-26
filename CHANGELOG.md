@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.11.3](https://github.com/middag-io/middag-php-framework/compare/v0.11.2...v0.11.3) (2026-06-26)
+
+
+### Features
+
+* **kernel:** promote core-consumed contracts to [@api](https://github.com/api) surface ([9b57b8d](https://github.com/middag-io/middag-php-framework/commit/9b57b8d56624ad26a2319c57e7307384543862be))
+
+
+### Documentation
+
+* declare [@api](https://github.com/api) stability policy and freeze core-facing contracts ([924269e](https://github.com/middag-io/middag-php-framework/commit/924269ed7abe53cd825d8a263afc4d720de75567))
+* link API-STABILITY from README ([8fc861d](https://github.com/middag-io/middag-php-framework/commit/8fc861da62bb68b98dcce0d5ffe8f190e7771a8d))
+
+
+### Miscellaneous
+
+* **ci:** update UI dependency resolution note ([402d4a2](https://github.com/middag-io/middag-php-framework/commit/402d4a2cc9071418889756cfa6c11bec8d3a1ee1))
+* **ci:** upgrade GitHub Actions ([9831a95](https://github.com/middag-io/middag-php-framework/commit/9831a9519d61898dee1d039fb91043698705bb5e))
+
 ## [Unreleased]
 
 ### Features
