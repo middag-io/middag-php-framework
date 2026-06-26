@@ -17,7 +17,7 @@ namespace Middag\Framework\Logging\Enum;
  *
  * Ordered from most severe (EMERGENCY) to least severe (DEBUG).
  *
- * @internal
+ * @api
  */
 enum LogLevel: string
 {

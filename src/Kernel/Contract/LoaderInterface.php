@@ -19,7 +19,7 @@ namespace Middag\Framework\Kernel\Contract;
  * container during the bootstrap phase. The target container is supplied to the
  * implementation at construction time, not passed to load().
  *
- * @internal
+ * @api
  */
 interface LoaderInterface
 {

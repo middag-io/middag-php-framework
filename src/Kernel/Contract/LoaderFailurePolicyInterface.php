@@ -22,7 +22,7 @@ use Throwable;
  *
  * A distribution-tier implementation is bound by the host/consumer in DI.
  *
- * @internal
+ * @api
  */
 interface LoaderFailurePolicyInterface
 {

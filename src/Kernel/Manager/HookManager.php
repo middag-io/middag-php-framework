@@ -40,7 +40,7 @@ use Psr\Log\NullLogger;
  * warning. Configure via {@see self::setSlowThreshold()} or disable by setting 0.
  * Default: 100ms.
  *
- * @internal
+ * @api
  *
  * @see HookManagerInterface The contract this class implements (the override seam).
  * @see HookFacade           Static proxy that resolves this service from the container.
