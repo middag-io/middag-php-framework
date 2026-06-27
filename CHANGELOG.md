@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0](https://github.com/middag-io/middag-php-framework/compare/v0.11.3...v1.0.0) (2026-06-27)
+
+
+### Miscellaneous
+
+* release 1.0.0 ([b788300](https://github.com/middag-io/middag-php-framework/commit/b788300e3f5e1536227e6dbb38dfd1edf683f0b6))
+* trigger 1.0.0 release ([8158d74](https://github.com/middag-io/middag-php-framework/commit/8158d74eee56f366e6a1c0203945a31f09851008))
+
 ## [0.11.3](https://github.com/middag-io/middag-php-framework/compare/v0.11.2...v0.11.3) (2026-06-26)
 
 
