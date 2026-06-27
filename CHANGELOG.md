@@ -27,12 +27,6 @@
 * **ci:** update UI dependency resolution note ([402d4a2](https://github.com/middag-io/middag-php-framework/commit/402d4a2cc9071418889756cfa6c11bec8d3a1ee1))
 * **ci:** upgrade GitHub Actions ([9831a95](https://github.com/middag-io/middag-php-framework/commit/9831a9519d61898dee1d039fb91043698705bb5e))
 
-## [Unreleased]
-
-### Features
-
-* **kernel:** promote core-consumed contracts to `@api` surface. Eleven previously `@internal` symbols are now part of the public API, since the `middag-io/core` package consumes them structurally and by type-reference: `Kernel\Contract\ServiceLoaderInterface`, `Kernel\Contract\LoaderInterface`, `Kernel\Contract\ModuleLoaderInterface`, `Kernel\Contract\LoaderFailurePolicyInterface`, `Exception\MiddagLifecycleViolationException`, `Kernel\Manager\HookManager`, `Shared\Util\Typing`, `Logging\Enum\LogLevel`, `Kernel\Contract\KernelInterface`, `Kernel\Contract\FacadeLoaderInterface`, and `Kernel\Contract\HookRegisterInterface`. Note: `KernelInterface` was previously marked `@internal` intentionally (it pins the kernel lifecycle spec); it is promoted to `@api` by explicit decision so adapters and consumers can rely on the lifecycle contract.
-
 ## [0.11.2](https://github.com/middag-io/middag-php-framework/compare/v0.11.1...v0.11.2) (2026-06-22)
 
 
