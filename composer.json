@@ -109,10 +109,12 @@
     "post-install-cmd": "git config core.hooksPath .githooks 2>/dev/null || true",
     "post-update-cmd": "git config core.hooksPath .githooks 2>/dev/null || true",
     "check": [
+      "@check:boundaries",
       "@check:style",
       "@check:rector",
       "@check:stan"
     ],
+    "check:boundaries": "grep -rln --include='*.php' 'Middag\\\\Core\\\\' src && { echo 'Article-I VIOLATION: OSS adapter src/ imports a non-OSS MIDDAG namespace/package, which is forbidden'; exit 1; } || echo 'boundaries OK: no non-OSS MIDDAG namespace imports in src/'",
     "check:stan": "phpstan analyse --configuration=.phpstan.neon",
     "check:style": "php-cs-fixer fix --dry-run --verbose --config=.php-cs-fixer.dist.php",
     "check:rector": "rector process --dry-run --config=.php-rector.php",
