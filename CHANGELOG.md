@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/middag-io/middag-php-framework/compare/v1.0.0...v1.1.0) (2026-06-30)
+
+
+### Features
+
+* **http:** Inertia v3 server-side bootstrap with configurable app id ([2eaf869](https://github.com/middag-io/middag-php-framework/commit/2eaf86949d27a022473d5c37ecf08f3c613f1e79))
+
+
+### Miscellaneous
+
+* drop stale Unreleased changelog block, fix host-adapter suggest constraints ([e29d7de](https://github.com/middag-io/middag-php-framework/commit/e29d7defd64d2dd870ec536d17530c1b50407c78))
+
 ## [1.0.0](https://github.com/middag-io/middag-php-framework/compare/v0.11.3...v1.0.0) (2026-06-27)
 
 
