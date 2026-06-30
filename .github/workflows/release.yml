@@ -5,21 +5,45 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Thin wrapper over the org reusable workflows (middag-io/.github-private).
-# See ADR-003 (release strategy) and ADR-006 (reusable workflows).
+# Self-contained release-please workflow.
+#
+# NOTE (ADR-006 deviation): the org pattern is a thin wrapper over the reusable
+# workflows in middag-io/.github-private. That wrapper fails to start on this
+# repo with "error parsing called workflow ... release-please.yml@main", even
+# though the reusable file is valid YAML and works for sibling repos. Until that
+# reusable-call anomaly is root-caused, this repo inlines the release-please +
+# sync-develop steps so releases are not blocked. Revert to the wrapper once the
+# reusable call parses here again.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
-    uses: middag-io/.github-private/.github/workflows/release-please.yml@main
-    permissions:
-      contents: write
-      pull-requests: write
-    secrets: inherit
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
 
-  # Keep develop current with whatever release-please shipped onto main,
-  # so the GitFlow loop stays closed and develop never drifts behind.
+  # Keep develop current with whatever release-please shipped onto main, so the
+  # GitFlow loop stays closed and develop never drifts behind.
   sync-develop:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
-    uses: middag-io/.github-private/.github/workflows/sync-develop.yml@main
-    permissions:
-      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: develop
+          fetch-depth: 0
+      - name: Merge main into develop
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge origin/main --no-edit
+          git push origin develop
