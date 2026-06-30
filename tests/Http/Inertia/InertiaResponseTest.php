@@ -390,9 +390,9 @@ final class InertiaResponseTest extends TestCase
     #[Test]
     public function htmlBootstrapHexEscapesPropMetacharacters(): void
     {
-        // §6 invariant #5 — JSON_HEX_* + htmlspecialchars must neutralize a prop
-        // that tries to break out of the inline <script> / data-page attribute
-        // (stored-XSS guard on the SPA bootstrap).
+        // §6 invariant #5 — JSON_HEX_* must neutralize a prop that tries to break
+        // out of the <script type="application/json"> block carrying the Inertia
+        // page JSON (stored-XSS guard on the v3 SPA bootstrap).
         $request = Request::create('/dashboard', 'GET'); // no X-Inertia → default HTML shell
 
         $response = (new InertiaResponse('Dashboard', [
@@ -400,14 +400,14 @@ final class InertiaResponseTest extends TestCase
         ], $request))->toResponse();
         $body = (string) $response->getContent();
 
-        // The prop's tag delimiters must never appear raw — JSON_HEX_* turns them
-        // into unicode escapes, so the prop cannot break out of the inline
-        // <script> nor the data-page attribute.
+        // The prop's tag delimiters must never appear raw — JSON_HEX_TAG turns '<'
+        // and '>' into unicode escapes, so the prop cannot close the
+        // <script type="application/json"> block early and inject markup.
         self::assertStringNotContainsString('<img', $body, 'prop tag must be hex-escaped, never raw');
         self::assertStringNotContainsString('onerror=alert(1)>', $body, 'attribute payload stays inert');
-        // The only <script>/</script> in the body are the bootstrap's own tags —
-        // the prop did not inject a second pair (no breakout).
-        self::assertSame(1, substr_count($body, '<script>'), 'no injected opening script tag');
+        // The only <script …>/</script> pair in the body is the bootstrap's own
+        // page-data tag — the prop did not inject a second pair (no breakout).
+        self::assertSame(1, substr_count($body, '<script'), 'no injected opening script tag');
         self::assertSame(1, substr_count($body, '</script>'), 'no injected closing script tag');
     }
 

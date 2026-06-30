@@ -43,6 +43,16 @@ class InertiaFactory
     private static ?Closure $htmlBootstrap = null;
 
     /**
+     * DOM id of the SPA mount element and the Inertia page-data <script>.
+     *
+     * Shared JS↔PHP contract: must equal the consumer's `createInertiaApp({ id })`.
+     * Defaults to Inertia's conventional `"app"`; a product composition root
+     * overrides it (e.g. `setAppId('middag-app')`) so the generic framework/host
+     * adapters stay product-agnostic and each product owns its own mount id.
+     */
+    private static string $appId = 'app';
+
+    /**
      * Build an Inertia response wrapper for the given component and props.
      *
      * @param array<string, mixed> $props
@@ -97,5 +107,24 @@ class InertiaFactory
     public static function getHtmlBootstrap(): ?Closure
     {
         return self::$htmlBootstrap;
+    }
+
+    /**
+     * Set the SPA mount id (must match the consumer's createInertiaApp id).
+     *
+     * Called by the product composition root during bootstrap, alongside the
+     * other host configuration seams.
+     */
+    public static function setAppId(string $appId): void
+    {
+        self::$appId = $appId;
+    }
+
+    /**
+     * The configured SPA mount id, or the Inertia default `"app"` if unset.
+     */
+    public static function getAppId(): string
+    {
+        return self::$appId;
     }
 }
