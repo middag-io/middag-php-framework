@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 # Thin wrapper over the org reusable workflows (middag-io/.github-private).
 # See ADR-003 (release strategy) and ADR-006 (reusable workflows).
