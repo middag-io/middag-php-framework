@@ -194,9 +194,16 @@ final class InertiaResponse
         }
 
         // Default minimal HTML bootstrap — no host integration available.
+        // Inertia v3 server-side shape: the client reads the initial page from a
+        // <script type="application/json" data-page="{id}"> element (data-page ===
+        // createInertiaApp id), not from a div[data-page] attribute. The mount id
+        // comes from InertiaFactory (default "app"; a product overrides it via
+        // setAppId), keeping this generic shell product-agnostic. $json is
+        // JSON_HEX_TAG/APOS/QUOT/AMP-encoded, so no </script> breakout is possible.
+        $appId = InertiaFactory::getAppId();
         $html = <<<HTML
-            <div id="app" data-page="{$attr}"></div>
-            <script>window.__INERTIA_PAGE__ = {$json};</script>
+            <div id="{$appId}"></div>
+            <script type="application/json" data-page="{$appId}">{$json}</script>
         HTML;
 
         return new Response($html, 200, $inertiaHeaders);

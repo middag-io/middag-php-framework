@@ -4,15 +4,21 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
+# Thin wrapper over the org reusable workflows (middag-io/.github-private).
+# See ADR-003 (release strategy) and ADR-006 (reusable workflows).
 jobs:
   release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: googleapis/release-please-action@v5
-        with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+    uses: middag-io/.github-private/.github/workflows/release-please.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+
+  # Keep develop current with whatever release-please shipped onto main,
+  # so the GitFlow loop stays closed and develop never drifts behind.
+  sync-develop:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: middag-io/.github-private/.github/workflows/sync-develop.yml@main
+    permissions:
+      contents: write

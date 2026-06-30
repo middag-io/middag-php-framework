@@ -66,6 +66,34 @@ final class InertiaFactoryTest extends TestCase
         $this->assertSame('table', $page['props']['contract']['kind']);
     }
 
+    #[Test]
+    public function appIdDefaultsToAppAndIsOverridableByTheCompositionRoot(): void
+    {
+        // Default: Inertia's conventional mount id, so a generic host needs no config.
+        $this->assertSame('app', InertiaFactory::getAppId());
+
+        // A product composition root overrides it; the generic default shell then
+        // emits a matching mount div + Inertia v3 page-data <script data-page>.
+        InertiaFactory::setAppId('middag-app');
+
+        try {
+            $this->assertSame('middag-app', InertiaFactory::getAppId());
+
+            $html = (string) InertiaFactory::render('Dashboard', [], Request::create('/x'))
+                ->toResponse()->getContent();
+
+            $this->assertStringContainsString('<div id="middag-app">', $html);
+            $this->assertStringContainsString(
+                '<script type="application/json" data-page="middag-app">',
+                $html,
+            );
+        } finally {
+            // Restore the static default so sibling tests (which assert the "app"
+            // shell) are not contaminated by this override.
+            InertiaFactory::setAppId('app');
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
