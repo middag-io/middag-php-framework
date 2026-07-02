@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.2](https://github.com/middag-io/middag-php-framework/compare/v1.0.1...v1.0.2) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mail:** Mail->to/cc/bcc are now list<Address>, from/replyTo ?Address, attachments list<Attachment> (string inputs still accepted and normalised).
+
+### Features
+
+* **filesystem:** flysystem-backed FilesystemInterface adapter ([e3b4691](https://github.com/middag-io/middag-php-framework/commit/e3b46913250a11dc49c4867647f2aa767301157c))
+* **mail:** address and attachment value objects with cid embeds ([aaa5f91](https://github.com/middag-io/middag-php-framework/commit/aaa5f91324f4ad0ab1129e9e220acb9dae514ffa))
+* **observability:** error reporter port with null and sentry impls ([9ca740a](https://github.com/middag-io/middag-php-framework/commit/9ca740aacdd3fad2bc5b7eabd078d1d1d704384a))
+
+
+### Documentation
+
+* **changelog:** drop release-please reset noise from 1.0.x sections ([925e341](https://github.com/middag-io/middag-php-framework/commit/925e3415efd577cd70f976e9a5b27fd0b04aa298))
+
+
+### Miscellaneous
+
+* **composer:** align suggests with shipped code ([e0a044d](https://github.com/middag-io/middag-php-framework/commit/e0a044df0d71d8dacbb3e83073e80bde395d20e4))
+
 ## [1.0.1](https://github.com/middag-io/middag-php-framework/compare/v1.0.0...v1.0.1) (2026-06-30)
 
 
