@@ -70,25 +70,28 @@
     "doctrine/dbal": "^4.0",
     "fakerphp/faker": "^1.23",
     "friendsofphp/php-cs-fixer": "^3.0",
+    "league/flysystem": "^3.0",
     "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^11.0",
     "rector/rector": "^2.0",
+    "sentry/sentry": "^4.0",
     "zircote/swagger-php": "^4.0"
   },
   "suggest": {
-    "doctrine/dbal": "Standalone DB via DBAL (^4.0)",
-    "illuminate/database": "Standalone DB via Eloquent (^10.0)",
-    "league/flysystem": "Flysystem-backed FilesystemInterface impl for cloud/abstract storage (^3.0)",
+    "doctrine/dbal": "DbalSchemaBuilderAdapter — standalone schema/migrations via DBAL (^4.0)",
+    "illuminate/database": "Laravel-flavoured query builder/Capsule behind ConnectionAdapterInterface for standalone DB (no shipped integration) (^11.0 || ^12.0)",
+    "league/flysystem": "FlysystemFilesystem — FilesystemInterface impl for cloud/abstract storage (^3.0)",
     "middag-io/moodle": "Moodle host adapter (^1.0)",
     "middag-io/wordpress": "WordPress host adapter (^1.0)",
-    "sentry/sentry": "Error reporting via ErrorReporterInterface (^4.0)",
+    "sentry/sentry": "SentryErrorReporter — ready-to-bind ErrorReporterInterface impl (^4.0)",
     "symfony/amqp-messenger": "AMQP/RabbitMQ async transport for the command worker (^7.0 || ^8.0)",
-    "symfony/console": "CLI worker for async commands and scheduled-command runner (^7.0 || ^8.0)",
+    "symfony/console": "Recommended CLI layer to expose the command worker and schedule runner as console commands (^7.0 || ^8.0)",
     "symfony/doctrine-messenger": "Persistent DB-backed async transport / outbox for the command worker (^7.0 || ^8.0)",
-    "symfony/lock": "Single-run locking for the command worker and scheduled commands (^7.0 || ^8.0)",
-    "symfony/rate-limiter": "Rate limiting / throttling via Symfony's rate-limiter component (^7.0 || ^8.0)",
+    "symfony/lock": "Recommended single-run locking around the command worker and schedule runner (concurrency is a host concern by design) (^7.0 || ^8.0)",
+    "symfony/mailer": "Recommended SMTP/API transport behind MailerInterface for standalone delivery (^7.0 || ^8.0)",
+    "symfony/rate-limiter": "Recommended throttling for HTTP endpoints and worker consumption (^7.0 || ^8.0)",
     "symfony/redis-messenger": "Redis async transport for the command worker (^7.0 || ^8.0)",
-    "symfony/scheduler": "Standalone recurring scheduling for #[Schedule] commands via the messenger bus (^7.0 || ^8.0)"
+    "symfony/scheduler": "Alternative to the built-in cron engine for standalone recurring scheduling via the messenger bus (^7.0 || ^8.0)"
   },
   "autoload": {
     "psr-4": {
