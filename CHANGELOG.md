@@ -11,18 +11,11 @@
 ### Miscellaneous
 
 * drop stale Unreleased changelog block, fix host-adapter suggest constraints ([e29d7de](https://github.com/middag-io/middag-php-framework/commit/e29d7defd64d2dd870ec536d17530c1b50407c78))
-* **main:** release 1.1.0 ([387e942](https://github.com/middag-io/middag-php-framework/commit/387e942f607395079d126e56ec16f4ecd779dccf))
-* **main:** release 1.1.0 ([f220bf4](https://github.com/middag-io/middag-php-framework/commit/f220bf4ed4f5b3e15e4491a595da8fc28489eb05))
-* reset release-please to 1.0.x (pre-stable patch policy) ([d55f477](https://github.com/middag-io/middag-php-framework/commit/d55f47791bc96f349bff40e4e0855b1ff72f78a3))
-* reset to 1.0.x patch line (Release-As 1.0.1) ([db72df7](https://github.com/middag-io/middag-php-framework/commit/db72df7f23d854a2d950b0755121b0a983cd2eba))
 
 ## [1.0.0](https://github.com/middag-io/middag-php-framework/compare/v0.11.3...v1.0.0) (2026-06-27)
 
 
-### Miscellaneous
-
-* release 1.0.0 ([b788300](https://github.com/middag-io/middag-php-framework/commit/b788300e3f5e1536227e6dbb38dfd1edf683f0b6))
-* trigger 1.0.0 release ([8158d74](https://github.com/middag-io/middag-php-framework/commit/8158d74eee56f366e6a1c0203945a31f09851008))
+First stable release — promotes the 0.11.x line (concern-first `src/`, PSR-15 HttpKernel with Inertia v3, command bus on symfony/messenger, immutable QueryBuilder, form engine) to the 1.0 API surface. No functional changes over v0.11.3.
 
 ## [0.11.3](https://github.com/middag-io/middag-php-framework/compare/v0.11.2...v0.11.3) (2026-06-26)
 
