@@ -96,6 +96,8 @@ Generic plumbing, organised by concern (each concern owns its own `Contract/`):
 | **Database** | `ConnectionAdapterInterface` with a default `PdoConnectionAdapter`, a SQL dialect layer, and a schema builder with migrations. |
 | **Bus** | A command bus over Symfony Messenger (sync, plus async by transport routing), an `InMemoryTransport`, and a `CommandWorker`. |
 | **Logging** | A Monolog-backed `LoggerFactory` per channel, with a `RotatingStreamHandler`. |
+| **Mail** | A `MailerInterface` port with `Mail` / `Address` / `Attachment` value objects (inline `cid:` embeds included). The OSS default `NullMailer` discards; adapters map a `Mail` onto `email_to_user()` / `wp_mail()`. |
+| **Observability** | An `ErrorReporterInterface` port (`NullErrorReporter` default, `SentryErrorReporter` behind a composer `suggest`) plus a `ProfileCollectorInterface` sink that gives bus, hook and query events a single profiling timeline. |
 | **Shared / Exception** | DTOs, enums and utilities, plus a typed exception hierarchy mapped to HTTP status codes. |
 
 Full API reference, guides and examples live at **[docs.middag.dev](https://docs.middag.dev)**.

@@ -69,7 +69,8 @@ is intentional. Each concern owns its own `Contract/` — there is **no** global
 | `Http/`          | `HttpKernel` (PSR-15) + `StandaloneKernel` + Inertia (v3 protocol) + FormRequest + route middleware (`#[Middleware]`) + the auth gate (`#[Auth]`)          |
 | `Kernel/`        | `ContainerFactory` (boot/DI) + `ServiceProvider`/loaders (auto-discovery) + `AbstractModule` + `AbstractFacade` + `HookManager` (per-instance)             |
 | `Logging/`       | `LoggerFactory` (Monolog) per module/channel + `RotatingStreamHandler`                                                                                     |
-| `Observability/` | `ProfileCollector` (dev profiling)                                                                                                                         |
+| `Observability/` | `ErrorReporterInterface` port (`NullErrorReporter`/`SentryErrorReporter`) + `ProfileCollectorInterface` profiling sink (single `bus`/`hook`/`query` timeline) |
+| `Mail/`          | `MailerInterface` port + `Mail`/`Address`/`Attachment` value objects (`cid:` embeds); OSS default `NullMailer`; adapters map onto the host sender          |
 | `Shared/`        | cross-cutting: DTOs, enums (`Operator`/`SortDirection`/`DebugMode`), utils, `Attribute/TrustedOutput` (an output-trust marker; behaviour in the host adapter) |
 | `Translation/`   | the i18n contract (`TranslatorInterface`) + OSS default `FallbackTranslator` (standalone); adapters wrap `get_string`/`__`                                 |
 | `Exception/`     | a typed, status-mapped hierarchy consumed by `HttpKernel::mapThrowable`                                                                                    |
