@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.0](https://github.com/middag-io/middag-php-framework/compare/v1.0.3...v1.1.0) (2026-07-03)
+
+
+### Bug Fixes
+
+* **mail:** harden Address validation and quote RFC 5322 display names ([c3b7354](https://github.com/middag-io/middag-php-framework/commit/c3b7354456639feb91152ff415f7554a1466e257))
+
+
+### Documentation
+
+* **api-stability:** define the 1.x breaking-change policy ([dd26e23](https://github.com/middag-io/middag-php-framework/commit/dd26e237c04c90bc0fc137866c2abb5eb1c84ed0))
+* document Observability and Mail concerns ([0996ce1](https://github.com/middag-io/middag-php-framework/commit/0996ce16684b16ae92a975dafb62323f147cae3f))
+* drop the last pre-1.0 claims from the security policy and PR template ([b37bf36](https://github.com/middag-io/middag-php-framework/commit/b37bf36a59ae03f3d43370176bf0f280c84c3703))
+* **versioning:** gate major releases behind explicit maintainer sign-off ([7594a91](https://github.com/middag-io/middag-php-framework/commit/7594a91cbe570a6f00e640ebd57347581044ceb4))
+
+
+### Miscellaneous
+
+* **composer:** align coverage scripts with the canonical baseline ([4fc821f](https://github.com/middag-io/middag-php-framework/commit/4fc821f9b1e3fd456c5111c56b6fdb790191ead9))
+* **composer:** require symfony/translation-contracts explicitly ([b71d2ce](https://github.com/middag-io/middag-php-framework/commit/b71d2ce2315c9db5426c23176e4d2023cbf8c89a))
+* release 1.1.0 ([f022a66](https://github.com/middag-io/middag-php-framework/commit/f022a666caebdafc0f35cd78d34152abfa9e7d27))
+* **release:** drop inert pre-major flags from release-please config ([d4ca57b](https://github.com/middag-io/middag-php-framework/commit/d4ca57be6ee7df736c794d4a1d6d2f8b608a6fcd))
+
 ## [1.0.3](https://github.com/middag-io/middag-php-framework/compare/v1.0.2...v1.0.3) (2026-07-03)
 
 
