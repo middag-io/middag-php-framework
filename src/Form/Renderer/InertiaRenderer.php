@@ -18,8 +18,8 @@ use Middag\Ui\Form\Contract\FieldInterface;
 use Middag\Ui\Form\Contract\FormInterface;
 use Middag\Ui\Form\Contract\FormRendererInterface;
 use Middag\Ui\Form\Group;
-use Middag\Ui\Shared\Data\RendererOutput;
 use Middag\Ui\Shared\Enum\RenderTarget;
+use Middag\Ui\Shared\ValueObject\RendererOutput;
 
 /**
  * Inertia form renderer adapter for the `@middag-io/react` form_panel.

@@ -19,9 +19,9 @@ use Middag\Ui\Condition\Condition;
 use Middag\Ui\Form\Contract\FieldInterface;
 use Middag\Ui\Form\FieldConstraints;
 use Middag\Ui\Form\FieldDefinition;
-use Middag\Ui\Shared\Data\Translatable;
 use Middag\Ui\Shared\Enum\ConditionOperator;
 use Middag\Ui\Shared\Enum\FieldType;
+use Middag\Ui\Shared\ValueObject\Translatable;
 use Symfony\Component\Validator\Constraint;
 
 /**
