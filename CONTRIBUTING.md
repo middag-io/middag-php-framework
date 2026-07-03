@@ -111,11 +111,11 @@ minor** instead of forcing `2.0`: a maintainer cuts that release deliberately
 with a `Release-As: 1.Y.0` footer, and the change is always marked (`!` /
 `BREAKING CHANGE:`) so it lands in the CHANGELOG's **⚠ BREAKING CHANGES**
 section. A breaking change never ships in a patch. Full strict semver
-(breaking only in majors) starts at `2.0`. The complete policy, including the
-frozen contracts, lives in [`API-STABILITY.md`](API-STABILITY.md).
-
-(The `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` flags still
-present in `release-please-config.json` are inert at `>= 1.0.0`.)
+(breaking only in majors) starts at `2.0`. A major release is never cut
+automatically: it happens only by explicit maintainer decision, when the break
+genuinely impacts Composer consumers — a release PR proposing a major bump is
+not merged without that sign-off. The complete policy, including the frozen
+contracts, lives in [`API-STABILITY.md`](API-STABILITY.md).
 
 ## Pull request checklist
 

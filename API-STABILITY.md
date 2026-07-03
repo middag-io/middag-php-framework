@@ -48,7 +48,10 @@ breaking changes:
   way in **any** `1.x` release.
 
 Full strict-semver rigor — breaking changes **only** in major releases —
-starts at `2.0`.
+starts at `2.0`. A major release is never cut automatically: it happens only
+by explicit maintainer decision, when the break genuinely impacts Composer
+consumers — a release PR proposing a major bump is not merged without that
+sign-off.
 
 > Historical note: `1.0.2` shipped a breaking `Mail` change as a patch, before
 > this policy existed. From this document on, a breaking `@api` change never
