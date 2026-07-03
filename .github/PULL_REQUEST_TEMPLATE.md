@@ -33,9 +33,11 @@ Does this PR change public API or behavior in a backward-incompatible way?
 If so, add a `BREAKING CHANGE:` footer to the relevant commit and describe the
 break below.
 
-Note: this is a pre-1.0 alpha (0.x), so a `BREAKING CHANGE:` commit footer bumps
-the MINOR version (not major). Flagging it correctly lets release-please cut the
-right version — without the footer the break ships as a silent patch.
+Note: on the 1.x line a breaking change ships only in a deliberately cut minor
+(a maintainer sets a `Release-As:` footer at release time) — a bare
+`BREAKING CHANGE:` footer makes release-please propose a major, which is never
+merged without explicit maintainer sign-off (see API-STABILITY.md). Flagging it
+correctly matters: without the footer the break ships as a silent patch.
 -->
 
 - [ ] This PR introduces a breaking change (a `BREAKING CHANGE:` footer is present on the relevant commit)
