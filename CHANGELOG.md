@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.3](https://github.com/middag-io/middag-php-framework/compare/v1.0.2...v1.0.3) (2026-07-03)
+
+
+### Bug Fixes
+
+* **form:** update imports for ui 1.2 namespaces ([2fb9cf4](https://github.com/middag-io/middag-php-framework/commit/2fb9cf4a860e5a27a688ea412057cf1b381caeb7))
+
+
+### Miscellaneous
+
+* **deps:** require middag-io/ui ^1.2 ([936113d](https://github.com/middag-io/middag-php-framework/commit/936113da2ab25775cf4bd05cc05f744fb46347c7))
+
 ## [1.0.2](https://github.com/middag-io/middag-php-framework/compare/v1.0.1...v1.0.2) (2026-07-02)
 
 
