@@ -1,13 +1,10 @@
 # API Stability
 
 This document defines what is public and supported in `middag-io/framework`,
-how the public surface may evolve, and which contracts are **frozen** ahead of
-the `1.0` release.
-
-The framework is **alpha** (`0.x`). The policy below makes precise what "alpha"
-does and does not allow, so downstream packages — the OSS adapters
-(`middag-io/moodle`, `middag-io/wordpress`), `middag-io/ui`, and proprietary
-consumers built on top — can depend on the framework without guessing.
+and how the public surface may evolve during the current **`1.x`** line, so
+downstream packages — the OSS adapters (`middag-io/moodle`,
+`middag-io/wordpress`), `middag-io/ui`, and proprietary consumers built on
+top — can depend on the framework without guessing.
 
 ## Stability levels
 
@@ -20,33 +17,49 @@ Every type carries a class-level annotation that states its stability:
 
 If a type has neither annotation, treat it as `@internal`.
 
-## Versioning policy
+The public surface is therefore the set of `@api`-annotated types: the
+interfaces under each concern's `Contract/` sub-namespace, plus the exported
+`@api` classes (value objects, OSS default implementations, base classes).
 
-Releases are cut by [release-please](https://github.com/googleapis/release-please)
-from [Conventional Commits](https://www.conventionalcommits.org/); the version
-is derived from commit types, not chosen by hand.
+## How releases are cut
 
-While the framework is `0.x`:
+Releases are cut **exclusively** by
+[release-please](https://github.com/googleapis/release-please) from
+[Conventional Commits](https://www.conventionalcommits.org/). There are no
+manual tags: the version is derived from commit types, or set deliberately by
+a maintainer with a `Release-As:` footer.
 
-- **Patch** (`0.y.Z`) — bug fixes and `@internal`-only changes. No `@api`
-  signature changes.
-- **Minor** (`0.Y.0`) — additive `@api` changes (new contracts, new optional
-  parameters, promoting an `@internal` symbol to `@api`). A minor may also carry
-  a **breaking** `@api` change while we are pre-`1.0`, but only when it is called
-  out explicitly with a `BREAKING CHANGE:` footer and an entry in the changelog.
-- **Frozen contracts** (see below) are exempt from that last clause: we commit
-  **not** to change them in a breaking way before `1.0`.
+## The `1.x` policy
 
-Promoting an `@internal` symbol to `@api` is additive and ships in a minor; it
-never narrows the surface, so consumers pinned to a compatible range keep
-resolving.
+During the `1.x` line the API is **still consolidating**. Standard semver
+applies to patches and additive minors, with one explicit exception for
+breaking changes:
+
+- **Patch** (`1.y.Z`) — bug fixes and `@internal`-only changes. Never a
+  breaking `@api` change.
+- **Minor** (`1.Y.0`) — additive `@api` changes (new contracts, new optional
+  parameters, promoting an `@internal` symbol to `@api`). A minor **may also
+  carry a breaking `@api` change** while the API consolidates. Every breaking
+  change is explicitly marked in the history (`feat!` / a `BREAKING CHANGE:`
+  footer) and listed in the CHANGELOG's **⚠ BREAKING CHANGES** section. Such
+  releases are always cut deliberately by a maintainer with a `Release-As:`
+  footer — never as an accidental side effect of merging.
+- **Frozen contracts** (below) are exempt: they do not change in a breaking
+  way in **any** `1.x` release.
+
+Full strict-semver rigor — breaking changes **only** in major releases —
+starts at `2.0`.
+
+> Historical note: `1.0.2` shipped a breaking `Mail` change as a patch, before
+> this policy existed. From this document on, a breaking `@api` change never
+> lands in a patch.
 
 ## Public surface consumed downstream
 
 The following eleven symbols were promoted from `@internal` to `@api` because
 `middag-io/core` consumes them structurally (implements / extends / instantiates
-/ throws) or by type-reference. They are now part of the supported public API
-and evolve under the versioning policy above.
+/ throws) or by type-reference. They are part of the supported public API and
+evolve under the versioning policy above.
 
 Structural coupling (implemented, extended, instantiated, or thrown):
 
@@ -72,11 +85,10 @@ Type-reference coupling (imported / type-hinted):
 ## Frozen contracts
 
 These four bridge contracts are the host-neutral seams that downstream code
-binds to. They were introduced or reshaped recently (`HostComponentContextInterface`
-in `0.11.2`, `HostEventBridgeInterface` promoted in `0.11.1`), so they are
-explicitly **frozen**: their method signatures will **not** change in a breaking
-way before `1.0`. New optional behaviour may be added; nothing already present
-will be renamed, removed, or have its signature altered.
+binds to. They are **frozen for the whole `1.x` line**: their method signatures
+will not change in a breaking way in any `1.x` release. New optional behaviour
+may be added; nothing already present will be renamed, removed, or have its
+signature altered. Breaking one of these requires `2.0`.
 
 | Contract | Role |
 |---|---|
@@ -89,8 +101,10 @@ will be renamed, removed, or have its signature altered.
 
 - Depend only on `@api` types. If you need behaviour exposed only by an
   `@internal` symbol, open an issue to have it promoted rather than reaching in.
-- Pin a caret range (`^0.12`) and read the changelog before bumping across a
-  minor — a pre-`1.0` minor may carry a documented breaking `@api` change to a
-  non-frozen contract.
+- **Default:** pin a caret range (`^1.0`) and read the CHANGELOG's
+  **⚠ BREAKING CHANGES** section before crossing a minor — a `1.x` minor may
+  carry a documented breaking `@api` change to a non-frozen contract.
+- **Zero-surprise upgrades:** pin a tilde patch range (for example `~1.0.3`)
+  to receive only patches, and move across minors deliberately.
 - The dependency direction only ever points downward: the framework never
   imports the proprietary layer, and OSS adapters never import `Middag\Core\`.

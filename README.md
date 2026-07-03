@@ -18,7 +18,7 @@
 
 > Your domain should not know, or care, where it runs.
 
-Status: alpha (the public API may still change). License: Apache-2.0.
+Status: `1.x` — the API is still consolidating, so a minor release may carry a documented breaking change (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
 
 ## Why middag-io/framework?
 
@@ -134,7 +134,7 @@ Git hooks are wired automatically on install; the `commit-msg` hook enforces [Co
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, coding standards and quality pipeline. Please also read the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Found a security issue? Follow [`SECURITY.md`](SECURITY.md).
 
-Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the versioning policy for `0.x`, and the host-neutral contracts frozen ahead of `1.0`.
+Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the `1.x` versioning policy (breaking changes may land in minors, always flagged in the changelog), and the host-neutral contracts frozen for the whole `1.x` line.
 
 ## License
 

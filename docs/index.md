@@ -6,7 +6,9 @@ inside a Moodle plugin, or inside a WordPress plugin, by swapping a thin adapter
 
 > Your domain should not know, or care, where it runs.
 
-Apache-2.0. Pre-1.0 — the public API may still change.
+Apache-2.0. On the `1.x` line the API is still consolidating: a minor release may carry a
+documented breaking change — see
+[`API-STABILITY.md`](https://github.com/middag-io/middag-php-framework/blob/main/API-STABILITY.md).
 
 ## Technical documentation
 

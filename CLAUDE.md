@@ -100,13 +100,15 @@ the adapter's, via `ConnectionAdapterInterface`); there is one sync bus + async 
   [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Commits:** Conventional Commits; **NEVER** `Co-Authored-By`. One scope per commit (the commit-msg
   hook rejects comma multi-scope); mark breaking changes with `!` or a `BREAKING CHANGE:` footer.
-  Pre-1.0 (release-please `bump-*-pre-major`): feat/fix → patch, breaking → minor; the MAJOR/1.0 path
-  is documented in [`CONTRIBUTING.md`](CONTRIBUTING.md). Branch base: `develop`.
+  On the `1.x` line: fix → patch, feat → minor; a breaking change only ships in a minor cut
+  deliberately via `Release-As` (never in a patch) — policy in [`API-STABILITY.md`](API-STABILITY.md).
+  Branch base: `develop`.
 - **Repo boundary:** this repo is OSS (Apache-2.0). It depends only on `middag-io/ui` and never on
   the proprietary layer; the framework defines contracts that downstream packages implement.
 
 ## State
 
-The framework is being prepared for its **pre-1.0 public release** (Apache-2.0, staying `0.x` until
-fully stable). Technical documentation lives in **`docs/`** (`architecture.md`, …) and is published
-at **docs.middag.dev**.
+The framework is **public on the `1.x` line** (Apache-2.0). The API is still consolidating: a minor
+release may carry a documented breaking change, cut deliberately via `Release-As` — the policy is
+[`API-STABILITY.md`](API-STABILITY.md). Technical documentation lives in **`docs/`**
+(`architecture.md`, …) and is published at **docs.middag.dev**.
