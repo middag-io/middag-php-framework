@@ -14,7 +14,7 @@ namespace Middag\Framework\Translation;
 
 use JsonSerializable;
 use Middag\Framework\Http\ValidationErrorSerializer;
-use Middag\Ui\Shared\Data\Translatable;
+use Middag\Ui\Shared\ValueObject\Translatable;
 use Symfony\Contracts\Translation\TranslatableInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 

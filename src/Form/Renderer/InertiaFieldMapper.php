@@ -14,9 +14,9 @@ namespace Middag\Framework\Form\Renderer;
 
 use Closure;
 use Middag\Ui\Form\FieldDefinition;
-use Middag\Ui\Shared\Data\Translatable;
 use Middag\Ui\Shared\Enum\ConditionOperator;
 use Middag\Ui\Shared\Enum\FieldType;
+use Middag\Ui\Shared\ValueObject\Translatable;
 
 /**
  * Maps a FieldDefinition to a `@middag-io/react` FormFieldNode: a node-level
