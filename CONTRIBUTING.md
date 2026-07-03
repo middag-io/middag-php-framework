@@ -53,8 +53,8 @@ An interface always ends in `*Interface` and never sits at the concern root.
 
 ### Tests
 
-- Cover **new behaviour** with a test. Pre-1.0 does not require 100% coverage,
-  but every public, testable seam has a test.
+- Cover **new behaviour** with a test. The project does not require 100%
+  coverage, but every public, testable seam has a test.
 - `tests/Unit` is pure (no I/O); `tests/Integration` is DB-aware where
   applicable.
 - Documented footguns (for example, the immutable query builder) **must** have a
@@ -96,27 +96,26 @@ Longer body when the "why" isn't obvious.
 
 ### Versioning (release-please)
 
-`release-please` reads the commit history to compute the next version and the
-CHANGELOG, so the commit **type** drives the bump.
+Releases are cut **exclusively** by `release-please` — never by a manual tag.
+It reads the commit history to compute the next version and the CHANGELOG, so
+the commit **type** drives the bump. The package is on the **`1.x`** line:
 
-While the package is **pre-1.0** (`release-please-config.json` sets
-`bump-minor-pre-major` and `bump-patch-for-minor-pre-major`):
+| Commit | Bump on `1.x` |
+| ------ | ------------- |
+| `fix:` | PATCH |
+| `feat:` | MINOR |
+| breaking (`!` or `BREAKING CHANGE:`) | proposes MAJOR — see below |
 
-| Commit | Bump while `0.x` |
-| ------ | ---------------- |
-| `fix:` / `feat:` | PATCH |
-| breaking (`!` or `BREAKING CHANGE:`) | MINOR |
-
-The public API is allowed to move while `0.x`, so no single commit auto-produces
-a MAJOR yet.
-
-**Going to `1.0.0` (and MAJOR releases after):** when the public API is declared
-stable, cut `1.0.0` deliberately — land a commit whose footer is
-`Release-As: 1.0.0` (or bump `.release-please-manifest.json` directly). From
-`1.0.0` onward the pre-major flags become inert and standard semver applies:
-`fix:` → PATCH, `feat:` → MINOR, and a breaking change (`!` / `BREAKING CHANGE:`)
-→ MAJOR. Remove `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` from
-`release-please-config.json` at that point for clarity.
+While the API consolidates on `1.x`, a **breaking change may still ship in a
+minor** instead of forcing `2.0`: a maintainer cuts that release deliberately
+with a `Release-As: 1.Y.0` footer, and the change is always marked (`!` /
+`BREAKING CHANGE:`) so it lands in the CHANGELOG's **⚠ BREAKING CHANGES**
+section. A breaking change never ships in a patch. Full strict semver
+(breaking only in majors) starts at `2.0`. A major release is never cut
+automatically: it happens only by explicit maintainer decision, when the break
+genuinely impacts Composer consumers — a release PR proposing a major bump is
+not merged without that sign-off. The complete policy, including the frozen
+contracts, lives in [`API-STABILITY.md`](API-STABILITY.md).
 
 ## Pull request checklist
 

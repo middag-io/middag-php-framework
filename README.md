@@ -18,7 +18,7 @@
 
 > Your domain should not know, or care, where it runs.
 
-Status: alpha (the public API may still change). License: Apache-2.0.
+Status: `1.x` — the API is still consolidating, so a minor release may carry a documented breaking change (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
 
 ## Why middag-io/framework?
 
@@ -96,6 +96,8 @@ Generic plumbing, organised by concern (each concern owns its own `Contract/`):
 | **Database** | `ConnectionAdapterInterface` with a default `PdoConnectionAdapter`, a SQL dialect layer, and a schema builder with migrations. |
 | **Bus** | A command bus over Symfony Messenger (sync, plus async by transport routing), an `InMemoryTransport`, and a `CommandWorker`. |
 | **Logging** | A Monolog-backed `LoggerFactory` per channel, with a `RotatingStreamHandler`. |
+| **Mail** | A `MailerInterface` port with `Mail` / `Address` / `Attachment` value objects (inline `cid:` embeds included). The OSS default `NullMailer` discards; adapters map a `Mail` onto `email_to_user()` / `wp_mail()`. |
+| **Observability** | An `ErrorReporterInterface` port (`NullErrorReporter` default, `SentryErrorReporter` behind a composer `suggest`) plus a `ProfileCollectorInterface` sink that gives bus, hook and query events a single profiling timeline. |
 | **Shared / Exception** | DTOs, enums and utilities, plus a typed exception hierarchy mapped to HTTP status codes. |
 
 Full API reference, guides and examples live at **[docs.middag.dev](https://docs.middag.dev)**.
@@ -134,7 +136,7 @@ Git hooks are wired automatically on install; the `commit-msg` hook enforces [Co
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, coding standards and quality pipeline. Please also read the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Found a security issue? Follow [`SECURITY.md`](SECURITY.md).
 
-Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the versioning policy for `0.x`, and the host-neutral contracts frozen ahead of `1.0`.
+Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the `1.x` versioning policy (breaking changes may land in minors, always flagged in the changelog), and the host-neutral contracts frozen for the whole `1.x` line.
 
 ## License
 

@@ -39,6 +39,27 @@ final class AddressTest extends TestCase
         self::assertSame('Jane Doe <jane@example.test>', $address->toString());
     }
 
+    public function testToStringQuotesNameContainingComma(): void
+    {
+        $address = new Address('jane@example.test', 'Doe, Jane');
+
+        self::assertSame('"Doe, Jane" <jane@example.test>', $address->toString());
+    }
+
+    public function testToStringEscapesQuotesInQuotedName(): void
+    {
+        $address = new Address('jane@example.test', 'Jane "JD" Doe');
+
+        self::assertSame('"Jane \"JD\" Doe" <jane@example.test>', $address->toString());
+    }
+
+    public function testToStringEscapesBackslashInQuotedName(): void
+    {
+        $address = new Address('jane@example.test', 'Back\slash');
+
+        self::assertSame('"Back\\\slash" <jane@example.test>', $address->toString());
+    }
+
     public function testParseRfcStyleString(): void
     {
         $address = Address::parse('Jane Doe <jane@example.test>');
@@ -83,5 +104,42 @@ final class AddressTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         new Address('not-an-email');
+    }
+
+    public function testRejectsEmailWithEmptyDomain(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new Address('user@');
+    }
+
+    public function testRejectsEmailWithEmptyLocalPart(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new Address('@example.test');
+    }
+
+    public function testRejectsEmailContainingWhitespace(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new Address('jane doe@example.test');
+    }
+
+    public function testParseRejectsBareEmailWithTrailingJunk(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Address::parse('jane@x junk');
+    }
+
+    public function testRoundTripParseOfToString(): void
+    {
+        $original = new Address('jane@example.test', 'Doe, Jane');
+        $parsed = Address::parse($original->toString());
+
+        self::assertSame($original->email, $parsed->email);
+        self::assertSame($original->name, $parsed->name);
     }
 }

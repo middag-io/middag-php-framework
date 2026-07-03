@@ -63,6 +63,7 @@
     "symfony/psr-http-message-bridge": "^7.0 || ^8.0",
     "symfony/routing": "^7.0 || ^8.0",
     "symfony/serializer": "^7.0 || ^8.0",
+    "symfony/translation-contracts": "^3.0",
     "symfony/uid": "^7.0 || ^8.0",
     "symfony/validator": "^7.0 || ^8.0"
   },
@@ -116,9 +117,9 @@
       "@check:rector",
       "@check:stan"
     ],
-    "check:stan": "phpstan analyse --configuration=.phpstan.neon",
     "check:style": "php-cs-fixer fix --dry-run --verbose --config=.php-cs-fixer.dist.php",
     "check:rector": "rector process --dry-run --config=.php-rector.php",
+    "check:stan": "phpstan analyse --configuration=.phpstan.neon",
     "fix": [
       "@fix:style",
       "@fix:rector"
@@ -131,6 +132,7 @@
     "fix:style": "php-cs-fixer fix --verbose --show-progress=none --config=.php-cs-fixer.dist.php",
     "fix:rector": "rector process --config=.php-rector.php --no-progress-bar",
     "test": "phpunit",
-    "test:cov": "phpunit --coverage-html coverage/"
+    "test:cov": "XDEBUG_MODE=coverage phpunit --coverage-text",
+    "test:cov:html": "XDEBUG_MODE=coverage phpunit --coverage-html coverage/"
   }
 }

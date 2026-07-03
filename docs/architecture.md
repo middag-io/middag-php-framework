@@ -214,6 +214,67 @@ ships an **OSS default** for each, so it runs standalone with no adapter.
 An adapter **never imports core**; core governance runs first, and the adapter
 delivers an opaque envelope.
 
+### 5.1 Mail — the port and its value objects
+
+The `Mail/` concern is deliberately **not** symfony/mailer: the framework
+declares only the seam and the message shape; delivery is the host's job.
+
+- **`Mail/Contract/MailerInterface`** — one method, `send(Mail $mail): void`.
+  Implementations throw on an unrecoverable transport failure; the OSS default
+  `NullMailer` discards and never throws (standalone has no MTA). Adapters map
+  a `Mail` onto the platform's native sender (Moodle `email_to_user()`,
+  WordPress `wp_mail()`); a product may bind a real transport (SMTP, API) when
+  running standalone.
+- **`Mail`** — the immutable message value object: `to`/`cc`/`bcc` are
+  `list<Address>`, `from`/`replyTo` are `?Address`, `attachments` is
+  `list<Attachment>`; at least one recipient is required. Ergonomics mirror
+  symfony/mime: every address parameter also accepts a plain string
+  (`'jane@example.org'`, `'Jane <jane@example.org>'`) and attachments accept a
+  path string — strings are normalised to the value objects at construction, so
+  adapters always read a uniform shape. Template rendering stays **out** of the
+  object: render first (Twig/Mustache/ui), pass the result as `htmlBody`.
+- **`Address`** — email plus optional display name, validated at construction
+  (rejects an empty local-part/domain, a missing `@`, or whitespace).
+  `Address::parse()` accepts the RFC-style `"Jane Doe <jane@example.org>"`
+  form; `toString()` quotes display names containing characters outside RFC
+  5322 atext, so a comma in a name cannot split comma-separated recipient
+  headers.
+- **`Attachment`** — a file by path with optional display name, MIME type and
+  content id. `Attachment::embedded($path, $contentId)` creates an inline
+  `cid:` part the HTML body references — the piece HTML templates need for
+  logos/images. Adapters map it onto the host's inline-attachment mechanism.
+
+### 5.2 Observability — error reporting and profiling ports
+
+The `Observability/` concern holds two ports that, unlike the bridge contracts
+above, an adapter is **not required to implement**: any tier (adapter, core,
+product, standalone consumer) binds an implementation, and the OSS ships
+working defaults.
+
+- **`Observability/Contract/ErrorReporterInterface`** —
+  `report(Throwable $throwable, array $context = []): void`, the seam for
+  shipping errors to an external tracker so kernel and domain code never
+  depend on a vendor SDK. Implementations must **never throw** (error
+  reporting is best-effort telemetry). OSS implementations:
+  `NullErrorReporter` (default, discards) and `SentryErrorReporter` — usable
+  when the consumer installs `sentry/sentry` (a composer `suggest`, never a
+  framework dependency); the host initialises the SDK, and without an
+  initialised SDK Sentry's capture functions are a no-op, so binding it
+  without a DSN is harmless.
+- **`Observability/Contract/ProfileCollectorInterface`** — the sink for
+  runtime profiling events: `record(category, label, context, durationMs)`,
+  `events()`, `reset()`. Categories are free-form strings (`bus`, `hook`,
+  `query`, …). The OSS implementation `ProfileCollector` holds events
+  in-memory for the lifetime of the request (plus a concrete-only
+  `byCategory()` convenience that is not part of the contract). Consumers
+  already wired in-tree: `Bus/Middleware/ProfilingMiddleware` records every
+  dispatched message under `bus` (timed in a `finally`, so failures show up
+  too), `Kernel/Manager/HookManager` records fired filters/actions under
+  `hook` (opt-in via `setProfileCollector()`), and `Http/FatalErrorHandler`
+  records shutdown fatals under `fatal`; adapter-side query loggers record
+  under `query`. Bind **one** collector instance and inject it everywhere to
+  get a single timeline a dev profiler / debug bar can read back.
+
 ## 6. Persistence — Active Record "Eloquent-like", not Eloquent
 
 The framework **does not depend on Eloquent**. It provides its own,

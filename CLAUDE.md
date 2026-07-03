@@ -69,7 +69,8 @@ is intentional. Each concern owns its own `Contract/` — there is **no** global
 | `Http/`          | `HttpKernel` (PSR-15) + `StandaloneKernel` + Inertia (v3 protocol) + FormRequest + route middleware (`#[Middleware]`) + the auth gate (`#[Auth]`)          |
 | `Kernel/`        | `ContainerFactory` (boot/DI) + `ServiceProvider`/loaders (auto-discovery) + `AbstractModule` + `AbstractFacade` + `HookManager` (per-instance)             |
 | `Logging/`       | `LoggerFactory` (Monolog) per module/channel + `RotatingStreamHandler`                                                                                     |
-| `Observability/` | `ProfileCollector` (dev profiling)                                                                                                                         |
+| `Observability/` | `ErrorReporterInterface` port (`NullErrorReporter`/`SentryErrorReporter`) + `ProfileCollectorInterface` profiling sink (single `bus`/`hook`/`query` timeline) |
+| `Mail/`          | `MailerInterface` port + `Mail`/`Address`/`Attachment` value objects (`cid:` embeds); OSS default `NullMailer`; adapters map onto the host sender          |
 | `Shared/`        | cross-cutting: DTOs, enums (`Operator`/`SortDirection`/`DebugMode`), utils, `Attribute/TrustedOutput` (an output-trust marker; behaviour in the host adapter) |
 | `Translation/`   | the i18n contract (`TranslatorInterface`) + OSS default `FallbackTranslator` (standalone); adapters wrap `get_string`/`__`                                 |
 | `Exception/`     | a typed, status-mapped hierarchy consumed by `HttpKernel::mapThrowable`                                                                                    |
@@ -100,13 +101,15 @@ the adapter's, via `ConnectionAdapterInterface`); there is one sync bus + async 
   [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Commits:** Conventional Commits; **NEVER** `Co-Authored-By`. One scope per commit (the commit-msg
   hook rejects comma multi-scope); mark breaking changes with `!` or a `BREAKING CHANGE:` footer.
-  Pre-1.0 (release-please `bump-*-pre-major`): feat/fix → patch, breaking → minor; the MAJOR/1.0 path
-  is documented in [`CONTRIBUTING.md`](CONTRIBUTING.md). Branch base: `develop`.
+  On the `1.x` line: fix → patch, feat → minor; a breaking change only ships in a minor cut
+  deliberately via `Release-As` (never in a patch) — policy in [`API-STABILITY.md`](API-STABILITY.md).
+  Branch base: `develop`.
 - **Repo boundary:** this repo is OSS (Apache-2.0). It depends only on `middag-io/ui` and never on
   the proprietary layer; the framework defines contracts that downstream packages implement.
 
 ## State
 
-The framework is being prepared for its **pre-1.0 public release** (Apache-2.0, staying `0.x` until
-fully stable). Technical documentation lives in **`docs/`** (`architecture.md`, …) and is published
-at **docs.middag.dev**.
+The framework is **public on the `1.x` line** (Apache-2.0). The API is still consolidating: a minor
+release may carry a documented breaking change, cut deliberately via `Release-As` — the policy is
+[`API-STABILITY.md`](API-STABILITY.md). Technical documentation lives in **`docs/`**
+(`architecture.md`, …) and is published at **docs.middag.dev**.
