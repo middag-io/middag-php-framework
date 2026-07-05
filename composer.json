@@ -75,8 +75,7 @@
     "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^11.0",
     "rector/rector": "^2.0",
-    "sentry/sentry": "^4.0",
-    "zircote/swagger-php": "^4.0"
+    "sentry/sentry": "^4.0"
   },
   "suggest": {
     "doctrine/dbal": "DbalSchemaBuilderAdapter — standalone schema/migrations via DBAL (^4.0)",
@@ -133,6 +132,7 @@
     "fix:rector": "rector process --config=.php-rector.php --no-progress-bar",
     "test": "phpunit",
     "test:cov": "XDEBUG_MODE=coverage phpunit --coverage-text",
-    "test:cov:html": "XDEBUG_MODE=coverage phpunit --coverage-html coverage/"
+    "test:cov:html": "XDEBUG_MODE=coverage phpunit --coverage-html coverage/",
+    "lint:php82": "bin/lint-php82.sh"
   }
 }

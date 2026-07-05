@@ -25,8 +25,6 @@ interface EntityInterface extends JsonSerializable
     /**
      * Get the entity unique identifier.
      * Returns null if the entity has not been persisted yet.
-     *
-     * @return null|int
      */
     public function getId(): ?int;
 
