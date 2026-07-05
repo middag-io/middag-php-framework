@@ -132,6 +132,7 @@
     "fix:rector": "rector process --config=.php-rector.php --no-progress-bar",
     "test": "phpunit",
     "test:cov": "XDEBUG_MODE=coverage phpunit --coverage-text",
-    "test:cov:html": "XDEBUG_MODE=coverage phpunit --coverage-html coverage/"
+    "test:cov:html": "XDEBUG_MODE=coverage phpunit --coverage-html coverage/",
+    "lint:php82": "bin/lint-php82.sh"
   }
 }
