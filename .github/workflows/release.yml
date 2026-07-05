@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -20,6 +22,10 @@ permissions:
 
 jobs:
   release-please:
+    # QG-OSS-02: gate the release on a green CI run. `workflow_run` above only
+    # fires after CI finishes; this guard requires success (workflow_dispatch
+    # bypasses deliberately). Never publish a tag while CI is red.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
