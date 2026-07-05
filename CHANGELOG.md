@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/middag-io/middag-php-framework/compare/v1.1.1...v1.1.2) (2026-07-05)
+
+
+### Miscellaneous
+
+* **deps:** remove unused zircote/swagger-php dev dependency ([a58d194](https://github.com/middag-io/middag-php-framework/commit/a58d1940f12efe554fc199fd321168b834c5bd21))
+* release 1.1.2 ([5c4e3b0](https://github.com/middag-io/middag-php-framework/commit/5c4e3b0d64d9739985608c25abe360099d54c8bf))
+
 ## [1.1.1](https://github.com/middag-io/middag-php-framework/compare/v1.1.0...v1.1.1) (2026-07-03)
 
 
