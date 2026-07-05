@@ -56,8 +56,6 @@ final readonly class ContainerResolver implements MethodArgumentResolverInterfac
      *
      * @param ReflectionParameter  $parameter
      * @param array<string, mixed> $routeParams
-     *
-     * @return mixed
      */
     public function resolve(ReflectionParameter $parameter, array $routeParams): mixed
     {

@@ -57,8 +57,6 @@ final class RouteParameterResolver implements MethodArgumentResolverInterface
      * @param ReflectionParameter  $parameter
      * @param array<string, mixed> $routeParams
      *
-     * @return mixed
-     *
      * @throws RuntimeException when the parameter is missing and no default is provided
      */
     public function resolve(ReflectionParameter $parameter, array $routeParams): mixed

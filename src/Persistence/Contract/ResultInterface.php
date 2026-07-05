@@ -55,15 +55,11 @@ interface ResultInterface extends Countable, IteratorAggregate
 
     /**
      * Returns current page number.
-     *
-     * @return null|int
      */
     public function page(): ?int;
 
     /**
      * Returns number of items per page.
-     *
-     * @return null|int
      */
     public function perpage(): ?int;
 

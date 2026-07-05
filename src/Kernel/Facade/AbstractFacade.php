@@ -45,8 +45,6 @@ abstract class AbstractFacade implements FacadeInterface
      *
      * @param string       $method
      * @param array<mixed> $args
-     *
-     * @return mixed
      */
     public static function __callStatic(string $method, array $args): mixed
     {

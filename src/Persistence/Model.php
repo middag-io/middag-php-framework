@@ -192,9 +192,6 @@ abstract class Model implements JsonSerializable
         return new ModelQuery(QueryBuilder::on($connection, $model->getTable()), $model);
     }
 
-    /**
-     * @return null|static
-     */
     public static function find(mixed $id): ?static
     {
         return static::query()->find($id);
@@ -219,9 +216,6 @@ abstract class Model implements JsonSerializable
         return static::query()->get();
     }
 
-    /**
-     * @return null|static
-     */
     public static function first(): ?static
     {
         return static::query()->first();
@@ -436,14 +430,11 @@ abstract class Model implements JsonSerializable
     // ========================================================================
     // HYDRATION
     // ========================================================================
-
     /**
      * Build a model instance from a raw persistence row (no events, no casts on
      * write — attributes are stored verbatim and cast lazily on read).
      *
      * @param array<string, mixed> $attributes
-     *
-     * @return static
      */
     public function newFromBuilder(array $attributes): static
     {
@@ -479,8 +470,6 @@ abstract class Model implements JsonSerializable
     /**
      * Re-read this record from the database into a NEW instance, or null when
      * it no longer exists (or was never persisted).
-     *
-     * @return null|static
      */
     public function fresh(): ?static
     {
@@ -516,8 +505,6 @@ abstract class Model implements JsonSerializable
      * timestamps when managed) plus any extra $except columns.
      *
      * @param list<string> $except
-     *
-     * @return static
      */
     public function replicate(array $except = []): static
     {

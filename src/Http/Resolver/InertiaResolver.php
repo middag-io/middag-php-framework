@@ -76,8 +76,6 @@ final readonly class InertiaResolver implements MethodArgumentResolverInterface
      *
      * @param ReflectionParameter  $parameter
      * @param array<string, mixed> $routeParams
-     *
-     * @return mixed
      */
     public function resolve(ReflectionParameter $parameter, array $routeParams): mixed
     {

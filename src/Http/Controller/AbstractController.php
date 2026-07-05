@@ -145,10 +145,7 @@ abstract class AbstractController implements ControllerInterface
     /**
      * Return a response based on data type and request accept header.
      *
-     * @param mixed $data
-     * @param int   $status
-     *
-     * @return JsonResponse|Response
+     * @param int $status
      */
     protected function response(mixed $data, int $status = Response::HTTP_OK): JsonResponse|Response
     {
@@ -162,8 +159,7 @@ abstract class AbstractController implements ControllerInterface
     /**
      * Return a JSON response.
      *
-     * @param mixed $data
-     * @param int   $status
+     * @param int $status
      */
     protected function jsonResponse(mixed $data, int $status = Response::HTTP_OK): JsonResponse
     {
