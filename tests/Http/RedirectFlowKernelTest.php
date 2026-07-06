@@ -20,7 +20,7 @@ use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\TranslatableMessage;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -38,7 +38,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(HttpKernel::class)]
 final class RedirectFlowKernelTest extends TestCase
 {
     #[Test]
