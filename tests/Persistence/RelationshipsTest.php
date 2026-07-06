@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Persistence;
 
 use Middag\Framework\Database\PdoConnectionAdapter;
 use Middag\Framework\Persistence\Model;
+use Middag\Framework\Persistence\ModelQuery;
 use Middag\Framework\Persistence\Relation\BelongsTo;
 use Middag\Framework\Persistence\Relation\BelongsToMany;
 use Middag\Framework\Persistence\Relation\HasMany;
@@ -37,6 +38,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(HasOne::class)]
 #[CoversClass(BelongsTo::class)]
 #[CoversClass(BelongsToMany::class)]
+#[CoversClass(Model::class)]
+#[CoversClass(ModelQuery::class)]
 final class RelationshipsTest extends TestCase
 {
     protected function setUp(): void
