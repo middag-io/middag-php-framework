@@ -15,12 +15,14 @@ namespace Middag\Framework\Tests\Http\Inertia;
 use Closure;
 use JsonSerializable;
 use Middag\Framework\Http\Inertia\InertiaAdapter;
+use Middag\Framework\Http\Inertia\InertiaFactory;
 use Middag\Framework\Http\Inertia\InertiaManager;
 use Middag\Framework\Http\Inertia\InertiaResponse;
 use Middag\Framework\Http\Inertia\InertiaVersionManager;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,7 +38,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(InertiaResponse::class)]
 final class InertiaResponseTest extends TestCase
 {
     protected function setUp(): void
@@ -48,6 +50,38 @@ final class InertiaResponseTest extends TestCase
     protected function tearDown(): void
     {
         InertiaManager::flush();
+        // Clear any custom HTML bootstrap a test installed (no public unsetter).
+        (new ReflectionProperty(InertiaFactory::class, 'htmlBootstrap'))->setValue(null, null);
+    }
+
+    #[Test]
+    public function scalarPropsPassThroughNormalizeUnchanged(): void
+    {
+        $request = Request::create('/dashboard', 'GET');
+        $request->headers->set('X-Inertia', 'true');
+        $request->headers->set('X-Inertia-Version', 'v2');
+
+        $response = (new InertiaResponse('Dashboard', ['count' => 5, 'label' => 'hi'], $request))->toResponse();
+
+        $page = json_decode((string) $response->getContent(), true);
+        self::assertSame(5, $page['props']['count']);
+        self::assertSame('hi', $page['props']['label']);
+    }
+
+    #[Test]
+    public function customHtmlBootstrapClosureRendersTheDocumentResponse(): void
+    {
+        InertiaFactory::setHtmlBootstrap(
+            static fn (array $page, string $json, string $attr): Response => new Response('BOOTSTRAP:' . $page['component'], 200),
+        );
+
+        // A non-Inertia GET triggers the HTML document path, which delegates to
+        // the registered bootstrap closure and merges the Inertia headers onto it.
+        $response = (new InertiaResponse('Dashboard', [], Request::create('/dashboard', 'GET')))->toResponse();
+
+        self::assertSame('BOOTSTRAP:Dashboard', $response->getContent());
+        self::assertSame('X-Inertia', $response->headers->get('Vary'));
+        self::assertSame('v2', $response->headers->get('X-Inertia-Version'));
     }
 
     #[Test]

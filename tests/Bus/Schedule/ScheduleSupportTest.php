@@ -59,6 +59,20 @@ final class ScheduleSupportTest extends TestCase
         self::assertFalse($matcher->matches($schedule, new DateTimeImmutable('2026-06-03 05:00:00')));
     }
 
+    public function testMalformedCronFieldsNeverMatch(): void
+    {
+        $matcher = new CronFieldMatcher();
+        $now = new DateTimeImmutable('2026-06-03 04:00:00');
+
+        // Each malformed minute field bails through a distinct guard in
+        // partMatches(): non-digit step, zero step, non-digit range bounds,
+        // and a non-digit single value.
+        self::assertFalse($matcher->matches(new Schedule(minute: '*/z'), $now), 'non-digit step');
+        self::assertFalse($matcher->matches(new Schedule(minute: '*/0'), $now), 'zero step');
+        self::assertFalse($matcher->matches(new Schedule(minute: 'x-y'), $now), 'non-digit range bounds');
+        self::assertFalse($matcher->matches(new Schedule(minute: 'abc'), $now), 'non-digit single value');
+    }
+
     public function testStepRangeAndList(): void
     {
         $matcher = new CronFieldMatcher();

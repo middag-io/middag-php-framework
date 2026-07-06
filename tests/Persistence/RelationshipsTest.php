@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Persistence;
 
 use Middag\Framework\Database\PdoConnectionAdapter;
 use Middag\Framework\Persistence\Model;
+use Middag\Framework\Persistence\ModelQuery;
 use Middag\Framework\Persistence\Relation\BelongsTo;
 use Middag\Framework\Persistence\Relation\BelongsToMany;
 use Middag\Framework\Persistence\Relation\HasMany;
@@ -37,6 +38,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(HasOne::class)]
 #[CoversClass(BelongsTo::class)]
 #[CoversClass(BelongsToMany::class)]
+#[CoversClass(Model::class)]
+#[CoversClass(ModelQuery::class)]
 final class RelationshipsTest extends TestCase
 {
     protected function setUp(): void
@@ -61,6 +64,15 @@ final class RelationshipsTest extends TestCase
     protected function tearDown(): void
     {
         Model::setConnectionResolver(null);
+    }
+
+    public function testRelationsShortCircuitWhenTheParentKeyIsMissing(): void
+    {
+        // An unsaved parent has no key, so each relation resolves to its empty
+        // value without querying (the null-key guard in getResults()).
+        self::assertNull((new Writer())->bio);
+        self::assertSame([], (new Writer())->books);
+        self::assertNull((new Book())->writer);
     }
 
     public function testHasManyLazy(): void

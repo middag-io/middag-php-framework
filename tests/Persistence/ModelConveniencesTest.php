@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Persistence;
 
+use LogicException;
 use Middag\Framework\Database\PdoConnectionAdapter;
 use Middag\Framework\Persistence\Model;
 use Middag\Framework\Persistence\ModelQuery;
@@ -140,5 +141,72 @@ final class ModelConveniencesTest extends TestCase
         self::assertSame('D', $doneStatic[0]->getAttribute('title'));
 
         self::assertSame(1, Task::query()->done()->count());
+    }
+
+    public function testFirstOrNewReturnsAnExistingMatch(): void
+    {
+        Task::create(['title' => 'Existing', 'status' => 'pending', 'tags' => []]);
+
+        $found = Task::firstOrNew(['title' => 'Existing'], ['status' => 'done', 'tags' => []]);
+
+        self::assertTrue($found->exists());
+        self::assertSame(Status::Pending, $found->getAttribute('status'), 'the matched row wins over the new values');
+    }
+
+    public function testUpdateOrCreateCreatesWhenNoMatch(): void
+    {
+        $task = Task::updateOrCreate(['title' => 'Brand New'], ['status' => 'done', 'tags' => ['x']]);
+
+        self::assertTrue($task->exists());
+        self::assertSame(Status::Done, Task::find($task->getKey())->getAttribute('status'));
+    }
+
+    public function testFirstAndWhereStatics(): void
+    {
+        Task::create(['title' => 'Alpha', 'status' => 'pending', 'tags' => []]);
+        Task::create(['title' => 'Beta', 'status' => 'done', 'tags' => []]);
+
+        self::assertInstanceOf(Task::class, Task::first());
+
+        $done = Task::where('status', Status::Done->value)->get();
+        self::assertCount(1, $done);
+        self::assertSame('Beta', $done[0]->getAttribute('title'));
+    }
+
+    public function testMagicGetReturnsLoadedRelationThenFallsBackToAttribute(): void
+    {
+        $task = new Task(['title' => 'Rel', 'status' => 'pending', 'tags' => []]);
+
+        // A value stashed in the relations bag is returned directly by __get.
+        $task->setRelation('sidecar', 'attached');
+        self::assertSame('attached', $task->sidecar);
+
+        // A name that is neither an attribute, a loaded relation, nor a
+        // relation method falls through to getAttribute() → null.
+        self::assertNull($task->totallyUndefined);
+    }
+
+    public function testDeleteOnUnpersistedModelReturnsFalse(): void
+    {
+        $task = new Task(['title' => 'Never saved', 'status' => 'pending', 'tags' => []]);
+
+        self::assertFalse($task->delete());
+    }
+
+    public function testFreshAndRefreshAreInertOnUnpersistedModels(): void
+    {
+        $task = new Task(['title' => 'Ghost', 'status' => 'pending', 'tags' => []]);
+
+        self::assertNull($task->fresh());
+        self::assertSame($task, $task->refresh());
+    }
+
+    public function testDeleteThrowsWhenPersistedRowHasNoKey(): void
+    {
+        // A "persisted" row hydrated without its primary key can't be located.
+        $task = (new Task())->newFromBuilder(['title' => 'keyless', 'status' => 'pending', 'tags' => null]);
+
+        $this->expectException(LogicException::class);
+        $task->delete();
     }
 }

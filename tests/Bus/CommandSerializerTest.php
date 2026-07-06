@@ -17,6 +17,7 @@ use Middag\Framework\Exception\MiddagInfrastructureException;
 use Middag\Framework\Tests\Bus\Fixture\RecordCommand;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Symfony\Component\Messenger\Envelope;
 
 /**
@@ -50,5 +51,30 @@ final class CommandSerializerTest extends TestCase
         $this->expectException(MiddagInfrastructureException::class);
 
         $this->serializer->decode(['headers' => ['type' => 'NotACommand'], 'body' => '{}']);
+    }
+
+    public function testDecodeRejectsNonStringBody(): void
+    {
+        $this->expectException(MiddagInfrastructureException::class);
+
+        // Valid command type, but the body is not a string.
+        $this->serializer->decode(['headers' => ['type' => RecordCommand::class], 'body' => 42]);
+    }
+
+    public function testDecodeRejectsNonArrayPayload(): void
+    {
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('non-array command payload');
+
+        // Valid JSON, but it decodes to a scalar rather than a payload map.
+        $this->serializer->decode(['headers' => ['type' => RecordCommand::class], 'body' => '"just a string"']);
+    }
+
+    public function testEncodeRejectsNonCommandMessage(): void
+    {
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('only encodes');
+
+        $this->serializer->encode(new Envelope(new stdClass()));
     }
 }

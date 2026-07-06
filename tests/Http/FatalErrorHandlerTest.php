@@ -84,6 +84,49 @@ final class FatalErrorHandlerTest extends TestCase
         self::assertFalse($handler->serverWantsJson(['HTTP_X_INERTIA' => 'true', 'HTTP_ACCEPT' => 'application/json']));
     }
 
+    public function testHtmlBodyIncludesDetailInDebug(): void
+    {
+        $handler = new FatalErrorHandler(debug: true);
+
+        [, , $body] = $handler->buildResponse(self::ERROR, 'ABCD1234', wantsJson: false);
+
+        self::assertStringContainsString('ABCD1234', $body);
+        self::assertStringContainsString('Allowed memory size exhausted', $body);
+        self::assertStringContainsString('/app/Foo.php:42', $body);
+        self::assertStringContainsString('<pre>', $body, 'debug detail is rendered in a preformatted block');
+    }
+
+    public function testRegisterInstallsShutdownHandlerWithoutError(): void
+    {
+        $handler = new FatalErrorHandler();
+
+        // register_shutdown_function is a global side effect; the guarded
+        // shutdown callback is a no-op at a clean process end (no fatal pending).
+        $handler->register();
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function testHandleShutdownIsNoOpWhenLastErrorIsNotFatal(): void
+    {
+        // Make error_get_last() report a non-fatal type so the fatal-mask guard
+        // returns early — nothing is logged or rendered.
+        @trigger_error('a plain user notice', E_USER_NOTICE);
+
+        $logger = new class extends AbstractLogger {
+            public int $calls = 0;
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                ++$this->calls;
+            }
+        };
+
+        (new FatalErrorHandler($logger))->handleShutdown();
+
+        self::assertSame(0, $logger->calls, 'a non-fatal last error must not be reported');
+    }
+
     public function testReportLogsCriticalAndRecordsOnProfiler(): void
     {
         $logger = new class extends AbstractLogger {

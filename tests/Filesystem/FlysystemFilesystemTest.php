@@ -13,12 +13,15 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Filesystem;
 
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Middag\Framework\Exception\MiddagInfrastructureException;
 use Middag\Framework\Filesystem\Contract\FilesystemInterface;
 use Middag\Framework\Filesystem\FlysystemFilesystem;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
  * @internal
@@ -84,5 +87,46 @@ final class FlysystemFilesystemTest extends TestCase
         $this->expectException(MiddagInfrastructureException::class);
 
         $this->filesystem->read('../outside.txt');
+    }
+
+    public function testExistsWrapsAFlysystemException(): void
+    {
+        $filesystem = new FlysystemFilesystem($this->throwingOperator('fileExists'));
+
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('could not be checked');
+        $filesystem->exists('x.txt');
+    }
+
+    public function testWriteWrapsAFlysystemException(): void
+    {
+        $filesystem = new FlysystemFilesystem($this->throwingOperator('write'));
+
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('could not be written');
+        $filesystem->write('x.txt', 'data');
+    }
+
+    public function testDeleteWrapsAFlysystemException(): void
+    {
+        $filesystem = new FlysystemFilesystem($this->throwingOperator('delete'));
+
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('could not be deleted');
+        $filesystem->delete('x.txt');
+    }
+
+    /**
+     * A Flysystem operator that throws a FilesystemException from $method,
+     * exercising the port's error-wrapping catch blocks.
+     */
+    private function throwingOperator(string $method): FilesystemOperator
+    {
+        $failure = new class('flysystem failure') extends RuntimeException implements FilesystemException {};
+
+        $operator = $this->createMock(FilesystemOperator::class);
+        $operator->method($method)->willThrowException($failure);
+
+        return $operator;
     }
 }

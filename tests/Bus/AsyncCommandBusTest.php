@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Bus;
 
 use Middag\Framework\Bus\Command\CommandWorker;
 use Middag\Framework\Bus\Command\ConventionHandlersLocator;
+use Middag\Framework\Bus\Contract\MessageBusInterface;
 use Middag\Framework\Bus\MessageBus;
 use Middag\Framework\Bus\MessageBusFactory;
 use Middag\Framework\Bus\Transport\InMemoryTransport;
@@ -24,6 +25,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\NoHandlerForMessageException;
 use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
 
@@ -110,6 +112,26 @@ final class AsyncCommandBusTest extends TestCase
         self::assertSame(['one', 'two'], RecordCommandHandler::$handled);
         // Drained: nothing left, and the ReceivedStamp stops a re-send loop.
         self::assertSame(0, $worker->drain());
+    }
+
+    public function testWorkerRejectsAndRethrowsWhenTheBusFails(): void
+    {
+        $transport = new InMemoryTransport();
+        $transport->send(new Envelope(new RecordCommand('doomed')));
+
+        // A bus that always fails: drain() must reject the envelope and rethrow.
+        $bus = new class implements MessageBusInterface {
+            public function dispatch(object $message, array $stamps = []): Envelope
+            {
+                throw new RuntimeException('handler blew up');
+            }
+        };
+
+        $worker = new CommandWorker($transport, $bus);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('handler blew up');
+        $worker->drain();
     }
 
     /**

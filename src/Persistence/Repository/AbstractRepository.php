@@ -45,7 +45,7 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         $row = $this->query()->where($this->primaryKey(), $id)->first();
 
-        return $row === null ? null : $this->mapper()->dbToDomain((object) $row, []);
+        return $row === null ? null : $this->mapper()->dbToDomain($row, []);
     }
 
     /**
@@ -56,7 +56,7 @@ abstract class AbstractRepository implements RepositoryInterface
         $entities = [];
 
         foreach ($this->query()->get() as $row) {
-            $entities[] = $this->mapper()->dbToDomain((object) $row, []);
+            $entities[] = $this->mapper()->dbToDomain($row, []);
         }
 
         return $entities;
@@ -67,7 +67,7 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function save(EntityInterface $entity): void
     {
-        $record = get_object_vars($this->mapper()->domainToDb($entity));
+        $record = $this->mapper()->domainToDb($entity);
 
         if ($entity->getId() === null) {
             $this->connection->insert($this->table(), $record);

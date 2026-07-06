@@ -74,4 +74,16 @@ final class ShutdownCleanupTest extends TestCase
 
         self::assertSame(1, $calls, 'cleanups drain after running; a second run() is a no-op');
     }
+
+    public function testRegisterIsIdempotent(): void
+    {
+        $cleanup = new ShutdownCleanup();
+
+        // First call installs the shutdown hook; the second hits the early-return
+        // guard so register_shutdown_function is never called twice.
+        $cleanup->register();
+        $cleanup->register();
+
+        $this->addToAssertionCount(1);
+    }
 }

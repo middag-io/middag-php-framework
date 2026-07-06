@@ -46,7 +46,7 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         self::assertTrue($this->adapter->columnExists('middag_widget', 'id'));
         self::assertTrue($this->adapter->columnExists('middag_widget', 'title'));
         self::assertTrue(
-            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('idx_widget_title'),
+            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('middag_widget_idx_widget_title'),
         );
     }
 
@@ -110,7 +110,7 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         ]);
 
         self::assertTrue(
-            $this->connection->createSchemaManager()->introspectTable('widget2')->hasIndex('idx_widget2_label'),
+            $this->connection->createSchemaManager()->introspectTable('widget2')->hasIndex('widget2_idx_widget2_label'),
         );
     }
 
@@ -147,6 +147,104 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
             'columns' => [['name' => 'id', 'type' => 'bigint', 'sequence' => true]],
             'indexes' => [['name' => 'idx_broken_nope']],
         ]);
+    }
+
+    public function testCreateTableMapsEveryColumnTypeIncludingDecimalPrecision(): void
+    {
+        $this->adapter->createTable([
+            'name' => 'types_dbal',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'c_int', 'type' => 'int'],
+                ['name' => 'c_integer', 'type' => 'integer'],
+                ['name' => 'c_smallint', 'type' => 'smallint'],
+                ['name' => 'c_char', 'type' => 'char'],
+                ['name' => 'c_varchar', 'type' => 'varchar', 'length' => 64],
+                ['name' => 'c_text', 'type' => 'text'],
+                ['name' => 'c_longtext', 'type' => 'longtext'],
+                ['name' => 'c_float', 'type' => 'float'],
+                ['name' => 'c_number', 'type' => 'number'],
+                ['name' => 'c_decimal', 'type' => 'decimal'],
+                ['name' => 'c_numeric', 'type' => 'numeric', 'length' => 8, 'decimals' => 4],
+                ['name' => 'c_datetime', 'type' => 'datetime'],
+                ['name' => 'c_date', 'type' => 'date'],
+                ['name' => 'c_boolean', 'type' => 'boolean'],
+                ['name' => 'c_bool', 'type' => 'bool'],
+                ['name' => 'c_blob', 'type' => 'blob'],
+                ['name' => 'c_binary', 'type' => 'binary'],
+                ['name' => 'c_unknown', 'type' => 'weird'],
+                ['name' => 'c_untyped'],
+            ],
+        ]);
+
+        $table = $this->connection->createSchemaManager()->introspectTable('types_dbal');
+        foreach (['c_int', 'c_smallint', 'c_char', 'c_decimal', 'c_numeric', 'c_datetime', 'c_boolean', 'c_blob', 'c_unknown', 'c_untyped'] as $column) {
+            self::assertTrue($table->hasColumn($column), 'missing column ' . $column);
+        }
+    }
+
+    public function testDropColumnIsNoOpWhenColumnAbsent(): void
+    {
+        $this->adapter->createTable($this->descriptor());
+
+        // No such column → early return, no exception, table untouched.
+        $this->adapter->dropColumn('middag_widget', 'ghost');
+
+        self::assertTrue($this->adapter->columnExists('middag_widget', 'title'));
+    }
+
+    public function testDropIndexIsNoOpWhenIndexAbsent(): void
+    {
+        $this->adapter->createTable($this->descriptor());
+
+        // No such index → early return, no exception.
+        $this->adapter->dropIndex('middag_widget', 'idx_missing');
+
+        self::assertTrue(
+            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('middag_widget_idx_widget_title'),
+        );
+    }
+
+    public function testCreateTableEmitsAUniqueIndex(): void
+    {
+        $this->adapter->createTable([
+            'name' => 'uqdemo',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'slug', 'type' => 'varchar', 'length' => 40],
+            ],
+            'indexes' => [
+                ['name' => 'slug', 'columns' => ['slug'], 'unique' => true],
+            ],
+        ]);
+
+        $index = $this->connection->createSchemaManager()->introspectTable('uqdemo')->getIndex('uqdemo_slug');
+        self::assertTrue($index->isUnique());
+    }
+
+    public function testPrimaryKeyColumnsSkipsNonArrayAndNonPrimaryKeyEntries(): void
+    {
+        $this->adapter->createTable([
+            'name' => 'nokey',
+            'columns' => [
+                ['name' => 'a', 'type' => 'bigint', 'notnull' => true],
+                ['name' => 'b', 'type' => 'bigint', 'notnull' => true],
+            ],
+            'keys' => [
+                'not-an-array',
+                ['type' => 'foreign', 'fields' => ['a'], 'reftable' => 'other'],
+            ],
+        ]);
+
+        // No 'primary' entry + no sequence column → the table has no primary key.
+        $pk = [];
+        foreach ($this->connection->fetchAllAssociative('PRAGMA table_info(nokey)') as $row) {
+            if ((int) $row['pk'] > 0) {
+                $pk[] = (string) $row['name'];
+            }
+        }
+
+        self::assertSame([], $pk);
     }
 
     /**

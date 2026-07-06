@@ -86,7 +86,17 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
     {
         $unique = empty($index['unique']) ? '' : 'UNIQUE';
         $cols = implode(', ', $this->indexFields($index));
-        $name = $index['name'] ?? sprintf('idx_%s_%s', $tableName, str_replace(', ', '_', $cols));
+        // Qualify the descriptor's (table-local) index name with the table.
+        // MIDDAG descriptors name indexes per table (idiomatic for MySQL/Moodle,
+        // whose index namespace is per-table), but SQLite namespaces indexes per
+        // schema, so a bare name reused across tables (e.g. `status`, `userid`)
+        // collides — and `CREATE INDEX IF NOT EXISTS` silently no-ops the
+        // duplicate, dropping the second table's index. The auto-generated
+        // fallback is already table-qualified. Mirrors DbalSchemaBuilderAdapter.
+        $explicit = (string) ($index['name'] ?? '');
+        $name = $explicit !== ''
+            ? sprintf('%s_%s', $tableName, $explicit)
+            : sprintf('idx_%s_%s', $tableName, str_replace(', ', '_', $cols));
         $this->connection->execute(sprintf('CREATE %s INDEX IF NOT EXISTS %s ON %s (%s)', $unique, $name, $tableName, $cols));
     }
 

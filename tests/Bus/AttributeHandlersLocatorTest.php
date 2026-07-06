@@ -153,6 +153,23 @@ final class AttributeHandlersLocatorTest extends TestCase
         $bus->dispatch(new RecordCommand('unresolvable'));
     }
 
+    public function testMapIsCachedAcrossDispatchesAndNonClassIdsAreSkipped(): void
+    {
+        $container = $this->containerWith([AttributedRecordHandler::class => new AttributedRecordHandler()]);
+
+        // A non-class id in the handler list must be skipped while building the
+        // map; a second dispatch must reuse the memoised map (cache-hit branch).
+        $bus = $this->factory->create(
+            $container,
+            handlers: new AttributeHandlersLocator($container, ['not.a.real.class', AttributedRecordHandler::class]),
+        );
+
+        $bus->dispatch(new RecordCommand('first'));
+        $bus->dispatch(new RecordCommand('second'));
+
+        self::assertSame(['first', 'second'], AttributedRecordHandler::$handled);
+    }
+
     /**
      * @param array<string, object> $services
      */

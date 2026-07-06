@@ -78,6 +78,21 @@ final class CorsHeaderApplierTest extends TestCase
         new Cors(origins: ['*'], credentials: true);
     }
 
+    public function testHeadersExposeHeadersAndMaxAgeAreEmitted(): void
+    {
+        $controller = new class {
+            #[Cors(origins: ['*'], methods: ['GET'], headers: ['X-Custom'], exposeHeaders: ['X-Total'], maxAge: 600)]
+            public function action(): void {}
+        };
+        $response = new Response('ok');
+
+        CorsHeaderApplier::apply($controller, 'action', $this->request(null), $response);
+
+        self::assertSame('X-Custom', $response->headers->get('Access-Control-Allow-Headers'));
+        self::assertSame('X-Total', $response->headers->get('Access-Control-Expose-Headers'));
+        self::assertSame('600', $response->headers->get('Access-Control-Max-Age'));
+    }
+
     private function request(?string $origin): Request
     {
         $request = Request::create('/');

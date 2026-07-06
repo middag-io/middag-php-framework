@@ -324,6 +324,31 @@ final class InertiaFieldMapperTest extends TestCase
      * @param array<int|string, mixed> $options
      * @param array<int, Condition>    $conditions
      */
+    #[Test]
+    public function helpTextReadonlyAndValueLabelOptionsAreMapped(): void
+    {
+        $definition = new FieldDefinition(
+            name: 'f',
+            type: FieldType::SELECT,
+            label: 'Choose',
+            help: 'Pick one carefully',
+            default: null,
+            constraints: new FieldConstraints(),
+            attributes: ['readonly' => true],
+            conditions: [],
+            options: [['value' => 'a', 'label' => 'A'], ['value' => 'b', 'label' => 'B']],
+        );
+
+        $props = (new InertiaFieldMapper())->map($definition)['props'];
+
+        self::assertSame('Pick one carefully', $props['helpText']);
+        self::assertTrue($props['readOnly']);
+        self::assertSame(
+            [['value' => 'a', 'label' => 'A'], ['value' => 'b', 'label' => 'B']],
+            $props['options'],
+        );
+    }
+
     private function def(
         FieldType $type,
         FieldConstraints $constraints = new FieldConstraints(),

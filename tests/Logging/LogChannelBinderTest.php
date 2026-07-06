@@ -86,6 +86,35 @@ final class LogChannelBinderTest extends TestCase
         self::assertInstanceOf(OriginResolverInterface::class, $container->get(OriginResolverInterface::class));
     }
 
+    public function testNoOpWhenChannelledClassHasNoConstructor(): void
+    {
+        $container = new ContainerBuilder();
+        $this->registerEnabledLoggerFactory($container);
+        $service = new #[LogChannel('reports', 'audit')] class {};
+        $definition = new Definition($service::class);
+
+        LogChannelBinder::apply($container, $definition, new ReflectionClass($service));
+
+        // No constructor → nothing to wire.
+        self::assertSame([], $definition->getArguments());
+    }
+
+    public function testSkipsUntypedAndNonLoggerConstructorParams(): void
+    {
+        $container = new ContainerBuilder();
+        $this->registerEnabledLoggerFactory($container);
+        // First param has no type (not a ReflectionNamedType); second is typed
+        // but not LoggerInterface — both are skipped, so no argument is bound.
+        $service = new #[LogChannel('reports', 'audit')] class(null, 'x') {
+            public function __construct($untyped, string $name) {}
+        };
+        $definition = new Definition($service::class);
+
+        LogChannelBinder::apply($container, $definition, new ReflectionClass($service));
+
+        self::assertSame([], $definition->getArguments());
+    }
+
     private function registerEnabledLoggerFactory(ContainerBuilder $container): void
     {
         $container->register(LoggerFactory::class, LoggerFactory::class)

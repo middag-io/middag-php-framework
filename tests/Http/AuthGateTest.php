@@ -19,7 +19,7 @@ use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Tests\Http\Fixture\GatedController;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -38,7 +38,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(HttpKernel::class)]
 final class AuthGateTest extends TestCase
 {
     #[Test]

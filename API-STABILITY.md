@@ -59,7 +59,7 @@ sign-off.
 
 ## Public surface consumed downstream
 
-The following eleven symbols were promoted from `@internal` to `@api` because
+The following twelve symbols were promoted from `@internal` to `@api` because
 `middag-io/core` consumes them structurally (implements / extends / instantiates
 / throws) or by type-reference. They are part of the supported public API and
 evolve under the versioning policy above.
@@ -70,6 +70,7 @@ Structural coupling (implemented, extended, instantiated, or thrown):
 - `Middag\Framework\Kernel\Contract\LoaderInterface`
 - `Middag\Framework\Kernel\Contract\ModuleLoaderInterface`
 - `Middag\Framework\Kernel\Contract\LoaderFailurePolicyInterface`
+- `Middag\Framework\Kernel\Contract\FailedModuleRegistryInterface`
 - `Middag\Framework\Exception\MiddagLifecycleViolationException`
 - `Middag\Framework\Kernel\Manager\HookManager`
 

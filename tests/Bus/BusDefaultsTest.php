@@ -26,6 +26,9 @@ use Middag\Framework\Tests\Bus\Fixture\RecordCommandHandler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
+use Symfony\Component\Messenger\Middleware\StackInterface;
 
 /**
  * The framework wires a working MessageBus at boot (ServiceProvider core
@@ -42,6 +45,21 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 #[CoversClass(ConventionHandlersLocator::class)]
 final class BusDefaultsTest extends TestCase
 {
+    public function testCreateWrapsPrependedMiddlewareIntoTheStack(): void
+    {
+        $middleware = new class implements MiddlewareInterface {
+            public function handle(Envelope $envelope, StackInterface $stack): Envelope
+            {
+                return $stack->next()->handle($envelope, $stack);
+            }
+        };
+
+        // Passing $middleware exercises the prepend loop; a MessageBus is returned.
+        $bus = (new MessageBusFactory())->create(new ContainerBuilder(), middleware: [$middleware]);
+
+        self::assertInstanceOf(MessageBus::class, $bus);
+    }
+
     public function testBusInterfaceIsWiredAndPlainCommandRunsSynchronously(): void
     {
         $container = $this->boot();
