@@ -46,7 +46,7 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         self::assertTrue($this->adapter->columnExists('middag_widget', 'id'));
         self::assertTrue($this->adapter->columnExists('middag_widget', 'title'));
         self::assertTrue(
-            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('idx_widget_title'),
+            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('middag_widget_idx_widget_title'),
         );
     }
 
@@ -110,7 +110,7 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         ]);
 
         self::assertTrue(
-            $this->connection->createSchemaManager()->introspectTable('widget2')->hasIndex('idx_widget2_label'),
+            $this->connection->createSchemaManager()->introspectTable('widget2')->hasIndex('widget2_idx_widget2_label'),
         );
     }
 

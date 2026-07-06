@@ -70,11 +70,12 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
 
         foreach ($descriptor['indexes'] ?? [] as $index) {
             $fields = $this->indexFields($index);
+            $name = $this->qualifiedIndexName((string) $descriptor['name'], $index);
 
             if (empty($index['unique'])) {
-                $table->addIndex($fields, (string) ($index['name'] ?? null) ?: null);
+                $table->addIndex($fields, $name);
             } else {
-                $table->addUniqueIndex($fields, (string) ($index['name'] ?? null) ?: null);
+                $table->addUniqueIndex($fields, $name);
             }
         }
 
@@ -195,6 +196,25 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
         }
 
         return $options;
+    }
+
+    /**
+     * Qualify a descriptor's (table-local) index name with the table name so the
+     * emitted DDL is globally unique. MIDDAG descriptors name indexes per table
+     * (idiomatic for MySQL/Moodle, whose index namespace is per-table), but the
+     * engines this adapter targets — PostgreSQL, SQLite — namespace indexes per
+     * schema, so a bare name reused across tables (e.g. `status`, `userid`)
+     * collides. Prefixing with the table keeps the descriptors engine-neutral
+     * while the DDL stays valid everywhere. Returns null when the descriptor
+     * names no index, letting DBAL auto-generate a unique name.
+     *
+     * @param array<string, mixed> $index
+     */
+    private function qualifiedIndexName(string $tableName, array $index): ?string
+    {
+        $name = (string) ($index['name'] ?? '');
+
+        return $name === '' ? null : $tableName . '_' . $name;
     }
 
     /**
