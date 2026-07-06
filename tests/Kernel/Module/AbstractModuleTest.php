@@ -75,6 +75,41 @@ final class AbstractModuleTest extends TestCase
         self::assertTrue($module->isAvailable());
     }
 
+    public function testDiscoverClassesBySuffixHandlesMissingDirsAndNonPhpFiles(): void
+    {
+        $module = new class extends AbstractModule {
+            public ?string $dirOverride = null;
+
+            /** @return string[] */
+            public function exposeDiscover(string $suffix): array
+            {
+                return $this->discoverClassesBySuffix($suffix);
+            }
+
+            protected function getModuleDirectory(): ?string
+            {
+                return $this->dirOverride;
+            }
+        };
+
+        // A missing directory yields nothing (the is_dir guard).
+        $module->dirOverride = sys_get_temp_dir() . '/middag-no-such-module-dir';
+        self::assertSame([], $module->exposeDiscover('Hooks'));
+
+        // A directory holding only a non-PHP file is skipped by the extension guard.
+        $tmp = sys_get_temp_dir() . '/middag-mod-' . getmypid();
+        mkdir($tmp, 0o777, true);
+        file_put_contents($tmp . '/notes.txt', 'not php');
+        $module->dirOverride = $tmp;
+
+        try {
+            self::assertSame([], $module->exposeDiscover('Hooks'));
+        } finally {
+            unlink($tmp . '/notes.txt');
+            rmdir($tmp);
+        }
+    }
+
     private function containerWithHook(): ContainerInterface
     {
         $container = $this->createStub(ContainerInterface::class);

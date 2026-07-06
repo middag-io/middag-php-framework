@@ -205,6 +205,48 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         );
     }
 
+    public function testCreateTableEmitsAUniqueIndex(): void
+    {
+        $this->adapter->createTable([
+            'name' => 'uqdemo',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'slug', 'type' => 'varchar', 'length' => 40],
+            ],
+            'indexes' => [
+                ['name' => 'slug', 'columns' => ['slug'], 'unique' => true],
+            ],
+        ]);
+
+        $index = $this->connection->createSchemaManager()->introspectTable('uqdemo')->getIndex('uqdemo_slug');
+        self::assertTrue($index->isUnique());
+    }
+
+    public function testPrimaryKeyColumnsSkipsNonArrayAndNonPrimaryKeyEntries(): void
+    {
+        $this->adapter->createTable([
+            'name' => 'nokey',
+            'columns' => [
+                ['name' => 'a', 'type' => 'bigint', 'notnull' => true],
+                ['name' => 'b', 'type' => 'bigint', 'notnull' => true],
+            ],
+            'keys' => [
+                'not-an-array',
+                ['type' => 'foreign', 'fields' => ['a'], 'reftable' => 'other'],
+            ],
+        ]);
+
+        // No 'primary' entry + no sequence column → the table has no primary key.
+        $pk = [];
+        foreach ($this->connection->fetchAllAssociative('PRAGMA table_info(nokey)') as $row) {
+            if ((int) $row['pk'] > 0) {
+                $pk[] = (string) $row['name'];
+            }
+        }
+
+        self::assertSame([], $pk);
+    }
+
     /**
      * @return array<string, mixed>
      */
