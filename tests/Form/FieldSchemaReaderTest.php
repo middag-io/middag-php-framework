@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Form;
 
+use DateTimeImmutable;
 use Middag\Framework\Form\Attribute\Field;
 use Middag\Framework\Form\Schema\FieldSchemaReader;
 use Middag\Framework\Kernel\ServiceProvider;
@@ -75,6 +76,55 @@ final class FieldSchemaReaderTest extends TestCase
         $container->compile();
 
         self::assertInstanceOf(FieldSchemaReader::class, $container->get(FieldSchemaReader::class));
+    }
+
+    public function testReadIsCachedPerClass(): void
+    {
+        $reader = new FieldSchemaReader();
+
+        // Second read returns the exact same materialised list (reflection runs once).
+        self::assertSame($reader->read(ProfileDto::class), $reader->read(ProfileDto::class));
+    }
+
+    public function testEveryAttributeSetterIsApplied(): void
+    {
+        $dto = new class {
+            #[Field(label: 'f.name', help: 'f.help', placeholder: 'f.ph', default: 'seed', required: true, readonly: true)]
+            public string $name = '';
+        };
+
+        $definition = (new FieldSchemaReader())->read($dto::class)[0]->toDefinition();
+
+        self::assertNotNull($definition->label);
+        self::assertNotNull($definition->help);
+        self::assertSame('seed', $definition->default);
+        self::assertTrue($definition->constraints->required);
+        self::assertTrue($definition->attributes['readonly']);
+        self::assertSame(['key' => 'f.ph', 'component' => ''], $definition->attributes['placeholder']);
+    }
+
+    public function testTypeInferenceCoversFloatDateAndUntyped(): void
+    {
+        $dto = new class {
+            #[Field]
+            public float $ratio = 0.0;
+
+            #[Field]
+            public ?DateTimeImmutable $when = null;
+
+            #[Field]
+            public $loose = null; // no PHP type → falls back to TEXT
+        };
+
+        $types = [];
+        foreach ((new FieldSchemaReader())->read($dto::class) as $field) {
+            $definition = $field->toDefinition();
+            $types[$definition->name] = $definition->type;
+        }
+
+        self::assertSame(FieldType::FLOAT, $types['ratio']);
+        self::assertSame(FieldType::DATE, $types['when']);
+        self::assertSame(FieldType::TEXT, $types['loose']);
     }
 
     /**

@@ -48,6 +48,59 @@ final class HookManagerRemovalTest extends TestCase
         self::assertFalse($hooks->removeFilter('other', static fn (int $v): int => $v));
     }
 
+    public function testRemoveFilterReturnsFalseWhenCallbackNotAtThatPriority(): void
+    {
+        $hooks = new HookManager();
+        $kept = static fn (int $v): int => $v + 1;
+        $hooks->addFilter('n', $kept, priority: 10);
+
+        // Priority 10 exists, but this callback is not registered there.
+        self::assertFalse($hooks->removeFilter('n', static fn (int $v): int => $v, priority: 10));
+        // The real callback is untouched and still runs.
+        self::assertSame(6, $hooks->applyFilters('n', 5));
+    }
+
+    public function testRemoveFilterKeepsOtherCallbacksAtSamePriority(): void
+    {
+        $hooks = new HookManager();
+        $plusOne = static fn (int $v): int => $v + 1;
+        $timesTwo = static fn (int $v): int => $v * 2;
+        $hooks->addFilter('n', $plusOne, priority: 10);
+        $hooks->addFilter('n', $timesTwo, priority: 10);
+
+        self::assertTrue($hooks->removeFilter('n', $plusOne, priority: 10));
+        self::assertTrue($hooks->hasFilter('n'), 'the other callback at the same priority survives');
+        self::assertSame(10, $hooks->applyFilters('n', 5), 'only timesTwo remains');
+    }
+
+    public function testRemoveActionReturnsFalseForUnknownAndUnmatchedCallback(): void
+    {
+        $hooks = new HookManager();
+        $listener = static function (): void {};
+        $hooks->addAction('boot', $listener, priority: 10);
+
+        // Unknown tag/priority → not isset.
+        self::assertFalse($hooks->removeAction('missing', $listener));
+        // Priority exists but this callback is not the registered one.
+        self::assertFalse($hooks->removeAction('boot', static function (): void {}, priority: 10));
+        self::assertTrue($hooks->hasAction('boot'));
+    }
+
+    public function testRemoveActionKeepsOtherCallbacksAtSamePriority(): void
+    {
+        $hooks = new HookManager();
+        $calls = [];
+        $first = static function () use (&$calls): void { $calls[] = 'first'; };
+        $second = static function () use (&$calls): void { $calls[] = 'second'; };
+        $hooks->addAction('boot', $first, priority: 10);
+        $hooks->addAction('boot', $second, priority: 10);
+
+        self::assertTrue($hooks->removeAction('boot', $first, priority: 10));
+
+        $hooks->doAction('boot');
+        self::assertSame(['second'], $calls, 'only the surviving callback runs');
+    }
+
     public function testRemoveActionDetachesByIdentity(): void
     {
         $hooks = new HookManager();

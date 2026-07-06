@@ -16,6 +16,8 @@ use Middag\Framework\Form\ConditionEvaluator;
 use Middag\Framework\Form\Field\IntField;
 use Middag\Framework\Form\Field\TextField;
 use Middag\Framework\Form\FormValidator;
+use Middag\Framework\Translation\Contract\TranslatorInterface;
+use Middag\Ui\Form\Group;
 use Middag\Ui\Shared\Enum\ConditionOperator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -128,6 +130,51 @@ final class FormValidatorTest extends TestCase
         $errors = $this->validator()->validate([(new TextField('flag'))->rule($rule)], ['flag' => 'bad']);
 
         self::assertArrayHasKey('flag', $errors);
+    }
+
+    #[Test]
+    public function optionalFieldWithAValueButNoConstraintsIsSkipped(): void
+    {
+        // Present value (not empty) on an optional field with no max/min/pattern
+        // /custom rules → constraintsFor() is empty → the field is skipped.
+        $errors = $this->validator()->validate([new TextField('note')], ['note' => 'anything']);
+
+        self::assertSame([], $errors);
+    }
+
+    #[Test]
+    public function violationMessagesAreRoutedThroughTheTranslator(): void
+    {
+        $translator = new class implements TranslatorInterface {
+            public function get(string $key, string $component = '', array $params = []): string
+            {
+                return $key;
+            }
+
+            public function has(string $key, string $component = ''): bool
+            {
+                return false;
+            }
+        };
+
+        $validator = new FormValidator(new ConditionEvaluator(), $translator);
+
+        // A required-but-empty field still errors; the translator-backed builder
+        // resolves the (passthrough) message.
+        $errors = $validator->validate([(new TextField('name'))->required()], []);
+
+        self::assertArrayHasKey('name', $errors);
+    }
+
+    #[Test]
+    public function layoutElementsAreFlattenedIntoTheirFields(): void
+    {
+        $schema = [Group::of('row')->fields((new TextField('a'))->required(), new TextField('b'))];
+
+        $errors = $this->validator()->validate($schema, []);
+
+        // The required child inside the group is reached and validated.
+        self::assertArrayHasKey('a', $errors);
     }
 
     private function validator(): FormValidator
