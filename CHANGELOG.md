@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.0](https://github.com/middag-io/middag-php-framework/compare/v1.1.2...v1.2.0) (2026-07-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **persistence:** MapperInterface::dbToDomain() now takes array $record (was stdClass) and domainToDb() now returns array (was stdClass). Implementors must update their signatures.
+
+### Features
+
+* **kernel:** add generic FailedModuleRegistryInterface contract ([d3a25a2](https://github.com/middag-io/middag-php-framework/commit/d3a25a2aff1542fa0b3b085b890887bceb31cc73))
+* **persistence:** array-native record contract in MapperInterface ([997ba8a](https://github.com/middag-io/middag-php-framework/commit/997ba8a3575b6ee6dbf351ea831bacc74744b21c))
+
+
+### Bug Fixes
+
+* **schema:** qualify DBAL index names with the table for global uniqueness ([7c26043](https://github.com/middag-io/middag-php-framework/commit/7c2604302617d13f94900ec6118bedbb461331a6))
+* **schema:** qualify SQLite index names with the table for global uniqueness ([0149edf](https://github.com/middag-io/middag-php-framework/commit/0149edf0bb3f42f614a5aacf21eef704091f4850))
+
+
+### Miscellaneous
+
+* release framework 1.2.0 ([c5a1c30](https://github.com/middag-io/middag-php-framework/commit/c5a1c30188ec905cb6be6a643509d6f247c76758))
+
 ## [1.1.2](https://github.com/middag-io/middag-php-framework/compare/v1.1.1...v1.1.2) (2026-07-05)
 
 
