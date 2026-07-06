@@ -624,6 +624,159 @@ final class QueryBuilderTest extends TestCase
         self::assertSame(2, $builder->count());
     }
 
+    public function testOrWhereThreeArgUsesTheOperator(): void
+    {
+        [$sql, $bindings] = QueryBuilder::for('users')->where('a', 1)->orWhere('b', '>', 2)->compile();
+
+        self::assertSame('SELECT * FROM users WHERE a = ? OR b > ?', $sql);
+        self::assertSame([1, 2], $bindings);
+    }
+
+    public function testOrWhereClosureNestsAnOrGroup(): void
+    {
+        [$sql, $bindings] = QueryBuilder::for('users')
+            ->where('a', 1)
+            ->orWhere(static fn (QueryBuilder $q): QueryBuilder => $q->where('b', 2)->where('c', 3))
+            ->compile();
+
+        self::assertSame('SELECT * FROM users WHERE a = ? OR (b = ? AND c = ?)', $sql);
+        self::assertSame([1, 2, 3], $bindings);
+    }
+
+    public function testOrWhereWithoutValueThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        QueryBuilder::for('users')->where('a', 1)->orWhere('b');
+    }
+
+    public function testOrWhereIn(): void
+    {
+        [$sql, $bindings] = QueryBuilder::for('users')->where('a', 1)->orWhereIn('id', [7, 8])->compile();
+
+        self::assertSame('SELECT * FROM users WHERE a = ? OR id IN (?, ?)', $sql);
+        self::assertSame([1, 7, 8], $bindings);
+    }
+
+    public function testWhereColumnWithoutSecondColumnThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        QueryBuilder::for('users')->whereColumn('a');
+    }
+
+    public function testOrWhereColumnTwoAndThreeArg(): void
+    {
+        $two = QueryBuilder::for('users')->where('x', 1)->orWhereColumn('a', 'b')->toSql();
+        self::assertSame('SELECT * FROM users WHERE x = ? OR a = b', $two);
+
+        $three = QueryBuilder::for('users')->where('x', 1)->orWhereColumn('a', '>', 'b')->toSql();
+        self::assertSame('SELECT * FROM users WHERE x = ? OR a > b', $three);
+    }
+
+    public function testAddSelectAppendsColumns(): void
+    {
+        self::assertSame('SELECT a, b, c FROM users', QueryBuilder::for('users')->select('a')->addSelect('b', 'c')->toSql());
+        // From the bare `*` baseline, addSelect replaces the star.
+        self::assertSame('SELECT a FROM users', QueryBuilder::for('users')->addSelect('a')->toSql());
+    }
+
+    public function testLatestOrdersByColumnDescending(): void
+    {
+        self::assertSame('SELECT * FROM users ORDER BY created desc', QueryBuilder::for('users')->latest('created')->toSql());
+    }
+
+    public function testOrderByRejectsUnknownDirection(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        QueryBuilder::for('users')->orderBy('id', 'sideways');
+    }
+
+    public function testHavingAndOrHavingCompile(): void
+    {
+        [$sql, $bindings] = QueryBuilder::for('users')
+            ->select('active', 'COUNT(*) AS c')
+            ->groupBy('active')
+            ->having('c', '>', 1)
+            ->orHaving('c', '=', 0)
+            ->compile();
+
+        self::assertStringContainsString('GROUP BY active', $sql);
+        self::assertStringContainsString('HAVING c > ? OR c = ?', $sql);
+        self::assertSame([1, 0], $bindings);
+    }
+
+    public function testGetConnectionReflectsMode(): void
+    {
+        self::assertNull(QueryBuilder::for('users')->getConnection());
+        self::assertNotNull($this->seededUsers()->getConnection());
+    }
+
+    public function testUpdateAffectsMatchingRows(): void
+    {
+        $builder = $this->seededUsers();
+
+        self::assertSame(1, $builder->where('id', 1)->update(['name' => 'Renamed']));
+        self::assertSame('Renamed', $builder->find(1)['name']);
+        self::assertSame(0, $builder->where('id', 1)->update([]), 'empty update is a no-op');
+    }
+
+    public function testUpdateOrInsertUpdatesThenInserts(): void
+    {
+        $builder = $this->seededUsers();
+
+        // Existing row (id 1 / Ada) → update path.
+        self::assertTrue($builder->updateOrInsert(['name' => 'Ada'], ['age' => 99]));
+        self::assertSame(99, (int) $builder->where('name', 'Ada')->first()['age']);
+
+        // No match → insert path.
+        self::assertTrue($builder->updateOrInsert(['name' => 'Zed'], ['age' => 20, 'active' => 1]));
+        self::assertNotNull($builder->where('name', 'Zed')->first());
+    }
+
+    public function testUpsertInsertsAndUpdatesOnConflict(): void
+    {
+        $builder = $this->seededUsers();
+
+        // id 1 exists → update; id 4 is new → insert.
+        $builder->upsert(
+            [
+                ['id' => 1, 'name' => 'Ada II', 'age' => 40, 'active' => 1],
+                ['id' => 4, 'name' => 'Margaret', 'age' => 45, 'active' => 1],
+            ],
+            'id',
+        );
+
+        self::assertSame('Ada II', $builder->find(1)['name']);
+        self::assertSame('Margaret', $builder->find(4)['name']);
+    }
+
+    public function testCursorStreamsEachRow(): void
+    {
+        $names = [];
+        foreach ($this->seededUsers()->orderBy('id')->cursor() as $row) {
+            $names[] = $row['name'];
+        }
+
+        self::assertSame(['Ada', 'Grace', 'Linus'], $names);
+    }
+
+    public function testChunkProcessesEveryBatch(): void
+    {
+        $seen = 0;
+        $result = $this->seededUsers()->orderBy('id')->chunk(2, function (array $rows) use (&$seen): bool {
+            $seen += count($rows);
+
+            return true;
+        });
+
+        self::assertTrue($result);
+        self::assertSame(3, $seen);
+    }
+
+    public function testNumericAggregateReturnsNullWhenNoRows(): void
+    {
+        self::assertNull($this->seededUsers()->where('id', 999)->avg('age'));
+    }
+
     private function seededUsers(): QueryBuilder
     {
         $pdo = new PDO('sqlite::memory:');
