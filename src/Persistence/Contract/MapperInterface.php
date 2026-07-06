@@ -12,11 +12,14 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Persistence\Contract;
 
-use stdClass;
-
 /**
- * Contract for mappers that convert between persistence records (stdClass)
+ * Contract for mappers that convert between persistence records (assoc arrays)
  * and domain entities.
+ *
+ * Records are plain associative arrays (`array<string, mixed>`) at this seam —
+ * array-native per the record contract. Hosts whose driver returns objects
+ * (e.g. Moodle `$DB` `stdClass` rows) convert to/from arrays at their adapter
+ * boundary, never here.
  *
  * @template T of EntityInterface
  *
@@ -27,12 +30,12 @@ interface MapperInterface
     /**
      * Convert a raw persistence record (and optional metadata) into a domain entity.
      *
-     * @param stdClass             $record   The raw row from persistence
+     * @param array<string, mixed> $record   The raw row from persistence
      * @param array<string, mixed> $metadata Key-value array of related metadata
      *
      * @return T The hydrated domain entity
      */
-    public function dbToDomain(stdClass $record, array $metadata): EntityInterface;
+    public function dbToDomain(array $record, array $metadata): EntityInterface;
 
     /**
      * Convert a domain entity into a raw persistence record.
@@ -40,7 +43,7 @@ interface MapperInterface
      *
      * @param EntityInterface $entity
      *
-     * @return stdClass
+     * @return array<string, mixed>
      */
-    public function domainToDb(EntityInterface $entity): stdClass;
+    public function domainToDb(EntityInterface $entity): array;
 }

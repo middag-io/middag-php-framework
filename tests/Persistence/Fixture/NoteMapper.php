@@ -14,7 +14,6 @@ namespace Middag\Framework\Tests\Persistence\Fixture;
 
 use Middag\Framework\Persistence\Contract\EntityInterface;
 use Middag\Framework\Persistence\Mapper\AbstractMapper;
-use stdClass;
 
 /**
  * Maps the Note entity to/from persistence rows.
@@ -25,16 +24,16 @@ use stdClass;
  */
 final class NoteMapper extends AbstractMapper
 {
-    public function dbToDomain(stdClass $record, array $metadata): Note
+    public function dbToDomain(array $record, array $metadata): Note
     {
         return new Note(
-            isset($record->id) ? (int) $record->id : null,
-            (string) $record->title,
+            isset($record['id']) ? (int) $record['id'] : null,
+            (string) $record['title'],
         );
     }
 
-    public function domainToDb(EntityInterface $entity): stdClass
+    public function domainToDb(EntityInterface $entity): array
     {
-        return (object) $entity->toArray();
+        return $entity->toArray();
     }
 }
