@@ -16,7 +16,7 @@ use Middag\Framework\Http\Inertia\InertiaFactory;
 use Middag\Framework\Http\Inertia\InertiaResponse;
 use Middag\Ui\Envelope\Contract\ContractEnvelopeInterface;
 use Middag\Ui\Page\Contract\PageContractInterface;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(InertiaFactory::class)]
 final class InertiaFactoryTest extends TestCase
 {
     #[Test]

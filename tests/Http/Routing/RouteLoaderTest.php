@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Http\Routing;
 
 use Middag\Framework\Http\Routing\RouteLoader;
 use Middag\Framework\Tests\Http\Fixture\PrefixedController;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -27,7 +27,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(RouteLoader::class)]
 final class RouteLoaderTest extends TestCase
 {
     #[Test]

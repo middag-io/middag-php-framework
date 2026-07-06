@@ -18,7 +18,7 @@ use Middag\Framework\Http\Inertia\InertiaAdapter;
 use Middag\Framework\Http\Inertia\InertiaManager;
 use Middag\Framework\Http\Inertia\InertiaResponse;
 use Middag\Framework\Http\Inertia\InertiaVersionManager;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -36,7 +36,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(InertiaResponse::class)]
 final class InertiaResponseTest extends TestCase
 {
     protected function setUp(): void

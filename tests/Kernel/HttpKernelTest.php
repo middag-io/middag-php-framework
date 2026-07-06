@@ -19,7 +19,7 @@ use Middag\Framework\Http\Contract\HttpKernelInterface;
 use Middag\Framework\Http\HttpKernel;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(HttpKernel::class)]
 final class HttpKernelTest extends TestCase
 {
     #[Test]
