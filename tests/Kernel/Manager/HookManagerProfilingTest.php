@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Kernel\Manager;
 
 use Middag\Framework\Kernel\Manager\HookManager;
 use Middag\Framework\Observability\ProfileCollector;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(HookManager::class)]
 final class HookManagerProfilingTest extends TestCase
 {
     #[Test]

@@ -24,6 +24,7 @@ use Psr\Container\ContainerInterface;
  * @internal
  */
 #[CoversClass(HookFacade::class)]
+#[CoversClass(AbstractFacade::class)]
 final class HookFacadeTest extends TestCase
 {
     protected function setUp(): void
