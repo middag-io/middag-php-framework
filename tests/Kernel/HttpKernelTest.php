@@ -17,6 +17,7 @@ use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Contract\ExceptionRendererInterface;
 use Middag\Framework\Http\Contract\HttpKernelInterface;
 use Middag\Framework\Http\HttpKernel;
+use Middag\Framework\Tests\Http\Fixture\PlainActionController;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -226,17 +227,142 @@ final class HttpKernelTest extends TestCase
         );
     }
 
+    #[Test]
+    public function nonResponseReturnIsWrappedInJson(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('data', new Route('/data', ['_controller' => static fn (): array => ['ok' => 1]]));
+
+        $response = $this->kernel($routes)->handle(new ServerRequest('GET', '/data'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('{"ok":1}', (string) $response->getBody());
+    }
+
+    #[Test]
+    public function methodNotAllowedMapsTo405(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('create', (new Route('/tasks', ['_controller' => static fn (): JsonResponse => new JsonResponse([])]))->setMethods(['POST']));
+
+        $request = (new ServerRequest('GET', '/tasks'))->withHeader('Accept', 'application/json');
+        $response = $this->kernel($routes)->handle($request);
+
+        self::assertSame(Response::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
+        self::assertStringContainsString('method_not_allowed', (string) $response->getBody());
+    }
+
+    #[Test]
+    public function genericExceptionMapsToServerError500(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('boom', new Route('/boom', ['_controller' => static function (): never {
+            throw new RuntimeException('kaboom');
+        }]));
+
+        $request = (new ServerRequest('GET', '/boom'))->withHeader('Accept', 'application/json');
+        $response = $this->kernel($routes)->handle($request);
+
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        self::assertStringContainsString('server_error', (string) $response->getBody());
+    }
+
+    #[Test]
+    public function uncallableControllerYieldsServerError(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('bad', new Route('/bad', ['_controller' => 'DefinitelyNotACallableClassName']));
+
+        $request = (new ServerRequest('GET', '/bad'))->withHeader('Accept', 'application/json');
+        $response = $this->kernel($routes)->handle($request);
+
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function xhrRequestNegotiatesJsonError(): void
+    {
+        // No Accept header, but X-Requested-With marks it as an XHR → JSON body.
+        $request = (new ServerRequest('GET', '/nope'))->withHeader('X-Requested-With', 'XMLHttpRequest');
+        $response = $this->kernel(new RouteCollection())->handle($request);
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+        self::assertStringContainsString('not_found', (string) $response->getBody());
+    }
+
+    #[Test]
+    public function stringControllerFqcnMethodIsResolvedFromContainer(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('str', new Route('/str', ['_controller' => PlainActionController::class . '::show']));
+
+        $container = $this->containerWith([PlainActionController::class => new PlainActionController()]);
+        $response = $this->kernelWith($routes, $container)->handle(new ServerRequest('GET', '/str'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('{"via":"string-controller"}', (string) $response->getBody());
+    }
+
+    #[Test]
+    public function containerBoundExceptionRendererIsPreferred(): void
+    {
+        $renderer = new class implements ExceptionRendererInterface {
+            public function render(
+                Throwable $throwable,
+                Request $request,
+                int $statusCode,
+                string $errorCode,
+                string $message,
+                bool $isJson,
+            ): Response {
+                return new Response('bound:' . $errorCode, $statusCode);
+            }
+        };
+
+        $container = $this->containerWith([ExceptionRendererInterface::class => $renderer]);
+        $response = $this->kernelWith(new RouteCollection(), $container)->handle(new ServerRequest('GET', '/nope'));
+
+        self::assertSame(404, $response->getStatusCode());
+        self::assertSame('bound:not_found', (string) $response->getBody());
+    }
+
     private function kernel(RouteCollection $routes): HttpKernel
+    {
+        return $this->kernelWith($routes, $this->container());
+    }
+
+    private function kernelWith(RouteCollection $routes, ContainerInterface $container): HttpKernel
     {
         $psr17 = new Psr17Factory();
 
         return new HttpKernel(
-            $this->container(),
+            $container,
             $routes,
             new RequestContext(),
             new HttpFoundationFactory(),
             new PsrHttpFactory($psr17, $psr17, $psr17, $psr17),
         );
+    }
+
+    /**
+     * @param array<string, object> $services
+     */
+    private function containerWith(array $services): ContainerInterface
+    {
+        return new class($services) implements ContainerInterface {
+            /** @param array<string, object> $services */
+            public function __construct(private array $services) {}
+
+            public function get(string $id): mixed
+            {
+                return $this->services[$id] ?? throw new RuntimeException('service not found: ' . $id);
+            }
+
+            public function has(string $id): bool
+            {
+                return isset($this->services[$id]);
+            }
+        };
     }
 
     private function container(): ContainerInterface

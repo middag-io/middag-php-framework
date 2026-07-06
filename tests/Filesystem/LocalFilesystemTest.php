@@ -117,6 +117,80 @@ final class LocalFilesystemTest extends TestCase
         $this->fs->read('../../etc/hosts');
     }
 
+    public function testNullByteInPathIsRejected(): void
+    {
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->fs->read("bad\0.txt");
+    }
+
+    public function testDotSegmentsAreNormalisedAway(): void
+    {
+        $this->fs->write('dir/./note.txt', 'x');
+
+        // The `.` segment collapses, so both paths resolve to the same file.
+        self::assertSame('x', $this->fs->read('dir/note.txt'));
+    }
+
+    public function testWriteFailsWhenParentPathIsAFile(): void
+    {
+        $this->fs->write('blocker', 'x');
+
+        // `blocker` is a file, so the parent directory for `blocker/child.txt`
+        // cannot be created.
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('could not be created');
+        $this->fs->write('blocker/child.txt', 'y');
+    }
+
+    public function testWriteFailsWhenTargetIsADirectory(): void
+    {
+        mkdir($this->root . '/adir', 0o775, true);
+
+        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectExceptionMessage('could not be written');
+        $this->fs->write('adir', 'x');
+    }
+
+    public function testReadFailsWhenFileIsUnreadable(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            self::markTestSkipped('root bypasses file permissions');
+        }
+
+        $this->fs->write('secret.txt', 'x');
+        chmod($this->root . '/secret.txt', 0o000);
+
+        try {
+            $this->fs->read('secret.txt');
+            self::fail('Expected MiddagInfrastructureException');
+        } catch (MiddagInfrastructureException $middagInfrastructureException) {
+            self::assertStringContainsString('could not be read', $middagInfrastructureException->getMessage());
+        } finally {
+            chmod($this->root . '/secret.txt', 0o644);
+        }
+    }
+
+    public function testDeleteFailsWhenUnlinkIsDenied(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            self::markTestSkipped('root bypasses file permissions');
+        }
+
+        mkdir($this->root . '/ro', 0o775, true);
+        file_put_contents($this->root . '/ro/f.txt', 'x');
+        // Read+execute but not write on the parent → unlink is denied.
+        chmod($this->root . '/ro', 0o555);
+
+        try {
+            $this->fs->delete('ro/f.txt');
+            self::fail('Expected MiddagInfrastructureException');
+        } catch (MiddagInfrastructureException $middagInfrastructureException) {
+            self::assertStringContainsString('could not be deleted', $middagInfrastructureException->getMessage());
+        } finally {
+            chmod($this->root . '/ro', 0o775);
+        }
+    }
+
     private function removeTree(string $dir): void
     {
         if (!is_dir($dir)) {

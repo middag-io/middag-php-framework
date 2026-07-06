@@ -15,6 +15,7 @@ namespace Middag\Framework\Tests\Form\Renderer;
 use Middag\Framework\Form\Field\TextField;
 use Middag\Framework\Form\Renderer\InertiaFieldMapper;
 use Middag\Framework\Form\Renderer\InertiaRenderer;
+use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Block\Section;
 use Middag\Ui\Form\Contract\FormInterface;
 use Middag\Ui\Form\FormState;
@@ -99,6 +100,35 @@ final class InertiaRendererTest extends TestCase
         $output = (new InertiaRenderer(new InertiaFieldMapper()))->render($form);
 
         self::assertSame(['greeting' => 'hello', 'title' => 'Hi'], $output->props['values']);
+    }
+
+    #[Test]
+    public function unknownLayoutElementSerializesAsAGenericGroupNode(): void
+    {
+        // A layout element that is neither Section nor Group falls through to the
+        // generic LayoutElementInterface branch and is emitted as a group node.
+        $custom = new class implements LayoutElementInterface {
+            public function id(): string
+            {
+                return 'custom';
+            }
+
+            /** @return array<int, TextField> */
+            public function children(): array
+            {
+                return [new TextField('inner')];
+            }
+        };
+
+        $form = new RendererFakeForm([$custom], new FormState([], [], false));
+
+        $schema = (new InertiaRenderer(new InertiaFieldMapper()))->render($form)->props['schema'];
+
+        self::assertCount(1, $schema);
+        self::assertSame('group', $schema[0]['kind']);
+        self::assertSame('custom', $schema[0]['id']);
+        self::assertCount(1, $schema[0]['children']);
+        self::assertSame('field', $schema[0]['children'][0]['kind']);
     }
 }
 

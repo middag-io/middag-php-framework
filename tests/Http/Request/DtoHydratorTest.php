@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Http\Request;
 
+use DateTimeImmutable;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Request\DtoHydrator;
 use Middag\Framework\Tests\Http\Fixture\ValidatedTicketDto;
@@ -138,7 +139,7 @@ final class DtoHydratorTest extends TestCase
 
             public int|string $unionTyped = 0;     // union type is not a ReflectionNamedType → coercion skips it
 
-            public ?\DateTimeImmutable $at = null;  // non-builtin type → coercion skips it
+            public ?DateTimeImmutable $at = null;  // non-builtin type → coercion skips it
         };
 
         $dto = (new DtoHydrator())->hydrate($target::class, [

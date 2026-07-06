@@ -17,6 +17,7 @@ use Middag\Framework\Kernel\HostContext;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 /**
  * @internal
@@ -71,6 +72,22 @@ final class HostContextTest extends TestCase
         self::assertNull(HostContext::get()?->basePath());
         self::assertSame('example', HostContext::get()?->componentName());
         self::assertSame('1.2.3', HostContext::get()?->assetVersion());
+    }
+
+    #[Test]
+    public function constructorIsPrivateToEnforceTheStaticRegistryPattern(): void
+    {
+        $reflection = new ReflectionClass(HostContext::class);
+        $constructor = $reflection->getConstructor();
+
+        self::assertNotNull($constructor);
+        self::assertTrue($constructor->isPrivate(), 'HostContext is a static registry — no instances');
+
+        // Invoke the (empty) private constructor via reflection purely to prove
+        // it is inert; instances are never used at runtime.
+        $instance = $reflection->newInstanceWithoutConstructor();
+        $constructor->invoke($instance);
+        self::assertInstanceOf(HostContext::class, $instance);
     }
 
     private function fakeContext(): HostComponentContextInterface

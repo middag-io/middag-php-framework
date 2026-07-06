@@ -113,7 +113,7 @@ final class FieldSchemaReaderTest extends TestCase
             public ?DateTimeImmutable $when = null;
 
             #[Field]
-            public $loose = null; // no PHP type → falls back to TEXT
+            public $loose; // no PHP type → falls back to TEXT
         };
 
         $types = [];

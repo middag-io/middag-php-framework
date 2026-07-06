@@ -62,8 +62,8 @@ final class RouteLoaderTest extends TestCase
         $container = $this->container();
 
         $routes = new RouteCollection();
-        $loader->loadRoutes($routes, $container, null);
-        $loader->loadRoutes($routes, $container, 'Totally\\Missing\\Controller');
+        $loader->loadRoutes($routes, $container);
+        $loader->loadRoutes($routes, $container, 'Totally\Missing\Controller');
         $loader->loadRoutes($routes, $container, AbstractModule::class);
 
         $this->assertCount(0, $routes, 'null, missing and abstract classes register no routes');
