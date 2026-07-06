@@ -76,6 +76,39 @@ final class ModelQueryTest extends TestCase
         Task::query()->nope();
     }
 
+    #[Test]
+    public function whereForwardsEveryArity(): void
+    {
+        // 1-arg closure, 3-arg operator, 4-arg boolean — each match arm.
+        self::assertSame(1, Task::query()->where(static fn (QueryBuilder $q): QueryBuilder => $q->where('status', 'done'))->count());
+        self::assertSame(2, Task::query()->where('priority', '>', 2)->count());
+        self::assertSame(2, Task::query()->where('id', 1)->where('id', '=', 3, 'or')->count());
+    }
+
+    #[Test]
+    public function orWhereForwardsClosureAndThreeArg(): void
+    {
+        self::assertSame(2, Task::query()->where('id', 1)->orWhere(static fn (QueryBuilder $q): QueryBuilder => $q->where('status', 'done'))->count());
+        self::assertSame(2, Task::query()->where('id', 3)->orWhere('priority', '>', 4)->count());
+    }
+
+    #[Test]
+    public function orWhereColumnThreeArgComparesColumns(): void
+    {
+        // tasks where id > owner_id: id2(owner1) and id3(owner2).
+        self::assertSame(2, Task::query()->where('id', 999)->orWhereColumn('id', '>', 'owner_id')->count());
+    }
+
+    #[Test]
+    public function firstEagerLoadsQueuedRelations(): void
+    {
+        $writer = Writer::query()->orderBy('id')->with('books')->first();
+
+        self::assertNotNull($writer);
+        self::assertTrue($writer->relationLoaded('books'));
+        self::assertCount(2, $writer->getRelation('books'));
+    }
+
     // ---- where family ------------------------------------------------------
 
     #[Test]

@@ -777,6 +777,39 @@ final class QueryBuilderTest extends TestCase
         self::assertNull($this->seededUsers()->where('id', 999)->avg('age'));
     }
 
+    public function testSumMinMaxAggregate(): void
+    {
+        $builder = $this->seededUsers();
+
+        self::assertSame(114, (int) $builder->sum('age'));
+        self::assertSame(28, (int) $builder->min('age'));
+        self::assertSame(50, (int) $builder->max('age'));
+    }
+
+    public function testUpdateOrInsertOnMatchWithNoValuesReturnsTrue(): void
+    {
+        // Existing row + empty $values → the early "nothing to change" true path.
+        self::assertTrue($this->seededUsers()->updateOrInsert(['name' => 'Ada']));
+    }
+
+    public function testUpsertWithNoRowsIsANoOp(): void
+    {
+        self::assertSame(0, $this->seededUsers()->upsert([], 'id'));
+    }
+
+    public function testHavingAndOrHavingTwoArgShortcut(): void
+    {
+        [$sql, $bindings] = QueryBuilder::for('users')
+            ->select('active', 'COUNT(*) AS c')
+            ->groupBy('active')
+            ->having('c', 1)
+            ->orHaving('c', 2)
+            ->compile();
+
+        self::assertStringContainsString('HAVING c = ? OR c = ?', $sql);
+        self::assertSame([1, 2], $bindings);
+    }
+
     private function seededUsers(): QueryBuilder
     {
         $pdo = new PDO('sqlite::memory:');
