@@ -193,6 +193,249 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
         self::assertStringContainsString('PRIMARY KEY (id)', $connection->queries[0]);
     }
 
+    #[Test]
+    public function dropTableEmitsIfExists(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->dropTable('demo');
+
+        self::assertSame(['DROP TABLE IF EXISTS demo'], $connection->queries);
+    }
+
+    #[Test]
+    public function addColumnEmitsAlterTableAddColumn(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->addColumn('demo', ['name' => 'slug', 'type' => 'varchar', 'length' => 64]);
+
+        self::assertStringStartsWith('ALTER TABLE demo ADD COLUMN slug VARCHAR(64)', $connection->queries[0]);
+    }
+
+    #[Test]
+    public function dropColumnEmitsAlterTableDropColumn(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->dropColumn('demo', 'slug');
+
+        self::assertSame(['ALTER TABLE demo DROP COLUMN slug'], $connection->queries);
+    }
+
+    #[Test]
+    public function addIndexEmitsCreateIndex(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->addIndex('demo', ['name' => 'idx_slug', 'fields' => ['slug']]);
+
+        self::assertSame(['CREATE INDEX idx_slug ON demo (slug)'], $connection->queries);
+    }
+
+    #[Test]
+    public function addUniqueIndexEmitsUniqueKeyword(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->addIndex('demo', ['name' => 'uq_slug', 'columns' => ['slug'], 'unique' => true]);
+
+        self::assertSame(['CREATE UNIQUE INDEX uq_slug ON demo (slug)'], $connection->queries);
+    }
+
+    #[Test]
+    public function mapTypeTranslatesEveryDescriptorType(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->createTable([
+            'name' => 'types',
+            'columns' => [
+                ['name' => 'c_int', 'type' => 'int'],
+                ['name' => 'c_int_len', 'type' => 'integer', 'length' => 11],
+                ['name' => 'c_bigint', 'type' => 'bigint'],
+                ['name' => 'c_smallint', 'type' => 'smallint'],
+                ['name' => 'c_char', 'type' => 'char'],
+                ['name' => 'c_varchar', 'type' => 'varchar', 'length' => 64],
+                ['name' => 'c_text', 'type' => 'text'],
+                ['name' => 'c_longtext', 'type' => 'longtext'],
+                ['name' => 'c_float', 'type' => 'float'],
+                ['name' => 'c_number', 'type' => 'number'],
+                ['name' => 'c_decimal', 'type' => 'decimal'],
+                ['name' => 'c_numeric', 'type' => 'numeric', 'length' => 8, 'decimals' => 4],
+                ['name' => 'c_datetime', 'type' => 'datetime'],
+                ['name' => 'c_date', 'type' => 'date'],
+                ['name' => 'c_boolean', 'type' => 'boolean'],
+                ['name' => 'c_bool', 'type' => 'bool'],
+                ['name' => 'c_blob', 'type' => 'blob'],
+                ['name' => 'c_binary', 'type' => 'binary'],
+                ['name' => 'c_unknown', 'type' => 'weird'],
+                ['name' => 'c_untyped'],
+            ],
+        ]);
+
+        $sql = $connection->queries[0];
+        self::assertStringContainsString('c_int INT ', $sql);
+        self::assertStringContainsString('c_int_len INT(11)', $sql);
+        self::assertStringContainsString('c_bigint BIGINT', $sql);
+        self::assertStringContainsString('c_smallint SMALLINT', $sql);
+        self::assertStringContainsString('c_char VARCHAR(255)', $sql);
+        self::assertStringContainsString('c_varchar VARCHAR(64)', $sql);
+        self::assertStringContainsString('c_text TEXT', $sql);
+        self::assertStringContainsString('c_longtext TEXT', $sql);
+        self::assertStringContainsString('c_float DOUBLE', $sql);
+        self::assertStringContainsString('c_number DOUBLE', $sql);
+        self::assertStringContainsString('c_decimal DECIMAL(10,2)', $sql);
+        self::assertStringContainsString('c_numeric DECIMAL(8,4)', $sql);
+        self::assertStringContainsString('c_datetime DATETIME', $sql);
+        self::assertStringContainsString('c_date DATE', $sql);
+        self::assertStringContainsString('c_boolean TINYINT(1)', $sql);
+        self::assertStringContainsString('c_bool TINYINT(1)', $sql);
+        self::assertStringContainsString('c_blob BLOB', $sql);
+        self::assertStringContainsString('c_binary BLOB', $sql);
+        self::assertStringContainsString('c_unknown TEXT', $sql);
+        self::assertStringContainsString('c_untyped TEXT', $sql);
+    }
+
+    #[Test]
+    public function columnDdlEmitsNotNullNumericAndStringDefaultsAndAutoIncrement(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->createTable([
+            'name' => 'defaults',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true, 'default' => 99],
+                ['name' => 'status', 'type' => 'int', 'notnull' => true, 'default' => 0],
+                ['name' => 'label', 'type' => 'varchar', 'default' => "O'Brien"],
+            ],
+        ]);
+
+        $sql = $connection->queries[0];
+        // Sequence column carries AUTO_INCREMENT and ignores its default.
+        self::assertStringContainsString('id BIGINT NULL AUTO_INCREMENT', $sql);
+        self::assertStringNotContainsString('DEFAULT 99', $sql);
+        // Numeric default is emitted unquoted; NOT NULL honoured.
+        self::assertStringContainsString('status INT NOT NULL', $sql);
+        self::assertStringContainsString('DEFAULT 0', $sql);
+        // String default is quoted and escaped.
+        self::assertStringContainsString("DEFAULT 'O\\'Brien'", $sql);
+    }
+
+    #[Test]
+    public function tableExistsProbesInformationSchema(): void
+    {
+        self::assertTrue((new MysqlSchemaBuilderAdapter($this->fetchingConnection(['1' => 1])))->tableExists('demo'));
+        self::assertFalse((new MysqlSchemaBuilderAdapter($this->fetchingConnection(null)))->tableExists('demo'));
+    }
+
+    #[Test]
+    public function tableExistsFallsBackToProbeWhenInformationSchemaUnavailable(): void
+    {
+        // fetch() throws (no information_schema); the execute() probe then decides.
+        $present = new class implements ConnectionInterface {
+            public function execute(string $sql, array $params = []): int
+            {
+                return 0; // probe succeeds → table present
+            }
+
+            public function fetch(string $sql, array $params = []): ?array
+            {
+                throw new RuntimeException('no such table: information_schema.tables');
+            }
+
+            public function fetchAll(string $sql, array $params = []): array
+            {
+                return [];
+            }
+
+            public function transaction(callable $work): mixed
+            {
+                return $work();
+            }
+        };
+        self::assertTrue((new MysqlSchemaBuilderAdapter($present))->tableExists('demo'));
+
+        $absent = new class implements ConnectionInterface {
+            public function execute(string $sql, array $params = []): int
+            {
+                throw new RuntimeException('no such table: demo'); // probe fails → absent
+            }
+
+            public function fetch(string $sql, array $params = []): ?array
+            {
+                throw new RuntimeException('no such table: information_schema.tables');
+            }
+
+            public function fetchAll(string $sql, array $params = []): array
+            {
+                return [];
+            }
+
+            public function transaction(callable $work): mixed
+            {
+                return $work();
+            }
+        };
+        self::assertFalse((new MysqlSchemaBuilderAdapter($absent))->tableExists('demo'));
+    }
+
+    #[Test]
+    public function columnExistsProbesInformationSchemaAndFailsClosed(): void
+    {
+        self::assertTrue((new MysqlSchemaBuilderAdapter($this->fetchingConnection(['1' => 1])))->columnExists('demo', 'slug'));
+
+        $throwing = new class implements ConnectionInterface {
+            public function execute(string $sql, array $params = []): int
+            {
+                return 0;
+            }
+
+            public function fetch(string $sql, array $params = []): ?array
+            {
+                throw new RuntimeException('no information_schema');
+            }
+
+            public function fetchAll(string $sql, array $params = []): array
+            {
+                return [];
+            }
+
+            public function transaction(callable $work): mixed
+            {
+                return $work();
+            }
+        };
+        self::assertFalse((new MysqlSchemaBuilderAdapter($throwing))->columnExists('demo', 'slug'));
+    }
+
+    /**
+     * A connection whose fetch() returns a fixed row (or null), for the
+     * information_schema existence probes.
+     *
+     * @param null|array<string, mixed> $row
+     */
+    private function fetchingConnection(?array $row): ConnectionInterface
+    {
+        return new class($row) implements ConnectionInterface {
+            /** @param null|array<string, mixed> $row */
+            public function __construct(private readonly ?array $row) {}
+
+            public function execute(string $sql, array $params = []): int
+            {
+                return 0;
+            }
+
+            public function fetch(string $sql, array $params = []): ?array
+            {
+                return $this->row;
+            }
+
+            public function fetchAll(string $sql, array $params = []): array
+            {
+                return [];
+            }
+
+            public function transaction(callable $work): mixed
+            {
+                return $work();
+            }
+        };
+    }
+
     /**
      * @return ConnectionInterface&object{queries: string[]}
      */

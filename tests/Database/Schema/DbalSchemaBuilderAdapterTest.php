@@ -149,6 +149,62 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         ]);
     }
 
+    public function testCreateTableMapsEveryColumnTypeIncludingDecimalPrecision(): void
+    {
+        $this->adapter->createTable([
+            'name' => 'types_dbal',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'c_int', 'type' => 'int'],
+                ['name' => 'c_integer', 'type' => 'integer'],
+                ['name' => 'c_smallint', 'type' => 'smallint'],
+                ['name' => 'c_char', 'type' => 'char'],
+                ['name' => 'c_varchar', 'type' => 'varchar', 'length' => 64],
+                ['name' => 'c_text', 'type' => 'text'],
+                ['name' => 'c_longtext', 'type' => 'longtext'],
+                ['name' => 'c_float', 'type' => 'float'],
+                ['name' => 'c_number', 'type' => 'number'],
+                ['name' => 'c_decimal', 'type' => 'decimal'],
+                ['name' => 'c_numeric', 'type' => 'numeric', 'length' => 8, 'decimals' => 4],
+                ['name' => 'c_datetime', 'type' => 'datetime'],
+                ['name' => 'c_date', 'type' => 'date'],
+                ['name' => 'c_boolean', 'type' => 'boolean'],
+                ['name' => 'c_bool', 'type' => 'bool'],
+                ['name' => 'c_blob', 'type' => 'blob'],
+                ['name' => 'c_binary', 'type' => 'binary'],
+                ['name' => 'c_unknown', 'type' => 'weird'],
+                ['name' => 'c_untyped'],
+            ],
+        ]);
+
+        $table = $this->connection->createSchemaManager()->introspectTable('types_dbal');
+        foreach (['c_int', 'c_smallint', 'c_char', 'c_decimal', 'c_numeric', 'c_datetime', 'c_boolean', 'c_blob', 'c_unknown', 'c_untyped'] as $column) {
+            self::assertTrue($table->hasColumn($column), 'missing column ' . $column);
+        }
+    }
+
+    public function testDropColumnIsNoOpWhenColumnAbsent(): void
+    {
+        $this->adapter->createTable($this->descriptor());
+
+        // No such column → early return, no exception, table untouched.
+        $this->adapter->dropColumn('middag_widget', 'ghost');
+
+        self::assertTrue($this->adapter->columnExists('middag_widget', 'title'));
+    }
+
+    public function testDropIndexIsNoOpWhenIndexAbsent(): void
+    {
+        $this->adapter->createTable($this->descriptor());
+
+        // No such index → early return, no exception.
+        $this->adapter->dropIndex('middag_widget', 'idx_missing');
+
+        self::assertTrue(
+            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('middag_widget_idx_widget_title'),
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */
