@@ -81,12 +81,13 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
                 ['name' => 'slug', 'type' => 'varchar', 'length' => 64],
             ],
             'indexes' => [
-                ['name' => 'idx_idx_demo_slug', 'columns' => ['slug'], 'unique' => true],
+                // Table-local name; the adapter qualifies it with the table.
+                ['name' => 'slug', 'columns' => ['slug'], 'unique' => true],
             ],
         ]);
 
         $names = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'index'")->fetchAll(PDO::FETCH_COLUMN);
-        self::assertContains('idx_idx_demo_slug', $names);
+        self::assertContains('idx_demo_slug', $names);
     }
 
     public function testAddIndexToleratesFieldsKey(): void
@@ -101,10 +102,37 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
             ],
         ]);
         // MySQL-style 'fields' key must work on the SQLite adapter too.
-        $adapter->addIndex('tol', ['name' => 'idx_tol_a', 'fields' => ['a']]);
+        $adapter->addIndex('tol', ['name' => 'active', 'fields' => ['a']]);
 
         $names = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'index'")->fetchAll(PDO::FETCH_COLUMN);
-        self::assertContains('idx_tol_a', $names);
+        self::assertContains('tol_active', $names);
+    }
+
+    public function testDeclaredIndexNamesAreQualifiedPerTableToAvoidCollision(): void
+    {
+        $pdo = $this->pdo();
+        $adapter = new SqliteSchemaBuilderAdapter(new PdoConnectionAdapter($pdo));
+
+        // Two tables declare an index with the SAME bare name ('status') —
+        // idiomatic for MySQL/Moodle. SQLite namespaces indexes per schema, so
+        // without qualification the second CREATE INDEX IF NOT EXISTS would
+        // silently no-op and the second table would lose its index.
+        foreach (['orders', 'invoices'] as $table) {
+            $adapter->createTable([
+                'name' => $table,
+                'columns' => [
+                    ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                    ['name' => 'status', 'type' => 'int'],
+                ],
+                'indexes' => [
+                    ['name' => 'status', 'columns' => ['status']],
+                ],
+            ]);
+        }
+
+        $names = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'index'")->fetchAll(PDO::FETCH_COLUMN);
+        self::assertContains('orders_status', $names);
+        self::assertContains('invoices_status', $names);
     }
 
     public function testCreateTableEmitsCompositePrimaryKeyFromKeys(): void
