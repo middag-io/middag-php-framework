@@ -66,6 +66,15 @@ final class RelationshipsTest extends TestCase
         Model::setConnectionResolver(null);
     }
 
+    public function testRelationsShortCircuitWhenTheParentKeyIsMissing(): void
+    {
+        // An unsaved parent has no key, so each relation resolves to its empty
+        // value without querying (the null-key guard in getResults()).
+        self::assertNull((new Writer())->bio);
+        self::assertSame([], (new Writer())->books);
+        self::assertNull((new Book())->writer);
+    }
+
     public function testHasManyLazy(): void
     {
         $writer = Writer::findOrFail(1);

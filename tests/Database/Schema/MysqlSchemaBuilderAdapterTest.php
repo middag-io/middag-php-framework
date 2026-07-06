@@ -135,6 +135,20 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
     }
 
     #[Test]
+    public function nonArrayKeyEntriesAreSkippedWhenResolvingThePrimaryKey(): void
+    {
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->createTable([
+            'name' => 't',
+            'columns' => [['name' => 'a', 'type' => 'int', 'notnull' => true]],
+            // A malformed (non-array) keys entry must be skipped, not fatal.
+            'keys' => ['garbage', ['type' => 'primary', 'fields' => ['a']]],
+        ]);
+
+        self::assertStringContainsString('PRIMARY KEY (a)', $connection->queries[0]);
+    }
+
+    #[Test]
     public function untypedKeyEntryIsNotEmittedAsPrimaryKey(): void
     {
         // A foreign-key-shaped entry WITHOUT an explicit type must never be

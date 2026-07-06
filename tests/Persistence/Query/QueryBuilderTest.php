@@ -786,6 +786,45 @@ final class QueryBuilderTest extends TestCase
         self::assertSame(50, (int) $builder->max('age'));
     }
 
+    public function testAvgReturnsAFloat(): void
+    {
+        // (36 + 50 + 28) / 3 = 38.0 — the string-numeric float branch of the
+        // aggregate coercion.
+        self::assertEqualsWithDelta(38.0, $this->seededUsers()->avg('age'), 0.001);
+    }
+
+    public function testOldestOrdersAscending(): void
+    {
+        self::assertSame('SELECT * FROM users ORDER BY created asc', QueryBuilder::for('users')->oldest('created')->toSql());
+    }
+
+    public function testGetTableExposesTheTable(): void
+    {
+        self::assertSame('users', QueryBuilder::for('users')->getTable());
+    }
+
+    public function testChunkStopsImmediatelyOnAnEmptyResult(): void
+    {
+        $called = false;
+        $result = $this->seededUsers()->where('id', 999)->chunk(2, function () use (&$called): bool {
+            $called = true;
+
+            return true;
+        });
+
+        self::assertTrue($result);
+        self::assertFalse($called, 'the callback never runs when the first page is empty');
+    }
+
+    public function testWhereClosureMustReturnTheBuilder(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        // A where-group closure that does not return the builder is rejected.
+        QueryBuilder::for('users')->where(static function (QueryBuilder $q): void {
+            $q->where('a', 1);
+        });
+    }
+
     public function testUpdateOrInsertOnMatchWithNoValuesReturnsTrue(): void
     {
         // Existing row + empty $values → the early "nothing to change" true path.

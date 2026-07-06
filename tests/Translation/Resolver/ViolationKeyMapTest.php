@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validation;
 
 /**
@@ -45,5 +46,15 @@ final class ViolationKeyMapTest extends TestCase
         self::assertSame('validation.length.too_short', $map->keyFor($validator->validate('a', [new Assert\Length(min: 3)])[0]));
         self::assertSame('validation.length.too_long', $map->keyFor($validator->validate('abcd', [new Assert\Length(max: 2)])[0]));
         self::assertSame('validation.range.too_low', $map->keyFor($validator->validate(1, [new Assert\Range(min: 5)])[0]));
+    }
+
+    #[Test]
+    public function fallsBackWhenTheViolationCarriesNoConstraint(): void
+    {
+        $map = new ViolationKeyMap();
+        // A raw violation with no attached constraint (constraint arg omitted → null).
+        $violation = new ConstraintViolation('bad', null, [], null, null, null);
+
+        self::assertSame('validation.invalid', $map->keyFor($violation));
     }
 }

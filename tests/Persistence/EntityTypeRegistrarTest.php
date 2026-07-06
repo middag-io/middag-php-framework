@@ -17,6 +17,7 @@ use Middag\Framework\Persistence\Contract\EntityTypeRegistryInterface;
 use Middag\Framework\Persistence\Entity\DefaultEntityType;
 use Middag\Framework\Persistence\Entity\EntityTypeRegistry;
 use Middag\Framework\Persistence\Loader\EntityTypeRegistrar;
+use Middag\Framework\Tests\Persistence\Fixture\AbstractEntityType;
 use Middag\Framework\Tests\Persistence\Fixture\AttributeEntityType;
 use Middag\Framework\Tests\Persistence\Fixture\InterfaceEntityType;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -52,6 +53,16 @@ final class EntityTypeRegistrarTest extends TestCase
         self::assertSame(AttributeEntityType::class, $registry->get('widget')->getEntityClass());
         self::assertSame('Widget', $registry->get('widget')->getLabel());
         self::assertSame('Gadget', $registry->get('gadget')->getLabel());
+    }
+
+    public function testRegisterSkipsNonInstantiableEntityTypes(): void
+    {
+        $registry = new EntityTypeRegistry();
+
+        // Implements the contract but is abstract → not instantiable → skipped.
+        (new EntityTypeRegistrar($registry))->register([AbstractEntityType::class]);
+
+        self::assertCount(0, $registry->all());
     }
 
     public function testDefaultEntityTypeLabelFallsBackToKey(): void

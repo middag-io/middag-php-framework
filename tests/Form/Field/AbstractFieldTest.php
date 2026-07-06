@@ -37,6 +37,12 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 final class AbstractFieldTest extends TestCase
 {
     #[Test]
+    public function nameExposesTheFieldName(): void
+    {
+        self::assertSame('username', (new TextField('username'))->name());
+    }
+
+    #[Test]
     public function toDefinitionBuildsTypedConstraintsAndTranslatableLabels(): void
     {
         $def = (new TextField('username'))
