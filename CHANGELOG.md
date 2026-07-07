@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.3.0](https://github.com/middag-io/middag-php-framework/compare/v1.2.1...v1.3.0) (2026-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **exception:** MiddagLifecycleViolationException is no longer @api.
+
+### Features
+
+* **http:** add PSR-18 HttpClientFactory ([@api](https://github.com/api)) [D-12/LB-2-01] ([3d07074](https://github.com/middag-io/middag-php-framework/commit/3d070740d077abfdefd362e948c13c749d8c0917))
+* **http:** forward rich #[Auth] requirements to opt-in controllers [LB-2-04] ([23c0aba](https://github.com/middag-io/middag-php-framework/commit/23c0aba46bd013fd1578d3f3f207745427feb187))
+* **http:** rich capability requirements for #[Auth] [N-03/LB-2-03] ([9dbcf9d](https://github.com/middag-io/middag-php-framework/commit/9dbcf9d4b3b15b34565c1e6afe55c43bcbf1d582))
+
+
+### Refactoring
+
+* **exception:** MiddagLifecycleViolationException [@api](https://github.com/api) -&gt; [@internal](https://github.com/internal) [D-17b/LB-3-03] ([f42339e](https://github.com/middag-io/middag-php-framework/commit/f42339e7e69f129325091095f06e8fe25e8c1355))
+
+
+### Documentation
+
+* framework CLAUDE.md — drop SortDirection, add DDD/util split note [LB-0-14/LB-0-06] ([84223d4](https://github.com/middag-io/middag-php-framework/commit/84223d4d637fa0e1adbf411b53e3e6140f56a672))
+
+
+### Miscellaneous
+
+* **dist:** export-ignore /bin in the published archive ([3a78725](https://github.com/middag-io/middag-php-framework/commit/3a78725fa8247f6a886caeffda0d1af74e7ee654))
+* release 1.3.0 ([ccaa731](https://github.com/middag-io/middag-php-framework/commit/ccaa7312c9cface31e246c46a999f305885b8514))
+
 ## [1.2.1](https://github.com/middag-io/middag-php-framework/compare/v1.2.0...v1.2.1) (2026-07-07)
 
 
