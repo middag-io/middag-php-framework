@@ -89,7 +89,7 @@ Generic plumbing, organised by concern (each concern owns its own `Contract/`):
 | Concern | What it does |
 |---|---|
 | **Kernel** | Symfony DI container booted from a `BootstrapInterface`, service auto-discovery, `AbstractModule`, `AbstractFacade`, and a per-instance WordPress-style `HookManager`. |
-| **Http** | PSR-15 `HttpKernel`, `StandaloneKernel`, attribute routing (`#[Route]`), declarative auth (`#[Auth]`), per-route middleware (`#[Middleware]`), `AbstractController` / `AbstractApiController`, and `AbstractFormRequest`. |
+| **Http** | PSR-15 `HttpKernel`, `StandaloneKernel`, attribute routing (`#[Route]`), declarative auth (`#[Auth]` with rich `CapabilityRequirement` support), per-route middleware (`#[Middleware]`), `AbstractController` / `AbstractApiController`, and `AbstractFormRequest`. |
 | **Inertia** | Full Inertia v3 protocol: lazy (`optional`), deferred (`defer`), merge (`merge` / `deepMerge`), partial reloads and asset versioning. |
 | **Form** | `AbstractForm`, `FormValidator`, a set of field types (text, select, date, file, and more), and an Inertia renderer. |
 | **Persistence** | An immutable `QueryBuilder`, an active-record `Model`, `AbstractRepository` / `AbstractMapper`, and `Page` pagination. |
