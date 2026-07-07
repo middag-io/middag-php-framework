@@ -10,12 +10,12 @@ on:
 # Self-contained release-please workflow.
 #
 # NOTE (ADR-006 deviation): the org pattern is a thin wrapper over the reusable
-# workflows in middag-io/.github-private. That wrapper fails to start on this
-# repo with "error parsing called workflow ... release-please.yml@main", even
-# though the reusable file is valid YAML and works for sibling repos. Until that
-# reusable-call anomaly is root-caused, this repo inlines the release-please +
-# sync-develop steps so releases are not blocked. Revert to the wrapper once the
-# reusable call parses here again.
+# workflows in middag-io/.github-private. A PUBLIC repository cannot consume
+# reusable workflows from a PRIVATE repository, so the wrapper fails to start
+# here with "error parsing called workflow ... release-please.yml@main". Until
+# the reusable workflows are published to a PUBLIC repo (e.g. middag-io/.github),
+# this repo inlines release-please + sync-develop so releases are not blocked.
+# Matches the same fix applied to middag-php-ui/moodle/wordpress.
 permissions:
   contents: write
   pull-requests: write
