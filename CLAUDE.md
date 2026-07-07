@@ -66,12 +66,12 @@ is intentional. Each concern owns its own `Contract/` — there is **no** global
 | `Database/`      | connection abstraction (`ConnectionAdapterInterface`) + SQL dialect + schema builder/migrations; OSS default `PdoConnectionAdapter`                               |
 | `Persistence/`   | `AbstractRepository`/`AbstractMapper` + the **immutable** QueryBuilder + the `Model` active record + `Page` (pagination). |
 | `Form/`          | `AbstractForm` + `FormValidator` + field types + the Inertia renderer (an impl of `Middag\Ui\Form\FormRendererInterface`)                                  |
-| `Http/`          | `HttpKernel` (PSR-15) + `StandaloneKernel` + Inertia (v3 protocol) + FormRequest + route middleware (`#[Middleware]`) + the auth gate (`#[Auth]`)          |
+| `Http/`          | `HttpKernel` (PSR-15) + `StandaloneKernel` + Inertia (v3 protocol) + FormRequest + route middleware (`#[Middleware]`) + the auth gate (`#[Auth]` with rich `CapabilityRequirement`) |
 | `Kernel/`        | `ContainerFactory` (boot/DI) + `ServiceProvider`/loaders (auto-discovery) + `AbstractModule` + `AbstractFacade` + `HookManager` (per-instance)             |
 | `Logging/`       | `LoggerFactory` (Monolog) per module/channel + `RotatingStreamHandler`                                                                                     |
 | `Observability/` | `ErrorReporterInterface` port (`NullErrorReporter`/`SentryErrorReporter`) + `ProfileCollectorInterface` profiling sink (single `bus`/`hook`/`query` timeline) |
 | `Mail/`          | `MailerInterface` port + `Mail`/`Address`/`Attachment` value objects (`cid:` embeds); OSS default `NullMailer`; adapters map onto the host sender          |
-| `Shared/`        | cross-cutting: DTOs, enums (`Operator`/`SortDirection`/`DebugMode`), utils, `Attribute/TrustedOutput` (an output-trust marker; behaviour in the host adapter) |
+| `Shared/`        | cross-cutting: DTOs, enums (`Operator`/`DebugMode`), utils, `Attribute/TrustedOutput` (an output-trust marker; behaviour in the host adapter) |
 | `Translation/`   | the i18n contract (`TranslatorInterface`) + OSS default `FallbackTranslator` (standalone); adapters wrap `get_string`/`__`                                 |
 | `Exception/`     | a typed, status-mapped hierarchy consumed by `HttpKernel::mapThrowable`                                                                                    |
 
@@ -90,6 +90,17 @@ The bridge contracts adapters implement (with their OSS defaults) and the locked
 decisions (D1–D6) live in [`docs/architecture.md`](docs/architecture.md) §5 and §8. In short: the
 framework defines interfaces and adapters implement them; the QueryBuilder is immutable (execution is
 the adapter's, via `ConnectionAdapterInterface`); there is one sync bus + async via Messenger.
+
+## DDD/util ownership split
+
+The framework keeps only generic contracts and plumbing. Domain base implementations and MIDDAG
+vocabulary live downstream:
+
+- `Persistence\Contract\EntityInterface` stays here as the generic persistence contract.
+- `AbstractEntity`, `AbstractValueObject`, `Shared\Util\Format` and `Shared\Util\Validator` live in
+  `middag-io/core`.
+- Legacy/speculative `abstract_service`, faker helpers and generic validator packages are not part of
+  the framework surface.
 
 ## How to work here
 
