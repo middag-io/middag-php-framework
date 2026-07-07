@@ -14,6 +14,9 @@ namespace Middag\Framework\Tests\Bus\Attribute;
 
 use Attribute;
 use Middag\Framework\Http\Attribute\Auth;
+use Middag\Framework\Http\Auth\CapabilityReference;
+use Middag\Framework\Http\Auth\CapabilityRequirement;
+use Middag\Framework\Http\Contract\CapabilityDefinitionInterface;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -103,6 +106,54 @@ final class AuthTest extends TestCase
 
         $this->assertSame($capabilities, $auth->capabilities);
         $this->assertCount(3, $auth->capabilities);
+        $this->assertCount(3, $auth->requirements);
+        $this->assertContainsOnlyInstancesOf(CapabilityRequirement::class, $auth->requirements);
+    }
+
+    #[Test]
+    public function capabilitiesAcceptsReferencesWithoutLosingLegacyKeys(): void
+    {
+        $auth = new Auth(capabilities: [new CapabilityReference('mod/helico:manage', host: 'moodle')]);
+
+        $this->assertSame(['mod/helico:manage'], $auth->capabilities);
+        $this->assertSame('moodle', $auth->requirements[0]->reference?->host);
+    }
+
+    #[Test]
+    public function requirementsAcceptDefinitionObjectsWithOptions(): void
+    {
+        $definition = new AuthTestCapabilityDefinition();
+
+        $auth = new Auth(requirements: [$definition]);
+
+        $this->assertSame(['local/foo:configure'], $auth->capabilities);
+        $this->assertSame($definition, $auth->requirements[0]->definition);
+        $this->assertSame([
+            'captype' => 'write',
+            'contextlevel' => 'course',
+        ], $auth->requirements[0]->options);
+    }
+
+    #[Test]
+    public function requirementsPreserveDefinitionClassStrings(): void
+    {
+        $auth = new Auth(requirements: [AuthTestCapabilityDefinition::class]);
+
+        $this->assertSame([], $auth->capabilities);
+        $this->assertSame(AuthTestCapabilityDefinition::class, $auth->requirements[0]->definitionClass);
+    }
+
+    #[Test]
+    public function requirementsAcceptNativeCapabilityStrings(): void
+    {
+        // A bare native host capability (e.g. Moodle's 'moodle/site:config')
+        // resolves to a CapabilityReference, not a definition class — so
+        // #[Auth(requirements: ['moodle/site:config'])] works alongside class refs.
+        $auth = new Auth(requirements: ['moodle/site:config']);
+
+        $this->assertSame(['moodle/site:config'], $auth->capabilities);
+        $this->assertSame('moodle/site:config', $auth->requirements[0]->reference?->key);
+        $this->assertNull($auth->requirements[0]->definitionClass);
     }
 
     #[Test]
@@ -117,5 +168,24 @@ final class AuthTest extends TestCase
     {
         $auth = new Auth();
         $this->assertSame(0, $auth->instanceId);
+    }
+}
+
+/**
+ * @internal
+ */
+final class AuthTestCapabilityDefinition implements CapabilityDefinitionInterface
+{
+    public function capabilityReference(): CapabilityReference
+    {
+        return new CapabilityReference('local/foo:configure', host: 'moodle');
+    }
+
+    public function capabilityOptions(): array
+    {
+        return [
+            'captype' => 'write',
+            'contextlevel' => 'course',
+        ];
     }
 }

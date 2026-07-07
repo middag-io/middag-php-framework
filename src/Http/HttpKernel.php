@@ -18,6 +18,7 @@ use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\Attribute\Auth;
 use Middag\Framework\Http\Attribute\Middleware;
 use Middag\Framework\Http\Contract\AuthenticatorInterface;
+use Middag\Framework\Http\Contract\CapabilityRequirementAwareInterface;
 use Middag\Framework\Http\Contract\ControllerInterface;
 use Middag\Framework\Http\Contract\ExceptionRendererInterface;
 use Middag\Framework\Http\Contract\HttpKernelInterface;
@@ -166,6 +167,14 @@ class HttpKernel implements HttpKernelInterface
 
             if ($auth->capabilities !== []) {
                 $controller->setRequireCapabilities($auth->capabilities, $auth->context, $auth->instanceId);
+            }
+
+            // Rich surface: forward the full CapabilityRequirement list to
+            // adapters that opt in, so per-requirement context/host/definition
+            // survives instead of being flattened to the class-wide context.
+            // The legacy call above stays for adapters that do not implement it.
+            if ($auth->requirements !== [] && $controller instanceof CapabilityRequirementAwareInterface) {
+                $controller->setRequireCapabilityRequirements($auth->requirements);
             }
         }
 
