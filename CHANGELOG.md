@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.1](https://github.com/middag-io/middag-php-framework/compare/v1.2.0...v1.2.1) (2026-07-07)
+
+
+### Miscellaneous
+
+* **ci:** document the real reusable-workflow limitation ([1410fdc](https://github.com/middag-io/middag-php-framework/commit/1410fdc0d5458b63136665ce682242855f78ded0))
+* release 1.2.1 ([531127b](https://github.com/middag-io/middag-php-framework/commit/531127b07c636bc335e050988ff66f54215215af))
+* release 1.2.1 ([adc072f](https://github.com/middag-io/middag-php-framework/commit/adc072f58f0c7c30c3198eafa72cb6450dd1c355))
+* widen PSR constraints and pin ui to ^v1.2.3 ([246782c](https://github.com/middag-io/middag-php-framework/commit/246782c983fa6f5c4ead74bf73c97c5c7dd9e935))
+
 ## [1.2.0](https://github.com/middag-io/middag-php-framework/compare/v1.1.2...v1.2.0) (2026-07-06)
 
 
