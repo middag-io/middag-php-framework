@@ -21,6 +21,14 @@ The public surface is therefore the set of `@api`-annotated types: the
 interfaces under each concern's `Contract/` sub-namespace, plus the exported
 `@api` classes (value objects, OSS default implementations, base classes).
 
+## Scope exclusions
+
+The framework intentionally does not ship MIDDAG domain base classes or utility
+bags. `Persistence\Contract\EntityInterface` is the generic contract here;
+`AbstractEntity`, `AbstractValueObject`, MIDDAG formatting helpers and validators
+belong to `middag-io/core`. Legacy/speculative `abstract_service`, faker helpers
+and generic validator packages are not supported framework API.
+
 ## How releases are cut
 
 Releases are cut **exclusively** by
@@ -59,7 +67,7 @@ sign-off.
 
 ## Public surface consumed downstream
 
-The following twelve symbols were promoted from `@internal` to `@api` because
+The following eleven symbols were promoted from `@internal` to `@api` because
 `middag-io/core` consumes them structurally (implements / extends / instantiates
 / throws) or by type-reference. They are part of the supported public API and
 evolve under the versioning policy above.
@@ -71,7 +79,6 @@ Structural coupling (implemented, extended, instantiated, or thrown):
 - `Middag\Framework\Kernel\Contract\ModuleLoaderInterface`
 - `Middag\Framework\Kernel\Contract\LoaderFailurePolicyInterface`
 - `Middag\Framework\Kernel\Contract\FailedModuleRegistryInterface`
-- `Middag\Framework\Exception\MiddagLifecycleViolationException`
 - `Middag\Framework\Kernel\Manager\HookManager`
 
 Type-reference coupling (imported / type-hinted):
