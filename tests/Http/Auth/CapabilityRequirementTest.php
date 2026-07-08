@@ -145,13 +145,13 @@ final class CapabilityRequirementTest extends TestCase
     }
 
     #[Test]
-    public function legacyCapabilityMirrorsTheReferenceKey(): void
+    public function keyMirrorsTheReferenceKey(): void
     {
         $withReference = CapabilityRequirement::from('local/foo:view');
-        $this->assertSame('local/foo:view', $withReference->legacyCapability());
+        $this->assertSame('local/foo:view', $withReference->key());
 
         $classOnly = CapabilityRequirement::from(CapabilityRequirementTestDefinition::class);
-        $this->assertNull($classOnly->legacyCapability());
+        $this->assertNull($classOnly->key());
     }
 }
 

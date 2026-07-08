@@ -172,7 +172,7 @@ class HttpKernel implements HttpKernelInterface
             // Rich surface: forward the full CapabilityRequirement list to
             // adapters that opt in, so per-requirement context/host/definition
             // survives instead of being flattened to the class-wide context.
-            // The legacy call above stays for adapters that do not implement it.
+            // The string-surface call above stays for adapters that do not implement it.
             if ($auth->requirements !== [] && $controller instanceof CapabilityRequirementAwareInterface) {
                 $controller->setRequireCapabilityRequirements($auth->requirements);
             }

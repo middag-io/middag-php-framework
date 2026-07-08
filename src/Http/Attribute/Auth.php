@@ -24,8 +24,8 @@ use Middag\Framework\Http\Contract\CapabilityDefinitionInterface;
  * Method-level takes precedence over class-level.
  *
  * Platform adapters should prefer `requirements` for rich authorization data.
- * The legacy `capabilities`, `context`, and `instanceId` fields remain for
- * consumers that still pass bare permission strings.
+ * The `capabilities`, `context`, and `instanceId` fields are the string
+ * surface: a first-class path for consumers that pass bare permission strings.
  *
  * @api
  */
@@ -44,9 +44,9 @@ final readonly class Auth
 
     /**
      * @param bool                                                                                                                             $login        Whether authentication is required
-     * @param list<CapabilityDefinitionInterface|CapabilityReference|CapabilityRequirement|string>                                             $capabilities Legacy capability list; strings remain supported for BC
-     * @param string                                                                                                                           $context      Legacy context type for string capability checks
-     * @param int                                                                                                                              $instanceId   Legacy instance ID for non-global context scopes
+     * @param list<CapabilityDefinitionInterface|CapabilityReference|CapabilityRequirement|string>                                             $capabilities String-surface capability list; bare permission strings are first-class
+     * @param string                                                                                                                           $context      Context type applied to string capability checks
+     * @param int                                                                                                                              $instanceId   Instance ID for non-global context scopes
      * @param list<CapabilityDefinitionInterface|CapabilityReference|CapabilityRequirement|class-string<CapabilityDefinitionInterface>|string> $requirements Rich requirements adapters can resolve without string-only loss
      */
     public function __construct(
@@ -59,7 +59,7 @@ final readonly class Auth
         $this->requirements = CapabilityRequirement::listFrom([...$capabilities, ...$requirements]);
         $this->capabilities = array_values(array_filter(
             array_map(
-                static fn (CapabilityRequirement $requirement): ?string => $requirement->legacyCapability(),
+                static fn (CapabilityRequirement $requirement): ?string => $requirement->key(),
                 $this->requirements,
             ),
             static fn (?string $capability): bool => $capability !== null,

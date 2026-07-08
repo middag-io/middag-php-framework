@@ -17,7 +17,7 @@ use Middag\Framework\Http\Auth\CapabilityRequirement;
 /**
  * Opt-in capability for controllers that consume rich #[Auth] requirements.
  *
- * The universal {@see ControllerInterface} carries only the legacy string
+ * The universal {@see ControllerInterface} carries only the string
  * surface (`setRequireCapabilities()`): a flat capability list plus one
  * class-wide context/instanceId, applied uniformly to every capability. That
  * loses the per-requirement data an #[Auth] attribute can hold — each
@@ -28,7 +28,7 @@ use Middag\Framework\Http\Auth\CapabilityRequirement;
  * Adapters whose controllers can honour per-requirement authorization
  * (e.g. the Moodle adapter resolving a distinct context level per capability)
  * implement this to receive the rich list. The kernel calls it in addition to
- * the legacy `setRequireCapabilities()`, so adapters that do not implement it
+ * the string-surface `setRequireCapabilities()`, so adapters that do not implement it
  * keep working unchanged — this is why it is a separate opt-in contract rather
  * than a method on the universal ControllerInterface.
  *

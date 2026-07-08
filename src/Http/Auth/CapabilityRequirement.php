@@ -89,11 +89,6 @@ final readonly class CapabilityRequirement
         return $this->reference?->key;
     }
 
-    public function legacyCapability(): ?string
-    {
-        return $this->reference?->key;
-    }
-
     /**
      * @param array<string, mixed> $options
      */
