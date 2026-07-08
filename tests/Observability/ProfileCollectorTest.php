@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Observability;
 
 use Middag\Framework\Observability\ProfileCollector;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(ProfileCollector::class)]
 final class ProfileCollectorTest extends TestCase
 {
     #[Test]

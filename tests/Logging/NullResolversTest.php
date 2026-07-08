@@ -15,13 +15,15 @@ namespace Middag\Framework\Tests\Logging;
 use Middag\Framework\Bus\NullUserContextResolver;
 use Middag\Framework\Logging\NullActorResolver;
 use Middag\Framework\Logging\NullOriginResolver;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(NullActorResolver::class)]
+#[CoversClass(NullOriginResolver::class)]
+#[CoversClass(NullUserContextResolver::class)]
 final class NullResolversTest extends TestCase
 {
     protected function tearDown(): void

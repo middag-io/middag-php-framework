@@ -13,14 +13,14 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Shared\Enum;
 
 use Middag\Framework\Shared\Enum\Operator;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Operator::class)]
 final class OperatorTest extends TestCase
 {
     #[Test]

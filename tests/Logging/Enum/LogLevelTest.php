@@ -13,14 +13,14 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Logging\Enum;
 
 use Middag\Framework\Logging\Enum\LogLevel;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(LogLevel::class)]
 final class LogLevelTest extends TestCase
 {
     #[Test]

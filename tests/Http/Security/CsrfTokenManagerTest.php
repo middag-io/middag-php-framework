@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Http\Security;
 
 use Middag\Framework\Http\Security\CsrfTokenManager;
 use Middag\Framework\Http\Session\ArraySession;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(CsrfTokenManager::class)]
 final class CsrfTokenManagerTest extends TestCase
 {
     #[Test]

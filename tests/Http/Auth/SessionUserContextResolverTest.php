@@ -16,14 +16,14 @@ use Middag\Framework\Bus\Contract\UserContextResolverInterface;
 use Middag\Framework\Http\Auth\SessionAuthenticator;
 use Middag\Framework\Http\Auth\SessionUserContextResolver;
 use Middag\Framework\Http\Session\ArraySession;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(SessionUserContextResolver::class)]
 final class SessionUserContextResolverTest extends TestCase
 {
     #[Test]

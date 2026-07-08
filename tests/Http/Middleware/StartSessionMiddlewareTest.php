@@ -16,7 +16,7 @@ use Middag\Framework\Http\Contract\SessionInterface;
 use Middag\Framework\Http\Middleware\StartSessionMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -28,7 +28,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(StartSessionMiddleware::class)]
 final class StartSessionMiddlewareTest extends TestCase
 {
     #[Test]

@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Bus\Attribute;
 
 use Attribute;
 use Middag\Framework\Bus\Attribute\Schedule;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -22,7 +22,7 @@ use ReflectionClass;
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Schedule::class)]
 final class ScheduleTest extends TestCase
 {
     #[Test]

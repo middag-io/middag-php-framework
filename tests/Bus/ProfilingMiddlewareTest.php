@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Bus;
 
 use Middag\Framework\Bus\Middleware\ProfilingMiddleware;
 use Middag\Framework\Observability\ProfileCollector;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -29,7 +29,7 @@ use Symfony\Component\Messenger\Middleware\StackInterface;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(ProfilingMiddleware::class)]
 final class ProfilingMiddlewareTest extends TestCase
 {
     #[Test]

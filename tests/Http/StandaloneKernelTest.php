@@ -14,7 +14,8 @@ namespace Middag\Framework\Tests\Http;
 
 use Middag\Framework\Http\Contract\HttpKernelInterface;
 use Middag\Framework\Http\StandaloneKernel;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use Nyholm\Psr7\Response as PsrResponse;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -28,9 +29,20 @@ use Symfony\Component\HttpFoundation\Request as SfRequest;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(StandaloneKernel::class)]
 final class StandaloneKernelTest extends TestCase
 {
+    #[Test]
+    public function convertsTheInnerPsrResponseToAnHttpFoundationResponse(): void
+    {
+        $kernel = new StandaloneKernel($this->succeedingInner(201, 'created ok'));
+
+        $response = $kernel->handle(SfRequest::create('/'));
+
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertSame('created ok', (string) $response->getContent());
+    }
+
     #[Test]
     public function debugModeRendersTheStackTrace(): void
     {
@@ -62,6 +74,21 @@ final class StandaloneKernelTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $kernel->handle(SfRequest::create('/'), catch: false);
+    }
+
+    private function succeedingInner(int $status, string $body): HttpKernelInterface
+    {
+        return new class($status, $body) implements HttpKernelInterface {
+            public function __construct(
+                private readonly int $status,
+                private readonly string $body,
+            ) {}
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return new PsrResponse($this->status, [], $this->body);
+            }
+        };
     }
 
     private function throwingInner(string $message): HttpKernelInterface
