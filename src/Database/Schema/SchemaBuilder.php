@@ -31,6 +31,8 @@ class SchemaBuilder
     /** @var array<string, array<string, mixed>> table_name → descriptor */
     private array $schemas = [];
 
+    private ?SchemaAttributeReader $reader = null;
+
     /**
      * Load all *.php descriptor files from a directory.
      *
@@ -77,6 +79,40 @@ class SchemaBuilder
         }
 
         $this->schemas[$descriptor['name']] = $descriptor;
+
+        return $this;
+    }
+
+    /**
+     * Register a descriptor authored as a schema-attribute class.
+     *
+     * Reflects the class's `#[Table]`/`#[Column]`/`#[Key]`/`#[Index]` attributes
+     * into a descriptor array via {@see SchemaAttributeReader} and registers it.
+     * The typed authoring counterpart of {@see self::register()}.
+     *
+     * @param class-string $class
+     *
+     * @throws InvalidArgumentException when the class carries no `#[Table]`
+     */
+    public function registerClass(string $class): static
+    {
+        return $this->register($this->reader()->read($class));
+    }
+
+    /**
+     * Register every schema-attribute class in the given list.
+     *
+     * The typed authoring counterpart of {@see self::loadFromDirectory()}.
+     *
+     * @param iterable<class-string> $classes
+     *
+     * @throws InvalidArgumentException when a class carries no `#[Table]`
+     */
+    public function loadFromClasses(iterable $classes): static
+    {
+        foreach ($classes as $class) {
+            $this->registerClass($class);
+        }
 
         return $this;
     }
@@ -147,5 +183,10 @@ class SchemaBuilder
     public function indexes(string $table): array
     {
         return $this->schemas[$table]['indexes'] ?? [];
+    }
+
+    private function reader(): SchemaAttributeReader
+    {
+        return $this->reader ??= new SchemaAttributeReader();
     }
 }
