@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/middag-io/middag-php-framework/compare/v1.4.0...v1.5.0) (2026-07-08)
+
+
+### Features
+
+* **persistence:** add relation references ([0e4b705](https://github.com/middag-io/middag-php-framework/commit/0e4b705))
+
 ## [1.4.0](https://github.com/middag-io/middag-php-framework/compare/v1.3.0...v1.4.0) (2026-07-08)
 
 
