@@ -13,14 +13,14 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Kernel\Loader;
 
 use Middag\Framework\Kernel\Loader\HookfileLoader;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(HookfileLoader::class)]
 final class HookfileLoaderTest extends TestCase
 {
     /** @var string[] */

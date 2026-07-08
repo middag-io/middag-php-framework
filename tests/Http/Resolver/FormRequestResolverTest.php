@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Http\Resolver;
 
 use Middag\Framework\Http\Contract\FormRequestInterface;
 use Middag\Framework\Http\Resolver\FormRequestResolver;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(FormRequestResolver::class)]
 final class FormRequestResolverTest extends TestCase
 {
     #[Test]

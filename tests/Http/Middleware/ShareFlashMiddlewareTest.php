@@ -18,7 +18,7 @@ use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -31,7 +31,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(ShareFlashMiddleware::class)]
 final class ShareFlashMiddlewareTest extends TestCase
 {
     #[Test]

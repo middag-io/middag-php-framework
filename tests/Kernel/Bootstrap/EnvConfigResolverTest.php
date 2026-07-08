@@ -13,13 +13,13 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Kernel\Bootstrap;
 
 use Middag\Framework\Kernel\Bootstrap\EnvConfigResolver;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(EnvConfigResolver::class)]
 final class EnvConfigResolverTest extends TestCase
 {
     protected function tearDown(): void
@@ -49,6 +49,16 @@ final class EnvConfigResolverTest extends TestCase
         $resolver = new EnvConfigResolver(['STRIPE_SECRETKEY' => 'from_overrides']);
 
         self::assertSame('from_overrides', $resolver->get('stripe_secretkey'));
+    }
+
+    public function testScopedOverrideTakesPrecedenceOverGlobalOverride(): void
+    {
+        $resolver = new EnvConfigResolver([
+            'STRIPE_SECRETKEY' => 'global_override',
+            'STRIPE_SECRETKEY_BR' => 'br_override',
+        ]);
+
+        self::assertSame('br_override', $resolver->get('stripe_secretkey', 'br'));
     }
 
     public function testReturnsDefaultWhenAllSourcesEmpty(): void

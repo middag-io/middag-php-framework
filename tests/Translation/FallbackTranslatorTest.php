@@ -14,13 +14,13 @@ namespace Middag\Framework\Tests\Translation;
 
 use Locale;
 use Middag\Framework\Translation\FallbackTranslator;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(FallbackTranslator::class)]
 final class FallbackTranslatorTest extends TestCase
 {
     public function testReturnsKeyVerbatimWithoutParams(): void

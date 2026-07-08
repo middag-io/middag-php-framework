@@ -14,7 +14,7 @@ namespace Middag\Framework\Tests\Http\Session;
 
 use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(FlashBag::class)]
 final class FlashBagTest extends TestCase
 {
     #[Test]

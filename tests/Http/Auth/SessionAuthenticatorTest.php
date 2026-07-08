@@ -15,14 +15,14 @@ namespace Middag\Framework\Tests\Http\Auth;
 use Middag\Framework\Http\Auth\SessionAuthenticator;
 use Middag\Framework\Http\Contract\SessionInterface;
 use Middag\Framework\Http\Session\ArraySession;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(SessionAuthenticator::class)]
 final class SessionAuthenticatorTest extends TestCase
 {
     #[Test]

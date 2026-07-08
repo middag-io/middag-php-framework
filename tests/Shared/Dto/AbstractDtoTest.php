@@ -15,14 +15,14 @@ namespace Middag\Framework\Tests\Shared\Dto;
 use JsonSerializable;
 use Middag\Framework\Shared\Contract\DtoInterface;
 use Middag\Framework\Shared\Dto\AbstractDto;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(AbstractDto::class)]
 final class AbstractDtoTest extends TestCase
 {
     #[Test]
