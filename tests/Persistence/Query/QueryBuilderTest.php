@@ -17,6 +17,7 @@ use LogicException;
 use Middag\Framework\Database\PdoConnectionAdapter;
 use Middag\Framework\Persistence\Query\Page;
 use Middag\Framework\Persistence\Query\QueryBuilder;
+use Middag\Framework\Persistence\Query\RelationRef;
 use Middag\Framework\Shared\Enum\Operator;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -153,6 +154,23 @@ final class QueryBuilderTest extends TestCase
         self::assertSame(
             'SELECT * FROM users LEFT JOIN roles ON users.role_id = roles.id',
             QueryBuilder::for('users')->leftJoin('roles', 'users.role_id', '=', 'roles.id')->toSql(),
+        );
+    }
+
+    public function testJoinRef(): void
+    {
+        $ref = new RelationRef(
+            targetTable: 'roles',
+            localField: 'role_id',
+            targetField: 'id',
+            defaultAlias: 'r',
+            cardinality: RelationRef::CARDINALITY_MANY_TO_ONE,
+            hostPolicy: RelationRef::HOST_POLICY_AGNOSTIC,
+        );
+
+        self::assertSame(
+            'SELECT * FROM users INNER JOIN roles r ON r.id = users.role_id',
+            QueryBuilder::for('users')->joinRef($ref)->toSql(),
         );
     }
 

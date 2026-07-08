@@ -62,7 +62,7 @@ class QueryBuilder implements QueryBuilderInterface
     protected array $wheres = [];
 
     /**
-     * @var array<int, array{type: string, table: string, first: string, operator: string, second: string}>
+     * @var array<int, array{type: string, table: string, first: string, operator: string, second: string, alias?: string}>
      */
     protected array $joins = [];
 
@@ -296,6 +296,21 @@ class QueryBuilder implements QueryBuilderInterface
     public function join(string $table, string $first, string $operator, string $second): static
     {
         return $this->addJoin('inner', $table, $first, $operator, $second);
+    }
+
+    public function joinRef(RelationRef $ref, ?string $alias = null): static
+    {
+        $targetAlias = $ref->alias($alias);
+        $type = strtolower($ref->normalizedJoinType());
+
+        return $this->addJoin(
+            $type,
+            $ref->targetTable,
+            $targetAlias . '.' . $ref->targetField,
+            '=',
+            $this->table . '.' . $ref->localField,
+            $targetAlias === $ref->targetTable ? null : $targetAlias,
+        );
     }
 
     public function leftJoin(string $table, string $first, string $operator, string $second): static
@@ -906,16 +921,22 @@ class QueryBuilder implements QueryBuilderInterface
     // INTERNAL
     // ========================================================================
 
-    private function addJoin(string $type, string $table, string $first, string $operator, string $second): static
+    private function addJoin(string $type, string $table, string $first, string $operator, string $second, ?string $alias = null): static
     {
-        return $this->copy(function (self $q) use ($type, $table, $first, $operator, $second): void {
-            $q->joins[] = [
+        return $this->copy(function (self $q) use ($type, $table, $first, $operator, $second, $alias): void {
+            $join = [
                 'type' => $type,
                 'table' => $table,
                 'first' => $first,
                 'operator' => $operator,
                 'second' => $second,
             ];
+
+            if ($alias !== null) {
+                $join['alias'] = $alias;
+            }
+
+            $q->joins[] = $join;
         });
     }
 
@@ -934,10 +955,15 @@ class QueryBuilder implements QueryBuilderInterface
         $from = $dialect->table($this->table);
 
         foreach ($this->joins as $join) {
+            $table = $dialect->table($join['table']);
+            if (isset($join['alias'])) {
+                $table .= ' ' . $join['alias'];
+            }
+
             $from .= sprintf(
                 ' %s JOIN %s ON %s %s %s',
                 strtoupper($join['type']),
-                $dialect->table($join['table']),
+                $table,
                 $join['first'],
                 $join['operator'],
                 $join['second'],
