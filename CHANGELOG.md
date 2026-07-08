@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/middag-io/middag-php-framework/compare/v1.3.0...v1.4.0) (2026-07-08)
+
+
+### Features
+
+* **database:** typed schema descriptor attributes + reflection reader ([167ff16](https://github.com/middag-io/middag-php-framework/commit/167ff16f3f7263263010769f4d7e58c67d995614))
+* **database:** typed schema descriptor attributes + reflection reader ([8b211ff](https://github.com/middag-io/middag-php-framework/commit/8b211ffd0711dbce13beb83ea11ad8beccf64771))
+
 ## [1.3.0](https://github.com/middag-io/middag-php-framework/compare/v1.2.1...v1.3.0) (2026-07-07)
 
 
