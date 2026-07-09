@@ -78,6 +78,35 @@ final class RotatingStreamHandlerTest extends TestCase
     }
 
     #[Test]
+    public function escalatesToErrorLogWithoutThrowingWhenWriteFails(): void
+    {
+        $dir = $this->root . '/ext/chan';
+        mkdir($dir, 0777, true);
+
+        // Make the hour-bucket path itself a directory: writing to it is a
+        // filesystem-level failure (not a permission one), so file_put_contents
+        // fails deterministically even when the suite runs as root.
+        $filepath = $dir . '/' . date('Y-m-d-H-00-00') . '.log';
+        mkdir($filepath);
+
+        $handler = new RotatingStreamHandler($this->root, 'ext', 'chan');
+
+        $errlog = $this->root . '/errors.log';
+        $prev = ini_set('error_log', $errlog);
+
+        try {
+            $handler->handle($this->record('unwritable'));
+        } finally {
+            if ($prev !== false) {
+                ini_set('error_log', $prev);
+            }
+        }
+
+        self::assertStringContainsString('cannot write to ' . $filepath, (string) file_get_contents($errlog));
+        self::assertStringContainsString('unwritable', (string) file_get_contents($errlog));
+    }
+
+    #[Test]
     public function spillRespectsCapInsteadOfAppendingToFullFile(): void
     {
         $dir = $this->root . '/ext/chan';

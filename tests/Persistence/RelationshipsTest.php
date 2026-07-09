@@ -73,6 +73,7 @@ final class RelationshipsTest extends TestCase
         self::assertNull((new Writer())->bio);
         self::assertSame([], (new Writer())->books);
         self::assertNull((new Book())->writer);
+        self::assertSame([], (new Book())->topics);
     }
 
     public function testHasManyLazy(): void
@@ -135,6 +136,14 @@ final class RelationshipsTest extends TestCase
         self::assertInstanceOf(Writer::class, $third);
         self::assertSame('Ada', $first->getAttribute('name'));
         self::assertSame('Linus', $third->getAttribute('name'));
+    }
+
+    public function testGetQueryExposesTheUnderlyingModelQuery(): void
+    {
+        $relation = Book::findOrFail(1)->writer();
+
+        self::assertInstanceOf(ModelQuery::class, $relation->getQuery());
+        self::assertSame('Ada', $relation->getResults()?->getAttribute('name'));
     }
 
     public function testBelongsToManyLazy(): void

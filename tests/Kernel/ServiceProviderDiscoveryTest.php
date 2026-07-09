@@ -12,11 +12,15 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Kernel;
 
+use Middag\Framework\Form\FormValidator;
 use Middag\Framework\Kernel\ServiceProvider;
 use Middag\Framework\Tests\Fixture\Discovery\DiscoveryServiceProvider;
+use Middag\Framework\Translation\Contract\TranslatorInterface;
+use Middag\Framework\Translation\FallbackTranslator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * Drives the convention-based auto-discovery of {@see ServiceProvider} against a
@@ -68,6 +72,20 @@ final class ServiceProviderDiscoveryTest extends TestCase
         self::assertFalse($container->hasDefinition(self::NS . '\FactoryOnlyService'));
         // Under an IGNORE_DIRS directory ("Contract").
         self::assertFalse($container->hasDefinition(self::NS . '\Contract\IgnoredService'));
+    }
+
+    public function testFormValidatorRoutesMessagesThroughAHostTranslatorWhenOneIsAlreadyBound(): void
+    {
+        // registerFormDefaults() only adds the TranslatorInterface argument to
+        // FormValidator when the host already bound one before discovery runs.
+        $container = new ContainerBuilder();
+        $container->register(TranslatorInterface::class, FallbackTranslator::class)->setPublic(true);
+
+        DiscoveryServiceProvider::register($container, dirname(__DIR__) . '/Fixture/Discovery');
+
+        $arguments = $container->getDefinition(FormValidator::class)->getArguments();
+        self::assertCount(2, $arguments);
+        self::assertEquals(new Reference(TranslatorInterface::class), $arguments[1]);
     }
 
     private function discover(): ContainerBuilder

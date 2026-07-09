@@ -17,8 +17,12 @@ use Middag\Framework\Form\Field\IntField;
 use Middag\Framework\Form\Field\TextField;
 use Middag\Framework\Form\FormValidator;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
+use Middag\Ui\Form\Contract\FieldInterface;
+use Middag\Ui\Form\FieldConstraints;
+use Middag\Ui\Form\FieldDefinition;
 use Middag\Ui\Form\Group;
 use Middag\Ui\Shared\Enum\ConditionOperator;
+use Middag\Ui\Shared\Enum\FieldType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -164,6 +168,40 @@ final class FormValidatorTest extends TestCase
         $errors = $validator->validate([(new TextField('name'))->required()], []);
 
         self::assertArrayHasKey('name', $errors);
+    }
+
+    #[Test]
+    public function nonArrayCustomRulesAttributeIsIgnored(): void
+    {
+        // `custom_rules` normally travels as an array (built by
+        // AbstractField::rule()), but FieldDefinition::$attributes is an
+        // untyped bag — a non-array value must be tolerated rather than
+        // crash customConstraints(), and other constraints still apply.
+        $field = new class implements FieldInterface {
+            public function toDefinition(): FieldDefinition
+            {
+                return new FieldDefinition(
+                    name: 'weird',
+                    type: FieldType::Text,
+                    label: null,
+                    help: null,
+                    default: null,
+                    constraints: new FieldConstraints(required: true),
+                    attributes: ['custom_rules' => 'not-an-array'],
+                    conditions: [],
+                    options: [],
+                );
+            }
+
+            public function name(): string
+            {
+                return 'weird';
+            }
+        };
+
+        $errors = $this->validator()->validate([$field], []);
+
+        self::assertArrayHasKey('weird', $errors);
     }
 
     #[Test]

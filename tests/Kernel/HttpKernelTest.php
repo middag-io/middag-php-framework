@@ -19,6 +19,9 @@ use Middag\Framework\Http\Contract\HttpKernelInterface;
 use Middag\Framework\Http\HttpKernel;
 use Middag\Framework\Tests\Http\Fixture\AuthPolicyController;
 use Middag\Framework\Tests\Http\Fixture\BogusMiddlewareController;
+use Middag\Framework\Tests\Http\Fixture\GatedController;
+use Middag\Framework\Tests\Http\Fixture\MiddlewareController;
+use Middag\Framework\Tests\Http\Fixture\OuterMiddleware;
 use Middag\Framework\Tests\Http\Fixture\PlainActionController;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
@@ -354,6 +357,39 @@ final class HttpKernelTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertTrue($controller->authDisabled, 'a public route signals the controller to skip its own auth');
+    }
+
+    #[Test]
+    public function actionWithNoAuthAttributeAnywhereStaysUngated(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('plain-auth', new Route('/plain-auth', ['_controller' => [GatedController::class, 'plain']]));
+
+        $container = $this->containerWith([GatedController::class => new GatedController()]);
+        $response = $this->kernelWith($routes, $container)->handle(new ServerRequest('GET', '/plain-auth'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString('plain', (string) $response->getBody());
+    }
+
+    #[Test]
+    public function middlewareRegisteredInContainerIsResolvedFromItInsteadOfBeingInstantiated(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('mw', new Route('/mw', ['_controller' => [MiddlewareController::class, 'run']]));
+
+        // OuterMiddleware (class-level #[Middleware]) is pre-registered in the
+        // container; InnerMiddleware (method-level) is not — proving the two
+        // resolution branches (container->get() vs `new $id()`) both run in the
+        // same chain.
+        $container = $this->containerWith([
+            MiddlewareController::class => new MiddlewareController(),
+            OuterMiddleware::class => new OuterMiddleware(),
+        ]);
+        $response = $this->kernelWith($routes, $container)->handle(new ServerRequest('GET', '/mw'));
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('inner outer', $response->getHeaderLine('X-Chain'));
     }
 
     #[Test]

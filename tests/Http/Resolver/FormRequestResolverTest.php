@@ -33,7 +33,7 @@ final class FormRequestResolverTest extends TestCase
     public function supportsReturnsTrueForFormRequestSubclass(): void
     {
         $resolver = new FormRequestResolver($this->container([]), Request::create('/'));
-        $param = $this->paramByName('controller_method', 'request');
+        $param = $this->paramByName('controllerMethod', 'request');
 
         $this->assertTrue($resolver->supports($param));
     }
@@ -42,7 +42,7 @@ final class FormRequestResolverTest extends TestCase
     public function supportsReturnsFalseForNonFormRequestType(): void
     {
         $resolver = new FormRequestResolver($this->container([]), Request::create('/'));
-        $param = $this->paramByName('controller_method', 'plain');
+        $param = $this->paramByName('controllerMethod', 'plain');
 
         $this->assertFalse($resolver->supports($param));
     }
@@ -56,7 +56,7 @@ final class FormRequestResolverTest extends TestCase
             Request::create('/')
         );
 
-        $param = $this->paramByName('controller_method', 'request');
+        $param = $this->paramByName('controllerMethod', 'request');
         $result = $resolver->resolve($param, []);
 
         $this->assertSame($instance, $result);
@@ -71,7 +71,7 @@ final class FormRequestResolverTest extends TestCase
             Request::create('/')
         );
 
-        $param = $this->paramByName('controller_method', 'request');
+        $param = $this->paramByName('controllerMethod', 'request');
         $result = $resolver->resolve($param, []);
 
         $this->assertInstanceOf(FakeFormRequest::class, $result);
@@ -124,5 +124,5 @@ final class FakeFormRequest implements FormRequestInterface
 
 final class FakeFormRequestController
 {
-    public function controller_method(FakeFormRequest $request, string $plain = ''): void {}
+    public function controllerMethod(FakeFormRequest $request, string $plain = ''): void {}
 }

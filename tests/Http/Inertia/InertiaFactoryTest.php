@@ -19,7 +19,9 @@ use Middag\Ui\Page\Contract\PageContractInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The UI-contract → Inertia bridge. A middag-io/ui contract envelope is
@@ -91,6 +93,25 @@ final class InertiaFactoryTest extends TestCase
             // Restore the static default so sibling tests (which assert the "app"
             // shell) are not contaminated by this override.
             InertiaFactory::setAppId('app');
+        }
+    }
+
+    #[Test]
+    public function setHtmlBootstrapRegistersTheClosureReturnedByGetHtmlBootstrap(): void
+    {
+        // No host adapter has booted in this test: the seam starts empty.
+        $this->assertNull(InertiaFactory::getHtmlBootstrap());
+
+        $bootstrap = static fn (array $page, string $json, string $attr): Response => new Response($json);
+
+        InertiaFactory::setHtmlBootstrap($bootstrap);
+
+        try {
+            $this->assertSame($bootstrap, InertiaFactory::getHtmlBootstrap());
+        } finally {
+            // Clear the registered closure so sibling tests (which assert no
+            // bootstrap is configured) are not contaminated by this one.
+            (new ReflectionProperty(InertiaFactory::class, 'htmlBootstrap'))->setValue(null, null);
         }
     }
 

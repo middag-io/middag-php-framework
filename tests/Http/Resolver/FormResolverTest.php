@@ -34,7 +34,7 @@ final class FormResolverTest extends TestCase
     public function supportsReturnsTrueForFormInterfaceSubclass(): void
     {
         $resolver = new FormResolver($this->container([]), Request::create('/foo'));
-        $param = $this->paramByName('controller_method', 'form');
+        $param = $this->paramByName('controllerMethod', 'form');
 
         $this->assertTrue($resolver->supports($param));
     }
@@ -43,7 +43,7 @@ final class FormResolverTest extends TestCase
     public function supportsReturnsFalseForNonFormType(): void
     {
         $resolver = new FormResolver($this->container([]), Request::create('/foo'));
-        $param = $this->paramByName('controller_method', 'plain');
+        $param = $this->paramByName('controllerMethod', 'plain');
 
         $this->assertFalse($resolver->supports($param));
     }
@@ -57,7 +57,7 @@ final class FormResolverTest extends TestCase
             Request::create('/foo', 'GET')
         );
 
-        $param = $this->paramByName('controller_method', 'form');
+        $param = $this->paramByName('controllerMethod', 'form');
         $result = $resolver->resolve($param, []);
 
         $this->assertSame($form, $result);
@@ -75,7 +75,7 @@ final class FormResolverTest extends TestCase
             $request
         );
 
-        $param = $this->paramByName('controller_method', 'form');
+        $param = $this->paramByName('controllerMethod', 'form');
         $resolver->resolve($param, []);
 
         $this->assertSame(['name' => 'invoice-1'], $form->lastInput);
@@ -94,7 +94,7 @@ final class FormResolverTest extends TestCase
             $request
         );
 
-        $param = $this->paramByName('controller_method', 'form');
+        $param = $this->paramByName('controllerMethod', 'form');
         $resolver->resolve($param, []);
 
         $this->assertSame(['id' => '5'], $form->lastInput);
@@ -182,5 +182,5 @@ final class FakeForm implements FormInterface
 
 final class FakeFormController
 {
-    public function controller_method(FakeForm $form, string $plain = ''): void {}
+    public function controllerMethod(FakeForm $form, string $plain = ''): void {}
 }

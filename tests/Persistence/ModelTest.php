@@ -18,6 +18,7 @@ use Middag\Framework\Exception\MiddagNotFoundException;
 use Middag\Framework\Persistence\Model;
 use Middag\Framework\Persistence\ModelQuery;
 use Middag\Framework\Persistence\Query\Page;
+use Middag\Framework\Persistence\Query\QueryBuilder;
 use Middag\Framework\Tests\Persistence\Fixture\NoTableModel;
 use Middag\Framework\Tests\Persistence\Fixture\Widget;
 use PDO;
@@ -76,6 +77,16 @@ final class ModelTest extends TestCase
     public function testWhereFiltersAndReturnsModels(): void
     {
         $active = Widget::where('active', 1)->get();
+
+        self::assertCount(1, $active);
+        self::assertSame('Gear', $active[0]->getAttribute('name'));
+    }
+
+    public function testWhereWithSingleClosureArgumentBuildsNestedGroup(): void
+    {
+        // static::where() with 1 arg (the func_num_args() === 1 branch) forwards the closure as-is,
+        // which ModelQuery/QueryBuilder treat as a nested where-group rather than a column name.
+        $active = Widget::where(static fn (QueryBuilder $query): QueryBuilder => $query->where('active', 1))->get();
 
         self::assertCount(1, $active);
         self::assertSame('Gear', $active[0]->getAttribute('name'));
