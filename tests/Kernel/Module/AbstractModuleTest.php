@@ -110,6 +110,41 @@ final class AbstractModuleTest extends TestCase
         }
     }
 
+    public function testDiscoverClassesBySuffixBuildsSubNamespaceForNestedFiles(): void
+    {
+        $module = new class extends AbstractModule {
+            public ?string $dirOverride = null;
+
+            /** @return string[] */
+            public function exposeDiscover(string $suffix): array
+            {
+                return $this->discoverClassesBySuffix($suffix);
+            }
+
+            protected function getModuleDirectory(): ?string
+            {
+                return $this->dirOverride;
+            }
+        };
+
+        // A matching file inside a subdirectory of the module dir takes the
+        // sub-namespace branch of the FQCN ternary. The crafted FQCN does not
+        // resolve to a real class, so the result stays empty either way.
+        $tmp = sys_get_temp_dir() . '/middag-mod-nested-' . getmypid();
+        $subdir = $tmp . '/Sub';
+        mkdir($subdir, 0o777, true);
+        file_put_contents($subdir . '/NestedHooks.php', '<?php // fixture only, never loaded');
+        $module->dirOverride = $tmp;
+
+        try {
+            self::assertSame([], $module->exposeDiscover('Hooks'));
+        } finally {
+            unlink($subdir . '/NestedHooks.php');
+            rmdir($subdir);
+            rmdir($tmp);
+        }
+    }
+
     private function containerWithHook(): ContainerInterface
     {
         $container = $this->createStub(ContainerInterface::class);

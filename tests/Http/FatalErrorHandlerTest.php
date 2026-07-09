@@ -17,6 +17,7 @@ use Middag\Framework\Observability\ProfileCollector;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
+use ReflectionMethod;
 use Stringable;
 
 /**
@@ -151,5 +152,53 @@ final class FatalErrorHandlerTest extends TestCase
         self::assertCount(1, $events);
         self::assertSame('fatal', $events[0]['category']);
         self::assertSame('ABCD1234', $events[0]['label']);
+    }
+
+    public function testGenerateErrorCodeProducesAnEightCharUppercaseHexString(): void
+    {
+        $handler = new FatalErrorHandler();
+
+        $method = new ReflectionMethod($handler, 'generateErrorCode');
+        $code = $method->invoke($handler);
+
+        self::assertMatchesRegularExpression('/^[0-9A-F]{8}$/', $code);
+    }
+
+    /**
+     * End-to-end through a real fatal: a genuine, uncatchable-by-userland
+     * E_USER_ERROR (in FATAL_MASK, and — unlike E_ERROR/E_PARSE/E_CORE_ERROR/
+     * E_COMPILE_ERROR — the only fatal type PHP lets a script provoke without
+     * killing the whole test runner) reaches error_get_last() and fires
+     * register_shutdown_function() callbacks exactly like a real crash would.
+     * Spawned in a subprocess because a real fatal still ends *that* process.
+     */
+    public function testHandleShutdownRendersTheNegotiated500ForARealFatal(): void
+    {
+        $autoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
+
+        $script = <<<'PHP'
+            require %s;
+            $handler = new \Middag\Framework\Http\FatalErrorHandler(debug: true);
+            $handler->register();
+            trigger_error('boom-fatal-subprocess-test', E_USER_ERROR);
+            PHP;
+        $script = sprintf($script, var_export($autoload, true));
+
+        $process = proc_open(
+            [PHP_BINARY, '-d', 'display_errors=stderr', '-r', $script],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+        );
+        self::assertIsResource($process);
+
+        $stdout = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+
+        self::assertNotFalse($stdout);
+        self::assertStringContainsString('Internal Server Error', $stdout);
+        self::assertStringContainsString('boom-fatal-subprocess-test', $stdout, 'debug:true includes the technical detail');
+        self::assertMatchesRegularExpression('/support:\s*<strong>[0-9A-F]{8}<\/strong>/', $stdout);
     }
 }

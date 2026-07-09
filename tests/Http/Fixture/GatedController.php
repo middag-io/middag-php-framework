@@ -34,4 +34,10 @@ final class GatedController extends AbstractController
     {
         return new JsonResponse(['area' => 'open']);
     }
+
+    /** Neither the method nor the class declares #[Auth]: the gate stays inert. */
+    public function plain(): JsonResponse
+    {
+        return new JsonResponse(['area' => 'plain']);
+    }
 }

@@ -514,6 +514,21 @@ final class InertiaResponseTest extends TestCase
         self::assertSame(['name' => 'Ada', 'age' => 36], $this->props($response)['user']);
     }
 
+    #[Test]
+    public function nonNormalizableValuePassesThroughNormalizeUnchanged(): void
+    {
+        // normalize()'s final fallback: a value that is neither null/scalar,
+        // array, JsonSerializable, nor an object (e.g. a resource) passes
+        // through untouched instead of being coerced or throwing.
+        $resource = fopen('php://memory', 'r');
+        $request = Request::create('/dashboard', 'GET'); // no X-Inertia → HTML bootstrap path
+
+        $response = (new InertiaResponse('Dashboard', ['handle' => $resource], $request))->toResponse();
+
+        self::assertSame(200, $response->getStatusCode(), 'resource prop does not crash the render');
+        fclose($resource);
+    }
+
     // ── deferred props ─────────────────────────────────────────────────
 
     #[Test]
@@ -629,6 +644,27 @@ final class InertiaResponseTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $response->toResponse();
+    }
+
+    #[Test]
+    public function deferRescueResolvesNormallyWhenNoFailureOccurs(): void
+    {
+        // Rescue's happy path: resolve() succeeds, so the value lands in props
+        // exactly like a normal deferred prop resolving on its partial — and
+        // nothing is recorded under rescuedProps.
+        $request = Request::create('/dashboard', 'GET', server: [
+            'HTTP_X_INERTIA' => 'true',
+            'HTTP_X_INERTIA_PARTIAL_COMPONENT' => 'Dashboard',
+            'HTTP_X_INERTIA_PARTIAL_DATA' => 'safe',
+        ]);
+
+        $response = (new InertiaResponse('Dashboard', [
+            'safe' => InertiaAdapter::defer(static fn (): array => ['ok' => true], 'default', rescue: true),
+        ], $request))->toResponse();
+        $page = $this->page($response);
+
+        self::assertSame(['ok' => true], $page['props']['safe']);
+        self::assertArrayNotHasKey('rescuedProps', $page, 'nothing failed, so rescuedProps stays empty');
     }
 
     #[Test]

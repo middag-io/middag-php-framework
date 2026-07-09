@@ -122,4 +122,20 @@ final class FieldFactoryTest extends TestCase
         self::assertNotNull($constructor);
         self::assertTrue($constructor->isPrivate());
     }
+
+    #[Test]
+    public function constructorCanBeInvokedViaReflectionButIsNeverUsedAtRuntime(): void
+    {
+        $reflection = new ReflectionClass(FieldFactory::class);
+        $constructor = $reflection->getConstructor();
+
+        self::assertNotNull($constructor);
+
+        // Invoke the (empty) private constructor via reflection purely to prove
+        // it is inert; instances are never used at runtime — the factory is
+        // static-only (see constructorIsPrivateSoTheFactoryStaysStatic()).
+        $instance = $reflection->newInstanceWithoutConstructor();
+        $constructor->invoke($instance);
+        self::assertInstanceOf(FieldFactory::class, $instance);
+    }
 }

@@ -23,7 +23,10 @@ use Middag\Framework\Kernel\ServiceProvider;
  */
 final class DiscoveryServiceProvider extends ServiceProvider
 {
-    protected const SCAN_DIRS = ['src'];
+    // 'does-not-exist' exercises register()'s is_dir() skip branch: an
+    // adapter/app declaring a scan dir that was never created (or removed)
+    // must not fail discovery for the directories that do exist.
+    protected const SCAN_DIRS = ['src', 'does-not-exist'];
 
     protected const ROOT_NAMESPACE = 'Middag\Framework\Tests\Fixture\Discovery\src';
 }
