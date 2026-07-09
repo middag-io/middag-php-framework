@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.6.0](https://github.com/middag-io/middag-php-framework/compare/v1.5.1...v1.6.0) (2026-07-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* enum case names changed for Capability, DebugMode, Operator and LogLevel. Consumers referencing cases by name must update (backed values unchanged). Requires middag-io/ui with PascalCase cases.
+* **http:** remove legacyCapability() from CapabilityRequirement
+
+### Features
+
+* rename all enum cases to strict PascalCase (PER-CS 2.0) ([1d58660](https://github.com/middag-io/middag-php-framework/commit/1d586604e5bd4eefd4347cc971562e6016bfcf4f))
+
+
+### Refactoring
+
+* **http:** remove legacyCapability() from CapabilityRequirement ([91160f4](https://github.com/middag-io/middag-php-framework/commit/91160f49ed13cd5fefa2b6bb7ba02722d9b2cf21))
+
+
+### Miscellaneous
+
+* **deps:** drop v prefix from ui constraint ([3114a5b](https://github.com/middag-io/middag-php-framework/commit/3114a5b62af6666c8c15b9762a5f2e653688c58b))
+* **deps:** require middag-io/ui ^1.3 ([a451414](https://github.com/middag-io/middag-php-framework/commit/a4514140a45da94f73154ee17ef13bf4642c7cc7))
+* release 1.6.0 ([d899e9b](https://github.com/middag-io/middag-php-framework/commit/d899e9b399c1e8aed73eca5f6468b3a8c3bb3b0c))
+* release framework 1.6.0 ([090782b](https://github.com/middag-io/middag-php-framework/commit/090782bba628379a1951af08054bd01fffcb35c7))
+
 ## [1.5.1](https://github.com/middag-io/middag-php-framework/compare/v1.5.0...v1.5.1) (2026-07-08)
 
 
