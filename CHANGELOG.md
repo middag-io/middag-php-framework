@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/middag-io/middag-php-framework/compare/v1.6.0...v1.7.0) (2026-07-09)
+
+
+### Features
+
+* **logging:** add ErrorLogFallbackLogger zero-dep PSR-3 fallback ([b4d9e83](https://github.com/middag-io/middag-php-framework/commit/b4d9e831be9a898143dc1c95d33d85a6e736f6c7))
+
+
+### Miscellaneous
+
+* promote develop for 1.7.0 release ([ab2fbb3](https://github.com/middag-io/middag-php-framework/commit/ab2fbb30fcd33c1cd25c7606f9dc271a5340b37e))
+
 ## [1.6.0](https://github.com/middag-io/middag-php-framework/compare/v1.5.1...v1.6.0) (2026-07-09)
 
 
