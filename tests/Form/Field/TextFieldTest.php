@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Covers TextField's own surface: the FieldType::TEXT declaration and the
+ * Covers TextField's own surface: the FieldType::Text declaration and the
  * max/min/pattern attribute setters it layers on AbstractField.
  *
  * @internal
@@ -35,7 +35,7 @@ final class TextFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('title', $def->name);
-        self::assertSame(FieldType::TEXT, $def->type);
+        self::assertSame(FieldType::Text, $def->type);
     }
 
     #[Test]

@@ -26,11 +26,11 @@ final class HtmlFormRenderer implements FormRendererInterface
 {
     public static function target(): RenderTarget
     {
-        return RenderTarget::HTML;
+        return RenderTarget::Html;
     }
 
     public function render(FormInterface $form): RendererOutput
     {
-        return RendererOutput::html(RenderTarget::HTML, '<form></form>');
+        return RendererOutput::html(RenderTarget::Html, '<form></form>');
     }
 }

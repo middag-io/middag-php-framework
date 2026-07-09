@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Covers the StaticField subclass surface: its FieldType::STATIC declaration
+ * Covers the StaticField subclass surface: its FieldType::Static declaration
  * and the content() i18n intent it stores in the definition attributes.
  * The inherited AbstractField fluent API is exercised by AbstractFieldTest.
  *
@@ -36,7 +36,7 @@ final class StaticFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('notice', $def->name);
-        self::assertSame(FieldType::STATIC, $def->type);
+        self::assertSame(FieldType::Static, $def->type);
     }
 
     #[Test]

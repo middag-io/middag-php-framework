@@ -73,45 +73,45 @@ final class FieldFactoryTest extends TestCase
      */
     public static function factoryCases(): iterable
     {
-        yield 'text' => [static fn (): FieldInterface => FieldFactory::text('example'), TextField::class, FieldType::TEXT];
+        yield 'text' => [static fn (): FieldInterface => FieldFactory::text('example'), TextField::class, FieldType::Text];
 
-        yield 'textarea' => [static fn (): FieldInterface => FieldFactory::textarea('example'), TextareaField::class, FieldType::TEXTAREA];
+        yield 'textarea' => [static fn (): FieldInterface => FieldFactory::textarea('example'), TextareaField::class, FieldType::Textarea];
 
-        yield 'email' => [static fn (): FieldInterface => FieldFactory::email('example'), TextField::class, FieldType::EMAIL];
+        yield 'email' => [static fn (): FieldInterface => FieldFactory::email('example'), TextField::class, FieldType::Email];
 
-        yield 'password' => [static fn (): FieldInterface => FieldFactory::password('example'), TextField::class, FieldType::PASSWORD];
+        yield 'password' => [static fn (): FieldInterface => FieldFactory::password('example'), TextField::class, FieldType::Password];
 
-        yield 'url' => [static fn (): FieldInterface => FieldFactory::url('example'), TextField::class, FieldType::URL];
+        yield 'url' => [static fn (): FieldInterface => FieldFactory::url('example'), TextField::class, FieldType::Url];
 
-        yield 'integer' => [static fn (): FieldInterface => FieldFactory::integer('example'), IntField::class, FieldType::INT];
+        yield 'integer' => [static fn (): FieldInterface => FieldFactory::integer('example'), IntField::class, FieldType::Int];
 
-        yield 'decimal' => [static fn (): FieldInterface => FieldFactory::decimal('example'), FloatField::class, FieldType::FLOAT];
+        yield 'decimal' => [static fn (): FieldInterface => FieldFactory::decimal('example'), FloatField::class, FieldType::Float];
 
-        yield 'checkbox' => [static fn (): FieldInterface => FieldFactory::checkbox('example'), GenericField::class, FieldType::CHECKBOX];
+        yield 'checkbox' => [static fn (): FieldInterface => FieldFactory::checkbox('example'), GenericField::class, FieldType::Checkbox];
 
-        yield 'toggle' => [static fn (): FieldInterface => FieldFactory::toggle('example'), GenericField::class, FieldType::SWITCH];
+        yield 'toggle' => [static fn (): FieldInterface => FieldFactory::toggle('example'), GenericField::class, FieldType::Switch];
 
-        yield 'date' => [static fn (): FieldInterface => FieldFactory::date('example'), DateField::class, FieldType::DATE];
+        yield 'date' => [static fn (): FieldInterface => FieldFactory::date('example'), DateField::class, FieldType::Date];
 
-        yield 'datetime' => [static fn (): FieldInterface => FieldFactory::datetime('example'), DateField::class, FieldType::DATETIME];
+        yield 'datetime' => [static fn (): FieldInterface => FieldFactory::datetime('example'), DateField::class, FieldType::Datetime];
 
-        yield 'duration' => [static fn (): FieldInterface => FieldFactory::duration('example'), DurationField::class, FieldType::DURATION];
+        yield 'duration' => [static fn (): FieldInterface => FieldFactory::duration('example'), DurationField::class, FieldType::Duration];
 
-        yield 'entityPicker' => [static fn (): FieldInterface => FieldFactory::entityPicker('example'), EntityPickerField::class, FieldType::ENTITY_PICKER];
+        yield 'entityPicker' => [static fn (): FieldInterface => FieldFactory::entityPicker('example'), EntityPickerField::class, FieldType::EntityPicker];
 
-        yield 'file' => [static fn (): FieldInterface => FieldFactory::file('example'), FileField::class, FieldType::FILE];
+        yield 'file' => [static fn (): FieldInterface => FieldFactory::file('example'), FileField::class, FieldType::File];
 
-        yield 'header' => [static fn (): FieldInterface => FieldFactory::header('example'), StaticField::class, FieldType::HEADER];
+        yield 'header' => [static fn (): FieldInterface => FieldFactory::header('example'), StaticField::class, FieldType::Header];
 
-        yield 'hidden' => [static fn (): FieldInterface => FieldFactory::hidden('example'), GenericField::class, FieldType::HIDDEN];
+        yield 'hidden' => [static fn (): FieldInterface => FieldFactory::hidden('example'), GenericField::class, FieldType::Hidden];
 
-        yield 'multiselect' => [static fn (): FieldInterface => FieldFactory::multiselect('example'), SelectField::class, FieldType::MULTISELECT];
+        yield 'multiselect' => [static fn (): FieldInterface => FieldFactory::multiselect('example'), SelectField::class, FieldType::Multiselect];
 
-        yield 'radio' => [static fn (): FieldInterface => FieldFactory::radio('example'), RadioField::class, FieldType::RADIO];
+        yield 'radio' => [static fn (): FieldInterface => FieldFactory::radio('example'), RadioField::class, FieldType::Radio];
 
-        yield 'select' => [static fn (): FieldInterface => FieldFactory::select('example'), SelectField::class, FieldType::SELECT];
+        yield 'select' => [static fn (): FieldInterface => FieldFactory::select('example'), SelectField::class, FieldType::Select];
 
-        yield 'display' => [static fn (): FieldInterface => FieldFactory::display('example'), StaticField::class, FieldType::STATIC];
+        yield 'display' => [static fn (): FieldInterface => FieldFactory::display('example'), StaticField::class, FieldType::Static];
     }
 
     #[Test]

@@ -45,6 +45,6 @@ final class FileField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::FILE;
+        return FieldType::File;
     }
 }

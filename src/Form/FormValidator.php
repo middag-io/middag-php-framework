@@ -154,7 +154,7 @@ final readonly class FormValidator
             $constraints[] = new Assert\NotBlank();
         }
 
-        $isNumericField = in_array($def->type, [FieldType::INT, FieldType::FLOAT], true);
+        $isNumericField = in_array($def->type, [FieldType::Int, FieldType::Float], true);
         $attributes = $def->attributes;
 
         if (isset($attributes['max'])) {

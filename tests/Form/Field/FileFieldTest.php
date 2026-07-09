@@ -33,7 +33,7 @@ final class FileFieldTest extends TestCase
     {
         $def = (new FileField('avatar'))->toDefinition();
 
-        self::assertSame(FieldType::FILE, $def->type);
+        self::assertSame(FieldType::File, $def->type);
         self::assertSame('avatar', $def->name);
     }
 
@@ -69,7 +69,7 @@ final class FileFieldTest extends TestCase
             ->maxSize(2048)
             ->toDefinition();
 
-        self::assertSame(FieldType::FILE, $def->type);
+        self::assertSame(FieldType::File, $def->type);
         self::assertSame(['image/jpeg'], $def->attributes['accept']);
         self::assertSame(2048, $def->attributes['max_size']);
     }

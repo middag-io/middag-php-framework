@@ -44,6 +44,6 @@ final class IntField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::INT;
+        return FieldType::Int;
     }
 }

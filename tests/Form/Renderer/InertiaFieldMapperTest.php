@@ -60,16 +60,16 @@ final class InertiaFieldMapperTest extends TestCase
     {
         $mapper = new InertiaFieldMapper();
 
-        self::assertSame('richtext', $mapper->map($this->def(FieldType::RICHTEXT))['component']);
-        self::assertSame('time', $mapper->map($this->def(FieldType::TIME))['component']);
-        self::assertSame('autocomplete', $mapper->map($this->def(FieldType::AUTOCOMPLETE))['component']);
-        self::assertSame('tags', $mapper->map($this->def(FieldType::TAGS))['component']);
+        self::assertSame('richtext', $mapper->map($this->def(FieldType::Richtext))['component']);
+        self::assertSame('time', $mapper->map($this->def(FieldType::Time))['component']);
+        self::assertSame('autocomplete', $mapper->map($this->def(FieldType::Autocomplete))['component']);
+        self::assertSame('tags', $mapper->map($this->def(FieldType::Tags))['component']);
         // Distinct types the legacy PascalCase map collapsed onto a shared alias
         // (TextField, NumberField) now keep their own canonical wire key.
-        self::assertSame('email', $mapper->map($this->def(FieldType::EMAIL))['component']);
-        self::assertSame('url', $mapper->map($this->def(FieldType::URL))['component']);
-        self::assertSame('int', $mapper->map($this->def(FieldType::INT))['component']);
-        self::assertSame('float', $mapper->map($this->def(FieldType::FLOAT))['component']);
+        self::assertSame('email', $mapper->map($this->def(FieldType::Email))['component']);
+        self::assertSame('url', $mapper->map($this->def(FieldType::Url))['component']);
+        self::assertSame('int', $mapper->map($this->def(FieldType::Int))['component']);
+        self::assertSame('float', $mapper->map($this->def(FieldType::Float))['component']);
     }
 
     #[Test]
@@ -79,9 +79,9 @@ final class InertiaFieldMapperTest extends TestCase
         // under its own registry key for the PHP->React form path.
         $mapper = new InertiaFieldMapper();
 
-        self::assertSame('slider', $mapper->map($this->def(FieldType::SLIDER))['component']);
-        self::assertSame('otp', $mapper->map($this->def(FieldType::OTP))['component']);
-        self::assertSame('native_select', $mapper->map($this->def(FieldType::NATIVE_SELECT))['component']);
+        self::assertSame('slider', $mapper->map($this->def(FieldType::Slider))['component']);
+        self::assertSame('otp', $mapper->map($this->def(FieldType::Otp))['component']);
+        self::assertSame('native_select', $mapper->map($this->def(FieldType::NativeSelect))['component']);
     }
 
     #[Test]
@@ -89,7 +89,7 @@ final class InertiaFieldMapperTest extends TestCase
     {
         // The lib reads identity from the node-level `key` (field.key), never
         // from props.name — so the mapper surfaces the field name as `key`.
-        $mapped = (new InertiaFieldMapper())->map($this->def(FieldType::TEXT));
+        $mapped = (new InertiaFieldMapper())->map($this->def(FieldType::Text));
 
         self::assertSame('f', $mapped['key']);
         self::assertArrayNotHasKey('name', $mapped['props'], 'identity is the node key, not props.name');
@@ -101,9 +101,9 @@ final class InertiaFieldMapperTest extends TestCase
         $mapper = new InertiaFieldMapper();
 
         self::assertTrue(
-            $mapper->map($this->def(FieldType::TEXT, new FieldConstraints(required: true)))['props']['required'],
+            $mapper->map($this->def(FieldType::Text, new FieldConstraints(required: true)))['props']['required'],
         );
-        self::assertFalse($mapper->map($this->def(FieldType::TEXT))['props']['required']);
+        self::assertFalse($mapper->map($this->def(FieldType::Text))['props']['required']);
     }
 
     #[Test]
@@ -112,7 +112,7 @@ final class InertiaFieldMapperTest extends TestCase
         // FieldField renders props.label as a raw string; a Translatable object
         // would break React. A literal label (empty-domain Translatable) resolves
         // to its key verbatim.
-        $def = $this->def(FieldType::TEXT, label: Translatable::of('Title', ''));
+        $def = $this->def(FieldType::Text, label: Translatable::of('Title', ''));
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -125,7 +125,7 @@ final class InertiaFieldMapperTest extends TestCase
     {
         // FieldPropsBase.label is required (string), so a label-less field still
         // emits a string rather than null.
-        $props = (new InertiaFieldMapper())->map($this->def(FieldType::TEXT))['props'];
+        $props = (new InertiaFieldMapper())->map($this->def(FieldType::Text))['props'];
 
         self::assertSame('', $props['label']);
     }
@@ -136,9 +136,9 @@ final class InertiaFieldMapperTest extends TestCase
         // The framework's conditions[] array becomes per-kind FormCondition props
         // ({field, operator, value}), with the operator vocabulary mapped to the
         // lib's closed union (eq -> equals).
-        $def = $this->def(FieldType::TEXT, conditions: [
-            new Condition('status', ConditionOperator::EQ, 'done', Condition::KIND_VISIBLE_WHEN),
-            new Condition('status', ConditionOperator::EQ, 'done', Condition::KIND_REQUIRED_WHEN),
+        $def = $this->def(FieldType::Text, conditions: [
+            new Condition('status', ConditionOperator::Eq, 'done', Condition::KIND_VISIBLE_WHEN),
+            new Condition('status', ConditionOperator::Eq, 'done', Condition::KIND_REQUIRED_WHEN),
         ]);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
@@ -154,21 +154,21 @@ final class InertiaFieldMapperTest extends TestCase
         $mapper = new InertiaFieldMapper();
 
         $op = fn (ConditionOperator $o): string => $mapper->map(
-            $this->def(FieldType::TEXT, conditions: [new Condition('x', $o, 'v', Condition::KIND_VISIBLE_WHEN)]),
+            $this->def(FieldType::Text, conditions: [new Condition('x', $o, 'v', Condition::KIND_VISIBLE_WHEN)]),
         )['props']['visible_when']['operator'];
 
-        self::assertSame('equals', $op(ConditionOperator::EQ));
-        self::assertSame('not_equals', $op(ConditionOperator::NEQ));
-        self::assertSame('in', $op(ConditionOperator::IN));
-        self::assertSame('not_in', $op(ConditionOperator::NOT_IN));
+        self::assertSame('equals', $op(ConditionOperator::Eq));
+        self::assertSame('not_equals', $op(ConditionOperator::Neq));
+        self::assertSame('in', $op(ConditionOperator::In));
+        self::assertSame('not_in', $op(ConditionOperator::NotIn));
         // Operators with no client-form equivalent pass their raw wire value.
-        self::assertSame('gt', $op(ConditionOperator::GT));
+        self::assertSame('gt', $op(ConditionOperator::Gt));
     }
 
     #[Test]
     public function optionsMapBecomesValueLabelList(): void
     {
-        $def = $this->def(FieldType::SELECT, options: ['low' => 'Low', 'high' => 'High']);
+        $def = $this->def(FieldType::Select, options: ['low' => 'Low', 'high' => 'High']);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -182,7 +182,7 @@ final class InertiaFieldMapperTest extends TestCase
     public function textLengthBoundsMapToValidation(): void
     {
         // On text-like fields min/max are string-length bounds → validation.*.
-        $def = $this->def(FieldType::TEXT, attributes: ['min' => 2, 'max' => 200, 'pattern' => '\d+']);
+        $def = $this->def(FieldType::Text, attributes: ['min' => 2, 'max' => 200, 'pattern' => '\d+']);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -197,7 +197,7 @@ final class InertiaFieldMapperTest extends TestCase
     public function numericBoundsMapToTopLevelProps(): void
     {
         // On numeric fields min/max/step are numeric bounds → top-level props.
-        $def = $this->def(FieldType::INT, attributes: ['min' => 0, 'max' => 100000, 'step' => 5]);
+        $def = $this->def(FieldType::Int, attributes: ['min' => 0, 'max' => 100000, 'step' => 5]);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -210,7 +210,7 @@ final class InertiaFieldMapperTest extends TestCase
     #[Test]
     public function textareaRowsLiftToProps(): void
     {
-        $props = (new InertiaFieldMapper())->map($this->def(FieldType::TEXTAREA, attributes: ['rows' => 4]))['props'];
+        $props = (new InertiaFieldMapper())->map($this->def(FieldType::Textarea, attributes: ['rows' => 4]))['props'];
 
         self::assertSame(4, $props['rows']);
     }
@@ -220,7 +220,7 @@ final class InertiaFieldMapperTest extends TestCase
     {
         // placeholder is stored as a {key, component} intent under attributes; it
         // surfaces as a top-level string prop.
-        $def = $this->def(FieldType::TEXT, attributes: ['placeholder' => ['key' => 'What needs doing?', 'component' => '']]);
+        $def = $this->def(FieldType::Text, attributes: ['placeholder' => ['key' => 'What needs doing?', 'component' => '']]);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -230,7 +230,7 @@ final class InertiaFieldMapperTest extends TestCase
     #[Test]
     public function entityPickerLiftsDisplayField(): void
     {
-        $def = $this->def(FieldType::ENTITY_PICKER, attributes: ['display_field' => 'title', 'source' => 'demo_tasks']);
+        $def = $this->def(FieldType::EntityPicker, attributes: ['display_field' => 'title', 'source' => 'demo_tasks']);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -243,7 +243,7 @@ final class InertiaFieldMapperTest extends TestCase
         // A Closure loader is not JSON-serializable: it must be resolved into the
         // `[{value,label}]` options list and never reach the props.
         $def = $this->def(
-            FieldType::SELECT,
+            FieldType::Select,
             attributes: ['options_loader' => static fn (): array => ['br' => 'Brasil', 'pt' => 'Portugal']],
         );
 
@@ -263,7 +263,7 @@ final class InertiaFieldMapperTest extends TestCase
         // client-form prop; none may reach the canonical props, which must
         // always JSON-encode cleanly.
         $def = $this->def(
-            FieldType::TEXT,
+            FieldType::Text,
             attributes: ['custom_rules' => [new Assert\Length(max: 5), new Assert\NotBlank()]],
         );
 
@@ -280,14 +280,14 @@ final class InertiaFieldMapperTest extends TestCase
         $mapper = new InertiaFieldMapper();
 
         // scalar non-string → string
-        $scalar = $mapper->map($this->def(FieldType::INT, conditions: [
-            new Condition('age', ConditionOperator::EQ, 18, Condition::KIND_VISIBLE_WHEN),
+        $scalar = $mapper->map($this->def(FieldType::Int, conditions: [
+            new Condition('age', ConditionOperator::Eq, 18, Condition::KIND_VISIBLE_WHEN),
         ]))['props']['visible_when'];
         self::assertSame('18', $scalar['value']);
 
         // list → list<string>
-        $list = $mapper->map($this->def(FieldType::TEXT, conditions: [
-            new Condition('role', ConditionOperator::IN, [1, 2], Condition::KIND_VISIBLE_WHEN),
+        $list = $mapper->map($this->def(FieldType::Text, conditions: [
+            new Condition('role', ConditionOperator::In, [1, 2], Condition::KIND_VISIBLE_WHEN),
         ]))['props']['visible_when'];
         self::assertSame(['1', '2'], $list['value']);
     }
@@ -295,7 +295,7 @@ final class InertiaFieldMapperTest extends TestCase
     #[Test]
     public function entityPickerLiftsAutocompleteHref(): void
     {
-        $def = $this->def(FieldType::ENTITY_PICKER, attributes: [
+        $def = $this->def(FieldType::EntityPicker, attributes: [
             'autocomplete_href' => '/api/entities/tasks',
             'autocomplete_min_chars' => 3,
         ]);
@@ -311,7 +311,7 @@ final class InertiaFieldMapperTest extends TestCase
     {
         // accept is a list (['image/*', '.pdf']) → a single HTML accept string;
         // max_size (bytes) → maxSize.
-        $def = $this->def(FieldType::FILE, attributes: ['accept' => ['image/*', '.pdf'], 'max_size' => 1048576]);
+        $def = $this->def(FieldType::File, attributes: ['accept' => ['image/*', '.pdf'], 'max_size' => 1048576]);
 
         $props = (new InertiaFieldMapper())->map($def)['props'];
 
@@ -329,7 +329,7 @@ final class InertiaFieldMapperTest extends TestCase
     {
         $definition = new FieldDefinition(
             name: 'f',
-            type: FieldType::SELECT,
+            type: FieldType::Select,
             label: 'Choose',
             help: 'Pick one carefully',
             default: null,

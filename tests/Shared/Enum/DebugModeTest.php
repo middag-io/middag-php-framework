@@ -27,17 +27,17 @@ final class DebugModeTest extends TestCase
     #[Test]
     public function casesCarryTheExpectedIntegerValues(): void
     {
-        self::assertSame(0, DebugMode::DISABLED->value);
-        self::assertSame(1, DebugMode::NORMAL->value);
-        self::assertSame(2, DebugMode::FULL->value);
+        self::assertSame(0, DebugMode::Disabled->value);
+        self::assertSame(1, DebugMode::Normal->value);
+        self::assertSame(2, DebugMode::Full->value);
         self::assertCount(3, DebugMode::cases());
     }
 
     #[Test]
     public function fromResolvesBackingValue(): void
     {
-        self::assertSame(DebugMode::NORMAL, DebugMode::from(1));
-        self::assertSame(DebugMode::FULL, DebugMode::tryFrom(2));
+        self::assertSame(DebugMode::Normal, DebugMode::from(1));
+        self::assertSame(DebugMode::Full, DebugMode::tryFrom(2));
         self::assertNull(DebugMode::tryFrom(99));
     }
 
@@ -53,16 +53,16 @@ final class DebugModeTest extends TestCase
      */
     public static function isEnabledByProvider(): iterable
     {
-        yield 'disabled satisfied by disabled config' => [DebugMode::DISABLED, 0, true];
+        yield 'disabled satisfied by disabled config' => [DebugMode::Disabled, 0, true];
 
-        yield 'normal not satisfied by disabled config' => [DebugMode::NORMAL, 0, false];
+        yield 'normal not satisfied by disabled config' => [DebugMode::Normal, 0, false];
 
-        yield 'normal satisfied by normal config' => [DebugMode::NORMAL, 1, true];
+        yield 'normal satisfied by normal config' => [DebugMode::Normal, 1, true];
 
-        yield 'normal satisfied by full config' => [DebugMode::NORMAL, 2, true];
+        yield 'normal satisfied by full config' => [DebugMode::Normal, 2, true];
 
-        yield 'full not satisfied by normal config' => [DebugMode::FULL, 1, false];
+        yield 'full not satisfied by normal config' => [DebugMode::Full, 1, false];
 
-        yield 'full satisfied by full config' => [DebugMode::FULL, 2, true];
+        yield 'full satisfied by full config' => [DebugMode::Full, 2, true];
     }
 }

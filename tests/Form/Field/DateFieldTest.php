@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Covers DateField's own surface: the FieldType::DATE declaration plus the
+ * Covers DateField's own surface: the FieldType::Date declaration plus the
  * date-specific attribute setters (minDate/maxDate/optional). The base
  * AbstractField fluent API is exercised by AbstractFieldTest.
  *
@@ -36,7 +36,7 @@ final class DateFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('birth_date', $def->name);
-        self::assertSame(FieldType::DATE, $def->type);
+        self::assertSame(FieldType::Date, $def->type);
     }
 
     #[Test]

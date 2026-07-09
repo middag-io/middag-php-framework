@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Covers TextareaField's own surface: the FieldType::TEXTAREA declaration and
+ * Covers TextareaField's own surface: the FieldType::Textarea declaration and
  * the sizing attribute setters (max/min/rows/cols) it layers on AbstractField.
  *
  * @internal
@@ -35,7 +35,7 @@ final class TextareaFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('bio', $def->name);
-        self::assertSame(FieldType::TEXTAREA, $def->type);
+        self::assertSame(FieldType::Textarea, $def->type);
     }
 
     #[Test]

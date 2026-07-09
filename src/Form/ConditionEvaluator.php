@@ -38,19 +38,19 @@ final class ConditionEvaluator
         $actual = $values[$cond->field] ?? null;
 
         return match ($cond->operator) {
-            ConditionOperator::EQ => $actual === $cond->value,
-            ConditionOperator::NEQ => $actual !== $cond->value,
-            ConditionOperator::IN => is_array($cond->value) && in_array($actual, $cond->value, true),
-            ConditionOperator::NOT_IN => is_array($cond->value) && !in_array($actual, $cond->value, true),
-            ConditionOperator::GT => $actual > $cond->value,
-            ConditionOperator::GTE => $actual >= $cond->value,
-            ConditionOperator::LT => $actual < $cond->value,
-            ConditionOperator::LTE => $actual <= $cond->value,
-            ConditionOperator::TRUTHY => (bool) $actual,
-            ConditionOperator::FALSY => !$actual,
-            ConditionOperator::EXISTS => array_key_exists($cond->field, $values) && $actual !== null,
-            ConditionOperator::EMPTY => !array_key_exists($cond->field, $values) || $actual === null || $actual === '' || $actual === [],
-            ConditionOperator::MATCHES => is_string($actual) && is_string($cond->value) && @preg_match($cond->value, $actual) === 1,
+            ConditionOperator::Eq => $actual === $cond->value,
+            ConditionOperator::Neq => $actual !== $cond->value,
+            ConditionOperator::In => is_array($cond->value) && in_array($actual, $cond->value, true),
+            ConditionOperator::NotIn => is_array($cond->value) && !in_array($actual, $cond->value, true),
+            ConditionOperator::Gt => $actual > $cond->value,
+            ConditionOperator::Gte => $actual >= $cond->value,
+            ConditionOperator::Lt => $actual < $cond->value,
+            ConditionOperator::Lte => $actual <= $cond->value,
+            ConditionOperator::Truthy => (bool) $actual,
+            ConditionOperator::Falsy => !$actual,
+            ConditionOperator::Exists => array_key_exists($cond->field, $values) && $actual !== null,
+            ConditionOperator::Empty => !array_key_exists($cond->field, $values) || $actual === null || $actual === '' || $actual === [],
+            ConditionOperator::Matches => is_string($actual) && is_string($cond->value) && @preg_match($cond->value, $actual) === 1,
         };
     }
 }

@@ -42,13 +42,13 @@ use Middag\Framework\Shared\Enum\Operator;
 class QueryBuilder implements QueryBuilderInterface
 {
     private const COMPARISON_OPERATORS = [
-        Operator::EQ->value => true,
-        Operator::NEQ->value => true,
-        Operator::GT->value => true,
-        Operator::GTE->value => true,
-        Operator::LT->value => true,
-        Operator::LTE->value => true,
-        Operator::LIKE->value => true,
+        Operator::Eq->value => true,
+        Operator::Neq->value => true,
+        Operator::Gt->value => true,
+        Operator::Gte->value => true,
+        Operator::Lt->value => true,
+        Operator::Lte->value => true,
+        Operator::Like->value => true,
     ];
 
     /** @var array<int, string> */
@@ -136,7 +136,7 @@ class QueryBuilder implements QueryBuilderInterface
                 throw new InvalidArgumentException('where() requires a value or a comparison operator and value.');
             }
             $value = $operator;
-            $resolved = Operator::EQ;
+            $resolved = Operator::Eq;
         } else {
             $resolved = $this->resolveComparisonOperator($operator);
         }
@@ -163,7 +163,7 @@ class QueryBuilder implements QueryBuilderInterface
         if (func_num_args() < 3) {
             // 2-arg shortcut: orWhere(col, value) -> equality. Pass an explicit
             // operator so where() sees a 4-arg call and treats $operator as the value.
-            return $this->where($column, Operator::EQ, $operator, 'or');
+            return $this->where($column, Operator::Eq, $operator, 'or');
         }
 
         return $this->where($column, $operator, $value, 'or');
@@ -238,7 +238,7 @@ class QueryBuilder implements QueryBuilderInterface
                 throw new InvalidArgumentException('whereColumn() requires a second column.');
             }
             $second = $operator;
-            $sqlOperator = Operator::EQ->value;
+            $sqlOperator = Operator::Eq->value;
         } else {
             $sqlOperator = $this->resolveComparisonOperator($operator)->value;
         }
@@ -373,7 +373,7 @@ class QueryBuilder implements QueryBuilderInterface
      * Only meaningful inside a transaction(): the lock is held until the
      * surrounding transaction commits or rolls back. On engines without
      * row-lock syntax the dialect emits nothing, so gate on
-     * supports(Capability::ROW_LOCK) before relying on it.
+     * supports(Capability::RowLock) before relying on it.
      */
     public function lockForUpdate(): static
     {
@@ -416,7 +416,7 @@ class QueryBuilder implements QueryBuilderInterface
                 throw new InvalidArgumentException('having() requires a value or a comparison operator and value.');
             }
             $value = $operator;
-            $sqlOperator = Operator::EQ->value;
+            $sqlOperator = Operator::Eq->value;
         } else {
             $sqlOperator = $this->resolveComparisonOperator($operator)->value;
         }
@@ -440,7 +440,7 @@ class QueryBuilder implements QueryBuilderInterface
         }
 
         if (func_num_args() < 3) {
-            return $this->having($column, Operator::EQ, $operator, 'or');
+            return $this->having($column, Operator::Eq, $operator, 'or');
         }
 
         return $this->having($column, $operator, $value, 'or');
@@ -733,7 +733,7 @@ class QueryBuilder implements QueryBuilderInterface
      * rows sharing the same columns; $update defaults to every column that is
      * not part of $uniqueBy. Engine-specific SQL comes from the dialect
      * ({@see SqlDialectInterface::upsertClause()}); callers needing portability
-     * can gate on supports(Capability::UPSERT). Returns the affected row count.
+     * can gate on supports(Capability::Upsert). Returns the affected row count.
      *
      * @param array<int, array<string, mixed>>|array<string, mixed> $rows
      * @param list<string>|string                                   $uniqueBy
@@ -816,7 +816,7 @@ class QueryBuilder implements QueryBuilderInterface
 
     /**
      * Stream the matched rows one at a time from a single query, keeping memory
-     * flat. Requires a connection that supports {@see Capability::STREAMING}.
+     * flat. Requires a connection that supports {@see Capability::Streaming}.
      *
      * @return iterable<int, array<string, mixed>>
      */
@@ -824,7 +824,7 @@ class QueryBuilder implements QueryBuilderInterface
     {
         $connection = $this->requireConnection();
 
-        if (!$connection->supports(Capability::STREAMING)) {
+        if (!$connection->supports(Capability::Streaming)) {
             throw new LogicException(
                 'This connection does not support streaming cursors; use chunk() or lazy() instead.'
             );

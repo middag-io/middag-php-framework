@@ -80,7 +80,7 @@ final readonly class StubConnectionAdapter implements ConnectionAdapterInterface
 
     public function supports(Capability $feature): bool
     {
-        if ($feature === Capability::STREAMING) {
+        if ($feature === Capability::Streaming) {
             return $this->supportsStreaming;
         }
 

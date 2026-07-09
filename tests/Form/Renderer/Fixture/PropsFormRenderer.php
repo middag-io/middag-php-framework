@@ -26,11 +26,11 @@ final class PropsFormRenderer implements FormRendererInterface
 {
     public static function target(): RenderTarget
     {
-        return RenderTarget::PROPS;
+        return RenderTarget::Props;
     }
 
     public function render(FormInterface $form): RendererOutput
     {
-        return RendererOutput::props(RenderTarget::PROPS, ['fields' => []]);
+        return RendererOutput::props(RenderTarget::Props, ['fields' => []]);
     }
 }

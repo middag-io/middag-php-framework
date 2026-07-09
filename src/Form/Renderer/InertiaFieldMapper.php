@@ -165,10 +165,10 @@ final class InertiaFieldMapper
     private function mapOperator(ConditionOperator $operator): string
     {
         return match ($operator) {
-            ConditionOperator::EQ => 'equals',
-            ConditionOperator::NEQ => 'not_equals',
-            ConditionOperator::IN => 'in',
-            ConditionOperator::NOT_IN => 'not_in',
+            ConditionOperator::Eq => 'equals',
+            ConditionOperator::Neq => 'not_equals',
+            ConditionOperator::In => 'in',
+            ConditionOperator::NotIn => 'not_in',
             default => $operator->value,
         };
     }
@@ -237,11 +237,11 @@ final class InertiaFieldMapper
         $validation = [];
 
         switch ($type) {
-            case FieldType::TEXT:
-            case FieldType::EMAIL:
-            case FieldType::URL:
-            case FieldType::PASSWORD:
-            case FieldType::TEXTAREA:
+            case FieldType::Text:
+            case FieldType::Email:
+            case FieldType::Url:
+            case FieldType::Password:
+            case FieldType::Textarea:
                 if (isset($attributes['min'])) {
                     $validation['minLength'] = (int) $attributes['min'];
                 }
@@ -251,15 +251,15 @@ final class InertiaFieldMapper
                 if (isset($attributes['pattern'])) {
                     $validation['pattern'] = (string) $attributes['pattern'];
                 }
-                if ($type === FieldType::TEXTAREA && isset($attributes['rows'])) {
+                if ($type === FieldType::Textarea && isset($attributes['rows'])) {
                     $props['rows'] = (int) $attributes['rows'];
                 }
 
                 break;
 
-            case FieldType::INT:
-            case FieldType::FLOAT:
-            case FieldType::SLIDER:
+            case FieldType::Int:
+            case FieldType::Float:
+            case FieldType::Slider:
                 if (isset($attributes['min'])) {
                     $props['min'] = $attributes['min'];
                 }
@@ -272,7 +272,7 @@ final class InertiaFieldMapper
 
                 break;
 
-            case FieldType::ENTITY_PICKER:
+            case FieldType::EntityPicker:
                 if (isset($attributes['display_field'])) {
                     $props['entityDisplayField'] = (string) $attributes['display_field'];
                 }
@@ -289,7 +289,7 @@ final class InertiaFieldMapper
 
                 break;
 
-            case FieldType::FILE:
+            case FieldType::File:
                 // accept is stored as a list (e.g. ['image/*', '.pdf']) but the lib
                 // wants a single HTML accept string; max_size (bytes) → maxSize.
                 if (isset($attributes['accept']) && is_array($attributes['accept']) && $attributes['accept'] !== []) {

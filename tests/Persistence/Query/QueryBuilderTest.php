@@ -64,7 +64,7 @@ final class QueryBuilderTest extends TestCase
 
     public function testExplicitComparisonOperator(): void
     {
-        [$sql, $bindings] = QueryBuilder::for('users')->where('age', Operator::GT, 18)->compile();
+        [$sql, $bindings] = QueryBuilder::for('users')->where('age', Operator::Gt, 18)->compile();
 
         self::assertSame('SELECT * FROM users WHERE age > ?', $sql);
         self::assertSame([18], $bindings);
@@ -81,7 +81,7 @@ final class QueryBuilderTest extends TestCase
     public function testRejectsNonComparisonOperatorInWhere(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        QueryBuilder::for('users')->where('id', Operator::IN, [1, 2]);
+        QueryBuilder::for('users')->where('id', Operator::In, [1, 2]);
     }
 
     public function testWhereIn(): void

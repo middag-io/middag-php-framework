@@ -35,13 +35,13 @@ final class PdoConnectionAdapterTest extends TestCase
     {
         $adapter = $this->seeded();
 
-        self::assertTrue($adapter->supports(Capability::TRANSACTIONS));
-        self::assertTrue($adapter->supports(Capability::STREAMING));
-        self::assertFalse($adapter->supports(Capability::JSON_WHERE));
-        self::assertFalse($adapter->supports(Capability::RETURNING));
-        self::assertFalse($adapter->supports(Capability::UPSERT));
-        self::assertFalse($adapter->supports(Capability::SCHEMA_DIFF));
-        self::assertFalse($adapter->supports(Capability::ROW_LOCK));
+        self::assertTrue($adapter->supports(Capability::Transactions));
+        self::assertTrue($adapter->supports(Capability::Streaming));
+        self::assertFalse($adapter->supports(Capability::JsonWhere));
+        self::assertFalse($adapter->supports(Capability::Returning));
+        self::assertFalse($adapter->supports(Capability::Upsert));
+        self::assertFalse($adapter->supports(Capability::SchemaDiff));
+        self::assertFalse($adapter->supports(Capability::RowLock));
     }
 
     #[Test]

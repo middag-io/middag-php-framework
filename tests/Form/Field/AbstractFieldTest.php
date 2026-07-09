@@ -54,7 +54,7 @@ final class AbstractFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('username', $def->name);
-        self::assertSame(FieldType::TEXT, $def->type);
+        self::assertSame(FieldType::Text, $def->type);
 
         self::assertInstanceOf(Translatable::class, $def->label);
         self::assertSame('field_username', $def->label->key);
@@ -115,10 +115,10 @@ final class AbstractFieldTest extends TestCase
     public function conditionalMethodsAppendEveryConditionKindInOrder(): void
     {
         $def = (new TextField('conditional'))
-            ->visibleWhen('a', ConditionOperator::EQ, '1')
-            ->hiddenWhen('b', ConditionOperator::NEQ, '2')
-            ->requiredWhen('c', ConditionOperator::IN, ['x'])
-            ->disabledWhen('d', ConditionOperator::TRUTHY, true)
+            ->visibleWhen('a', ConditionOperator::Eq, '1')
+            ->hiddenWhen('b', ConditionOperator::Neq, '2')
+            ->requiredWhen('c', ConditionOperator::In, ['x'])
+            ->disabledWhen('d', ConditionOperator::Truthy, true)
             ->toDefinition();
 
         self::assertContainsOnlyInstancesOf(Condition::class, $def->conditions);

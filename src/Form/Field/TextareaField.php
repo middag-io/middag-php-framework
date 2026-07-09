@@ -51,6 +51,6 @@ final class TextareaField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::TEXTAREA;
+        return FieldType::Textarea;
     }
 }

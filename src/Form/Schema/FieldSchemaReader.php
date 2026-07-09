@@ -101,15 +101,15 @@ final class FieldSchemaReader
         $type = $property->getType();
 
         if (!$type instanceof ReflectionNamedType) {
-            return FieldType::TEXT;
+            return FieldType::Text;
         }
 
         return match ($type->getName()) {
-            'int' => FieldType::INT,
-            'float' => FieldType::FLOAT,
-            'bool' => FieldType::CHECKBOX,
-            'DateTimeInterface', 'DateTime', 'DateTimeImmutable' => FieldType::DATE,
-            default => FieldType::TEXT,
+            'int' => FieldType::Int,
+            'float' => FieldType::Float,
+            'bool' => FieldType::Checkbox,
+            'DateTimeInterface', 'DateTime', 'DateTimeImmutable' => FieldType::Date,
+            default => FieldType::Text,
         };
     }
 

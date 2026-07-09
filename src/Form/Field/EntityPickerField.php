@@ -91,6 +91,6 @@ final class EntityPickerField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::ENTITY_PICKER;
+        return FieldType::EntityPicker;
     }
 }

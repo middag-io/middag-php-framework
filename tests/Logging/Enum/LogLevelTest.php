@@ -47,41 +47,41 @@ final class LogLevelTest extends TestCase
     #[Test]
     public function enumValuesMatchPsr3Strings(): void
     {
-        $this->assertSame('emergency', LogLevel::EMERGENCY->value);
-        $this->assertSame('alert', LogLevel::ALERT->value);
-        $this->assertSame('critical', LogLevel::CRITICAL->value);
-        $this->assertSame('error', LogLevel::ERROR->value);
-        $this->assertSame('warning', LogLevel::WARNING->value);
-        $this->assertSame('notice', LogLevel::NOTICE->value);
-        $this->assertSame('info', LogLevel::INFO->value);
-        $this->assertSame('debug', LogLevel::DEBUG->value);
+        $this->assertSame('emergency', LogLevel::Emergency->value);
+        $this->assertSame('alert', LogLevel::Alert->value);
+        $this->assertSame('critical', LogLevel::Critical->value);
+        $this->assertSame('error', LogLevel::Error->value);
+        $this->assertSame('warning', LogLevel::Warning->value);
+        $this->assertSame('notice', LogLevel::Notice->value);
+        $this->assertSame('info', LogLevel::Info->value);
+        $this->assertSame('debug', LogLevel::Debug->value);
     }
 
     #[Test]
     public function severityReturnsCorrectNumericValues(): void
     {
-        $this->assertSame(0, LogLevel::EMERGENCY->severity());
-        $this->assertSame(1, LogLevel::ALERT->severity());
-        $this->assertSame(2, LogLevel::CRITICAL->severity());
-        $this->assertSame(3, LogLevel::ERROR->severity());
-        $this->assertSame(4, LogLevel::WARNING->severity());
-        $this->assertSame(5, LogLevel::NOTICE->severity());
-        $this->assertSame(6, LogLevel::INFO->severity());
-        $this->assertSame(7, LogLevel::DEBUG->severity());
+        $this->assertSame(0, LogLevel::Emergency->severity());
+        $this->assertSame(1, LogLevel::Alert->severity());
+        $this->assertSame(2, LogLevel::Critical->severity());
+        $this->assertSame(3, LogLevel::Error->severity());
+        $this->assertSame(4, LogLevel::Warning->severity());
+        $this->assertSame(5, LogLevel::Notice->severity());
+        $this->assertSame(6, LogLevel::Info->severity());
+        $this->assertSame(7, LogLevel::Debug->severity());
     }
 
     #[Test]
     public function severityIsMonotonicallyIncreasingFromMostToLeastSevere(): void
     {
         $orderedLevels = [
-            LogLevel::EMERGENCY,
-            LogLevel::ALERT,
-            LogLevel::CRITICAL,
-            LogLevel::ERROR,
-            LogLevel::WARNING,
-            LogLevel::NOTICE,
-            LogLevel::INFO,
-            LogLevel::DEBUG,
+            LogLevel::Emergency,
+            LogLevel::Alert,
+            LogLevel::Critical,
+            LogLevel::Error,
+            LogLevel::Warning,
+            LogLevel::Notice,
+            LogLevel::Info,
+            LogLevel::Debug,
         ];
         $counter = count($orderedLevels);
 
@@ -105,7 +105,7 @@ final class LogLevelTest extends TestCase
     {
         foreach (LogLevel::cases() as $level) {
             $this->assertGreaterThanOrEqual(
-                LogLevel::EMERGENCY->severity(),
+                LogLevel::Emergency->severity(),
                 $level->severity(),
             );
         }
@@ -116,7 +116,7 @@ final class LogLevelTest extends TestCase
     {
         foreach (LogLevel::cases() as $level) {
             $this->assertLessThanOrEqual(
-                LogLevel::DEBUG->severity(),
+                LogLevel::Debug->severity(),
                 $level->severity(),
             );
         }
@@ -125,8 +125,8 @@ final class LogLevelTest extends TestCase
     #[Test]
     public function canBeCreatedFromString(): void
     {
-        $this->assertSame(LogLevel::EMERGENCY, LogLevel::from('emergency'));
-        $this->assertSame(LogLevel::DEBUG, LogLevel::from('debug'));
+        $this->assertSame(LogLevel::Emergency, LogLevel::from('emergency'));
+        $this->assertSame(LogLevel::Debug, LogLevel::from('debug'));
     }
 
     #[Test]

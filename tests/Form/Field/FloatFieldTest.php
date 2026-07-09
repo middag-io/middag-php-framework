@@ -19,7 +19,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pins FloatField's own surface: the FieldType::FLOAT declaration and the
+ * Pins FloatField's own surface: the FieldType::Float declaration and the
  * numeric min()/max()/step() attributes it adds on top of AbstractField.
  *
  * @internal
@@ -33,7 +33,7 @@ final class FloatFieldTest extends TestCase
         $def = (new FloatField('weight'))->toDefinition();
 
         self::assertSame('weight', $def->name);
-        self::assertSame(FieldType::FLOAT, $def->type);
+        self::assertSame(FieldType::Float, $def->type);
     }
 
     #[Test]

@@ -45,6 +45,6 @@ final class DurationField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::DURATION;
+        return FieldType::Duration;
     }
 }

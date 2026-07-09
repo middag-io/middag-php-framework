@@ -44,6 +44,6 @@ final class FloatField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::FLOAT;
+        return FieldType::Float;
     }
 }

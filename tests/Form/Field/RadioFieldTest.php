@@ -33,7 +33,7 @@ final class RadioFieldTest extends TestCase
     {
         $def = (new RadioField('newsletter_choice'))->toDefinition();
 
-        self::assertSame(FieldType::RADIO, $def->type);
+        self::assertSame(FieldType::Radio, $def->type);
         self::assertSame('newsletter_choice', $def->name);
     }
 
