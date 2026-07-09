@@ -46,12 +46,12 @@ final class OperatorTest extends TestCase
     #[Test]
     public function sqlMethodReturnsValue(): void
     {
-        $this->assertSame('=', Operator::EQ->sql());
-        $this->assertSame('<>', Operator::NEQ->sql());
-        $this->assertSame('LIKE', Operator::LIKE->sql());
-        $this->assertSame('NOT IN', Operator::NOT_IN->sql());
-        $this->assertSame('BETWEEN', Operator::BETWEEN->sql());
-        $this->assertSame('IS NOT', Operator::IS_NOT->sql());
+        $this->assertSame('=', Operator::Eq->sql());
+        $this->assertSame('<>', Operator::Neq->sql());
+        $this->assertSame('LIKE', Operator::Like->sql());
+        $this->assertSame('NOT IN', Operator::NotIn->sql());
+        $this->assertSame('BETWEEN', Operator::Between->sql());
+        $this->assertSame('IS NOT', Operator::IsNot->sql());
     }
 
     #[Test]

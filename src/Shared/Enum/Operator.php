@@ -30,7 +30,7 @@ enum Operator: string
      * Usage: WHERE column = value
      * Accepts: scalar values (string, int, float, bool)
      */
-    case EQ = '=';
+    case Eq = '=';
 
     /**
      * Inequality operator (<>).
@@ -39,7 +39,7 @@ enum Operator: string
      * Usage: WHERE column <> value
      * Accepts: scalar values (string, int, float, bool)
      */
-    case NEQ = '<>';
+    case Neq = '<>';
 
     /**
      * Greater than operator (>).
@@ -48,7 +48,7 @@ enum Operator: string
      * Usage: WHERE column > value
      * Accepts: numeric or comparable values (int, float, string for dates)
      */
-    case GT = '>';
+    case Gt = '>';
 
     /**
      * Greater than or equal operator (>=).
@@ -57,7 +57,7 @@ enum Operator: string
      * Usage: WHERE column >= value
      * Accepts: numeric or comparable values (int, float, string for dates)
      */
-    case GTE = '>=';
+    case Gte = '>=';
 
     /**
      * Less than operator (<).
@@ -66,7 +66,7 @@ enum Operator: string
      * Usage: WHERE column < value
      * Accepts: numeric or comparable values (int, float, string for dates)
      */
-    case LT = '<';
+    case Lt = '<';
 
     /**
      * Less than or equal operator (<=).
@@ -75,7 +75,7 @@ enum Operator: string
      * Usage: WHERE column <= value
      * Accepts: numeric or comparable values (int, float, string for dates)
      */
-    case LTE = '<=';
+    case Lte = '<=';
 
     /**
      * Pattern matching operator (LIKE).
@@ -85,7 +85,7 @@ enum Operator: string
      * Accepts: string values with optional wildcards
      * Note: Wildcards must be included in the value itself
      */
-    case LIKE = 'LIKE';
+    case Like = 'LIKE';
 
     /**
      * Set membership operator (IN).
@@ -94,7 +94,7 @@ enum Operator: string
      * Usage: WHERE column IN (value1, value2, value3)
      * Accepts: array of scalar values
      */
-    case IN = 'IN';
+    case In = 'IN';
 
     /**
      * Negated set membership operator (NOT IN).
@@ -103,7 +103,7 @@ enum Operator: string
      * Usage: WHERE column NOT IN (value1, value2, value3)
      * Accepts: array of scalar values
      */
-    case NOT_IN = 'NOT IN';
+    case NotIn = 'NOT IN';
 
     /**
      * Range operator (BETWEEN).
@@ -112,7 +112,7 @@ enum Operator: string
      * Usage: WHERE column BETWEEN min AND max
      * Accepts: array with exactly two elements [min, max]
      */
-    case BETWEEN = 'BETWEEN';
+    case Between = 'BETWEEN';
 
     /**
      * NULL comparison operator (IS).
@@ -122,7 +122,7 @@ enum Operator: string
      * Accepts: NULL, TRUE, FALSE
      * Note: Use this instead of EQ for NULL comparisons
      */
-    case IS = 'IS';
+    case Is = 'IS';
 
     /**
      * Negated NULL comparison operator (IS NOT).
@@ -132,7 +132,7 @@ enum Operator: string
      * Accepts: NULL, TRUE, FALSE
      * Note: Use this instead of NEQ for NULL comparisons
      */
-    case IS_NOT = 'IS NOT';
+    case IsNot = 'IS NOT';
 
     /**
      * Raw SQL operator (RAW).
@@ -147,7 +147,7 @@ enum Operator: string
      * Usage: Internal use only for complex SQL expressions
      * Accepts: trusted SQL string fragments
      */
-    case RAW = 'RAW';
+    case Raw = 'RAW';
 
     /**
      * Return the SQL representation of this operator.

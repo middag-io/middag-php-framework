@@ -34,7 +34,7 @@ enum Capability: string
      * `START TRANSACTION` and is InnoDB-only, so a $wpdb adapter may report
      * false depending on the table engine.
      */
-    case TRANSACTIONS = 'transactions';
+    case Transactions = 'transactions';
 
     /**
      * Stream large result sets lazily via cursor() instead of buffering.
@@ -42,26 +42,26 @@ enum Capability: string
      * Backed by an unbuffered cursor (PDO) or a native recordset
      * (Moodle get_recordset_sql) so memory stays bounded on big reads.
      */
-    case STREAMING = 'streaming';
+    case Streaming = 'streaming';
 
     /**
      * Use JSON-path predicates inside WHERE clauses.
      *
      * Available on modern MySQL/PostgreSQL; absent on legacy engines.
      */
-    case JSON_WHERE = 'json_where';
+    case JsonWhere = 'json_where';
 
     /**
      * Return affected/inserted row data from a write (SQL RETURNING).
      *
      * PostgreSQL supports it; MySQL and Moodle's DML do not.
      */
-    case RETURNING = 'returning';
+    case Returning = 'returning';
 
     /**
      * Insert-or-update in a single statement (INSERT ... ON CONFLICT / upsert).
      */
-    case UPSERT = 'upsert';
+    case Upsert = 'upsert';
 
     /**
      * Introspect or diff the schema (DDL).
@@ -69,7 +69,7 @@ enum Capability: string
      * False on hosts that own their own schema lifecycle, e.g. Moodle, where
      * install.xml / db/upgrade.php (XMLDB) are the only sanctioned path.
      */
-    case SCHEMA_DIFF = 'schema_diff';
+    case SchemaDiff = 'schema_diff';
 
     /**
      * Acquire row-level locks within a transaction (SELECT ... FOR UPDATE /
@@ -78,5 +78,5 @@ enum Capability: string
      * Supported on MySQL/InnoDB and PostgreSQL; SQLite has no row-lock syntax
      * (it locks the whole database), so a SQLite-backed adapter reports false.
      */
-    case ROW_LOCK = 'row_lock';
+    case RowLock = 'row_lock';
 }

@@ -39,7 +39,7 @@ final class InertiaRendererTest extends TestCase
     #[Test]
     public function targetIsPropsMedium(): void
     {
-        self::assertSame(RenderTarget::PROPS, InertiaRenderer::target());
+        self::assertSame(RenderTarget::Props, InertiaRenderer::target());
     }
 
     #[Test]
@@ -59,7 +59,7 @@ final class InertiaRendererTest extends TestCase
         $output = (new InertiaRenderer(new InertiaFieldMapper()))->render($form);
 
         self::assertInstanceOf(RendererOutput::class, $output);
-        self::assertSame(RenderTarget::PROPS, $output->target);
+        self::assertSame(RenderTarget::Props, $output->target);
 
         $schema = $output->props['schema'];
         self::assertCount(3, $schema);

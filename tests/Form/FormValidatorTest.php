@@ -62,7 +62,7 @@ final class FormValidatorTest extends TestCase
     #[Test]
     public function requiredWhenConditionMakesFieldRequired(): void
     {
-        $schema = [(new TextField('reason'))->requiredWhen('type', ConditionOperator::EQ, 'other')];
+        $schema = [(new TextField('reason'))->requiredWhen('type', ConditionOperator::Eq, 'other')];
 
         self::assertArrayHasKey('reason', $this->validator()->validate($schema, ['type' => 'other']));
         self::assertSame([], $this->validator()->validate($schema, ['type' => 'standard']));

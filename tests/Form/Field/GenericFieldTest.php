@@ -34,25 +34,25 @@ final class GenericFieldTest extends TestCase
     #[Test]
     public function exposesTheExplicitCheckboxTypeInTheDefinition(): void
     {
-        $def = (new GenericField('agree_terms', FieldType::CHECKBOX))->toDefinition();
+        $def = (new GenericField('agree_terms', FieldType::Checkbox))->toDefinition();
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('agree_terms', $def->name);
-        self::assertSame(FieldType::CHECKBOX, $def->type);
+        self::assertSame(FieldType::Checkbox, $def->type);
     }
 
     #[Test]
     public function carriesAnyExplicitTypeVerbatim(): void
     {
-        $def = (new GenericField('secret_token_ref', FieldType::HIDDEN))->toDefinition();
+        $def = (new GenericField('secret_token_ref', FieldType::Hidden))->toDefinition();
 
-        self::assertSame(FieldType::HIDDEN, $def->type);
+        self::assertSame(FieldType::Hidden, $def->type);
     }
 
     #[Test]
     public function defaultTypeThrowsBecauseNoTypeCanBeInferred(): void
     {
-        $field = new GenericField('feature_enabled', FieldType::SWITCH);
+        $field = new GenericField('feature_enabled', FieldType::Switch);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('GenericField requires explicit FieldType via constructor.');

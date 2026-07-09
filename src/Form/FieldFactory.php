@@ -58,17 +58,17 @@ final class FieldFactory
 
     public static function email(string $name): TextField
     {
-        return new TextField($name, FieldType::EMAIL);
+        return new TextField($name, FieldType::Email);
     }
 
     public static function password(string $name): TextField
     {
-        return new TextField($name, FieldType::PASSWORD);
+        return new TextField($name, FieldType::Password);
     }
 
     public static function url(string $name): TextField
     {
-        return new TextField($name, FieldType::URL);
+        return new TextField($name, FieldType::Url);
     }
 
     public static function integer(string $name): IntField
@@ -83,12 +83,12 @@ final class FieldFactory
 
     public static function checkbox(string $name): GenericField
     {
-        return new GenericField($name, FieldType::CHECKBOX);
+        return new GenericField($name, FieldType::Checkbox);
     }
 
     public static function toggle(string $name): GenericField
     {
-        return new GenericField($name, FieldType::SWITCH);
+        return new GenericField($name, FieldType::Switch);
     }
 
     public static function date(string $name): DateField
@@ -98,7 +98,7 @@ final class FieldFactory
 
     public static function datetime(string $name): DateField
     {
-        return new DateField($name, FieldType::DATETIME);
+        return new DateField($name, FieldType::Datetime);
     }
 
     public static function duration(string $name): DurationField
@@ -118,17 +118,17 @@ final class FieldFactory
 
     public static function header(string $name): StaticField
     {
-        return new StaticField($name, FieldType::HEADER);
+        return new StaticField($name, FieldType::Header);
     }
 
     public static function hidden(string $name): GenericField
     {
-        return new GenericField($name, FieldType::HIDDEN);
+        return new GenericField($name, FieldType::Hidden);
     }
 
     public static function multiselect(string $name): SelectField
     {
-        return new SelectField($name, FieldType::MULTISELECT);
+        return new SelectField($name, FieldType::Multiselect);
     }
 
     public static function radio(string $name): RadioField

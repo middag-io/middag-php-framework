@@ -37,8 +37,8 @@ final class RendererRegistryTest extends TestCase
         $props = new PropsFormRenderer();
         $registry = new RendererRegistry([$html, $props]);
 
-        self::assertSame($html, $registry->get(RenderTarget::HTML));
-        self::assertSame($props, $registry->get(RenderTarget::PROPS));
+        self::assertSame($html, $registry->get(RenderTarget::Html));
+        self::assertSame($props, $registry->get(RenderTarget::Props));
     }
 
     #[Test]
@@ -48,7 +48,7 @@ final class RendererRegistryTest extends TestCase
         $second = new HtmlFormRenderer();
         $registry = new RendererRegistry([$first, $second]);
 
-        self::assertSame($second, $registry->get(RenderTarget::HTML));
+        self::assertSame($second, $registry->get(RenderTarget::Html));
     }
 
     #[Test]
@@ -58,6 +58,6 @@ final class RendererRegistryTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('No form renderer for target: props');
-        $registry->get(RenderTarget::PROPS);
+        $registry->get(RenderTarget::Props);
     }
 }

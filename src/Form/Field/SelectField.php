@@ -53,6 +53,6 @@ final class SelectField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::SELECT;
+        return FieldType::Select;
     }
 }

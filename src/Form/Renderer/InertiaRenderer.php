@@ -42,7 +42,7 @@ final readonly class InertiaRenderer implements FormRendererInterface
     /** {@inheritdoc} */
     public static function target(): RenderTarget
     {
-        return RenderTarget::PROPS;
+        return RenderTarget::Props;
     }
 
     /** {@inheritdoc} */
@@ -62,7 +62,7 @@ final readonly class InertiaRenderer implements FormRendererInterface
             'meta' => [],
         ];
 
-        return RendererOutput::props(RenderTarget::PROPS, $props);
+        return RendererOutput::props(RenderTarget::Props, $props);
     }
 
     /**

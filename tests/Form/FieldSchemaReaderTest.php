@@ -54,10 +54,10 @@ final class FieldSchemaReaderTest extends TestCase
     {
         $definitions = $this->definitionsByName();
 
-        self::assertSame(FieldType::TEXT, $definitions['full_name']->type);   // inferred: string
-        self::assertSame(FieldType::EMAIL, $definitions['email']->type);      // explicit
-        self::assertSame(FieldType::INT, $definitions['age']->type);          // inferred: int
-        self::assertSame(FieldType::CHECKBOX, $definitions['active']->type);  // inferred: bool
+        self::assertSame(FieldType::Text, $definitions['full_name']->type);   // inferred: string
+        self::assertSame(FieldType::Email, $definitions['email']->type);      // explicit
+        self::assertSame(FieldType::Int, $definitions['age']->type);          // inferred: int
+        self::assertSame(FieldType::Checkbox, $definitions['active']->type);  // inferred: bool
     }
 
     public function testSettersFromTheAttributeAreApplied(): void
@@ -122,9 +122,9 @@ final class FieldSchemaReaderTest extends TestCase
             $types[$definition->name] = $definition->type;
         }
 
-        self::assertSame(FieldType::FLOAT, $types['ratio']);
-        self::assertSame(FieldType::DATE, $types['when']);
-        self::assertSame(FieldType::TEXT, $types['loose']);
+        self::assertSame(FieldType::Float, $types['ratio']);
+        self::assertSame(FieldType::Date, $types['when']);
+        self::assertSame(FieldType::Text, $types['loose']);
     }
 
     /**

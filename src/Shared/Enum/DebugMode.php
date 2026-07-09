@@ -19,11 +19,11 @@ namespace Middag\Framework\Shared\Enum;
  */
 enum DebugMode: int
 {
-    case DISABLED = 0;
+    case Disabled = 0;
 
-    case NORMAL = 1;
+    case Normal = 1;
 
-    case FULL = 2;
+    case Full = 2;
 
     /**
      * Check if the current configured mode satisfies the required level.

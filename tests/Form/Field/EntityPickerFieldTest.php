@@ -34,7 +34,7 @@ final class EntityPickerFieldTest extends TestCase
         $def = (new EntityPickerField('owner'))->toDefinition();
 
         self::assertSame('owner', $def->name);
-        self::assertSame(FieldType::ENTITY_PICKER, $def->type);
+        self::assertSame(FieldType::EntityPicker, $def->type);
     }
 
     #[Test]

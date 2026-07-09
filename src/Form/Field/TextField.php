@@ -44,6 +44,6 @@ final class TextField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::TEXT;
+        return FieldType::Text;
     }
 }

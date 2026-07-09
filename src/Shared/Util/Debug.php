@@ -76,7 +76,7 @@ class Debug
     /**
      * Emit a trace message when the current debug mode is at least `$level`.
      */
-    public static function trace(string $message = '', DebugMode $level = DebugMode::NORMAL): void
+    public static function trace(string $message = '', DebugMode $level = DebugMode::Normal): void
     {
         if (!$level->isEnabledBy(self::readDebugMode())) {
             return;
@@ -91,7 +91,7 @@ class Debug
      * Subclasses override `formatExceptionLines()` to add platform-specific
      * exception properties (e.g. host-specific debug/SQL fields).
      */
-    public static function traceException(Throwable $exception, DebugMode $level = DebugMode::NORMAL): void
+    public static function traceException(Throwable $exception, DebugMode $level = DebugMode::Normal): void
     {
         if (self::$intrace) {
             return;
@@ -100,7 +100,7 @@ class Debug
         self::$intrace = true;
 
         try {
-            $enabledValue = DebugMode::DISABLED->value;
+            $enabledValue = DebugMode::Disabled->value;
 
             try {
                 $enabledValue = self::readDebugMode();
@@ -157,7 +157,7 @@ class Debug
     private static function readDebugMode(): int
     {
         if (!self::$configReader instanceof Closure) {
-            return DebugMode::DISABLED->value;
+            return DebugMode::Disabled->value;
         }
 
         return (self::$configReader)();

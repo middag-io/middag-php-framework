@@ -25,7 +25,7 @@ final class ProfileDto
     #[Field(label: 'profile.name', required: true)]
     public string $fullName = '';
 
-    #[Field(type: FieldType::EMAIL, label: 'profile.email')]
+    #[Field(type: FieldType::Email, label: 'profile.email')]
     public string $email = '';
 
     #[Field]

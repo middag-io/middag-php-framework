@@ -34,6 +34,6 @@ final class StaticField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::STATIC;
+        return FieldType::Static;
     }
 }

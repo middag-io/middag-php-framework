@@ -53,6 +53,6 @@ final class DateField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::DATE;
+        return FieldType::Date;
     }
 }

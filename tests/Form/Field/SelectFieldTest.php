@@ -21,7 +21,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pins SelectField's own surface: the FieldType::SELECT declaration and the
+ * Pins SelectField's own surface: the FieldType::Select declaration and the
  * options()/optionsFrom()/searchable() members it adds on top of AbstractField.
  * The inherited AbstractField fluent API is exercised by AbstractFieldTest.
  *
@@ -37,7 +37,7 @@ final class SelectFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('country', $def->name);
-        self::assertSame(FieldType::SELECT, $def->type);
+        self::assertSame(FieldType::Select, $def->type);
     }
 
     #[Test]
@@ -100,7 +100,7 @@ final class SelectFieldTest extends TestCase
             ->searchable()
             ->toDefinition();
 
-        self::assertSame(FieldType::SELECT, $def->type);
+        self::assertSame(FieldType::Select, $def->type);
         self::assertSame(['br' => 'Brazil'], $def->options);
         self::assertTrue($def->attributes['searchable']);
     }

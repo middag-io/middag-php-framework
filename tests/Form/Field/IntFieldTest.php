@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Covers IntField's own surface: the FieldType::INT declaration and the
+ * Covers IntField's own surface: the FieldType::Int declaration and the
  * numeric attribute setters (min/max/step) it layers on AbstractField.
  *
  * @internal
@@ -35,7 +35,7 @@ final class IntFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('age', $def->name);
-        self::assertSame(FieldType::INT, $def->type);
+        self::assertSame(FieldType::Int, $def->type);
     }
 
     #[Test]

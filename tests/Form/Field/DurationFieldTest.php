@@ -36,7 +36,7 @@ final class DurationFieldTest extends TestCase
 
         self::assertInstanceOf(FieldDefinition::class, $def);
         self::assertSame('lesson_length', $def->name);
-        self::assertSame(FieldType::DURATION, $def->type);
+        self::assertSame(FieldType::Duration, $def->type);
     }
 
     #[Test]
@@ -49,7 +49,7 @@ final class DurationFieldTest extends TestCase
         $def = $field->toDefinition();
 
         self::assertSame([60, 3600, 86400], $def->attributes['units']);
-        self::assertSame(FieldType::DURATION, $def->type);
+        self::assertSame(FieldType::Duration, $def->type);
     }
 
     #[Test]
@@ -74,6 +74,6 @@ final class DurationFieldTest extends TestCase
 
         self::assertSame([1, 60, 3600], $def->attributes['units']);
         self::assertSame(60, $def->attributes['default_unit']);
-        self::assertSame(FieldType::DURATION, $def->type);
+        self::assertSame(FieldType::Duration, $def->type);
     }
 }

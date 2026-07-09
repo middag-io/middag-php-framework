@@ -21,21 +21,21 @@ namespace Middag\Framework\Logging\Enum;
  */
 enum LogLevel: string
 {
-    case EMERGENCY = 'emergency';
+    case Emergency = 'emergency';
 
-    case ALERT = 'alert';
+    case Alert = 'alert';
 
-    case CRITICAL = 'critical';
+    case Critical = 'critical';
 
-    case ERROR = 'error';
+    case Error = 'error';
 
-    case WARNING = 'warning';
+    case Warning = 'warning';
 
-    case NOTICE = 'notice';
+    case Notice = 'notice';
 
-    case INFO = 'info';
+    case Info = 'info';
 
-    case DEBUG = 'debug';
+    case Debug = 'debug';
 
     /**
      * Numeric severity for filtering (Lower number = Higher severity).
@@ -43,14 +43,14 @@ enum LogLevel: string
     public function severity(): int
     {
         return match ($this) {
-            self::EMERGENCY => 0,
-            self::ALERT => 1,
-            self::CRITICAL => 2,
-            self::ERROR => 3,
-            self::WARNING => 4,
-            self::NOTICE => 5,
-            self::INFO => 6,
-            self::DEBUG => 7,
+            self::Emergency => 0,
+            self::Alert => 1,
+            self::Critical => 2,
+            self::Error => 3,
+            self::Warning => 4,
+            self::Notice => 5,
+            self::Info => 6,
+            self::Debug => 7,
         };
     }
 }

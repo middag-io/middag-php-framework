@@ -43,9 +43,9 @@ final class DebugTest extends TestCase
     public function traceEmitsWhenModeMeetsLevel(): void
     {
         $logger = $this->spyLogger();
-        Debug::setRuntime($logger, static fn (): int => DebugMode::FULL->value);
+        Debug::setRuntime($logger, static fn (): int => DebugMode::Full->value);
 
-        Debug::trace('hello', DebugMode::NORMAL);
+        Debug::trace('hello', DebugMode::Normal);
 
         self::assertContains('hello', $logger->messages);
     }
@@ -54,9 +54,9 @@ final class DebugTest extends TestCase
     public function traceIsSilentWhenModeBelowLevel(): void
     {
         $logger = $this->spyLogger();
-        Debug::setRuntime($logger, static fn (): int => DebugMode::DISABLED->value);
+        Debug::setRuntime($logger, static fn (): int => DebugMode::Disabled->value);
 
-        Debug::trace('hidden', DebugMode::NORMAL);
+        Debug::trace('hidden', DebugMode::Normal);
 
         self::assertSame([], $logger->messages);
     }
@@ -65,9 +65,9 @@ final class DebugTest extends TestCase
     public function traceExceptionEmitsFormattedLines(): void
     {
         $logger = $this->spyLogger();
-        Debug::setRuntime($logger, static fn (): int => DebugMode::NORMAL->value);
+        Debug::setRuntime($logger, static fn (): int => DebugMode::Normal->value);
 
-        Debug::traceException(new RuntimeException('boom', 7), DebugMode::NORMAL);
+        Debug::traceException(new RuntimeException('boom', 7), DebugMode::Normal);
 
         self::assertContains('@@@@@@ EXCEPTION @@@@@@', $logger->messages);
         self::assertContains('Code: 7', $logger->messages);
@@ -79,11 +79,11 @@ final class DebugTest extends TestCase
     public function traceExceptionAppendsPreviousMessage(): void
     {
         $logger = $this->spyLogger();
-        Debug::setRuntime($logger, static fn (): int => DebugMode::NORMAL->value);
+        Debug::setRuntime($logger, static fn (): int => DebugMode::Normal->value);
 
         Debug::traceException(
             new RuntimeException('outer', 0, new LogicException('inner')),
-            DebugMode::NORMAL,
+            DebugMode::Normal,
         );
 
         self::assertContains('Previous: inner', $logger->messages);
@@ -93,9 +93,9 @@ final class DebugTest extends TestCase
     public function traceExceptionIsSilentWhenModeBelowLevel(): void
     {
         $logger = $this->spyLogger();
-        Debug::setRuntime($logger, static fn (): int => DebugMode::DISABLED->value);
+        Debug::setRuntime($logger, static fn (): int => DebugMode::Disabled->value);
 
-        Debug::traceException(new RuntimeException('boom'), DebugMode::NORMAL);
+        Debug::traceException(new RuntimeException('boom'), DebugMode::Normal);
 
         self::assertSame([], $logger->messages);
     }
@@ -108,7 +108,7 @@ final class DebugTest extends TestCase
             throw new RuntimeException('config unavailable');
         });
 
-        Debug::traceException(new RuntimeException('boom'), DebugMode::NORMAL);
+        Debug::traceException(new RuntimeException('boom'), DebugMode::Normal);
 
         self::assertSame([], $logger->messages);
     }
@@ -117,9 +117,9 @@ final class DebugTest extends TestCase
     public function traceExceptionGuardsAgainstReentrancy(): void
     {
         ReentrantDebug::$formatCalls = 0;
-        Debug::setRuntime($this->spyLogger(), static fn (): int => DebugMode::FULL->value);
+        Debug::setRuntime($this->spyLogger(), static fn (): int => DebugMode::Full->value);
 
-        ReentrantDebug::traceException(new RuntimeException('boom'), DebugMode::NORMAL);
+        ReentrantDebug::traceException(new RuntimeException('boom'), DebugMode::Normal);
 
         self::assertSame(1, ReentrantDebug::$formatCalls);
     }
@@ -128,10 +128,10 @@ final class DebugTest extends TestCase
     public function resetRuntimeClearsWiringSoTraceBecomesDisabled(): void
     {
         $logger = $this->spyLogger();
-        Debug::setRuntime($logger, static fn (): int => DebugMode::FULL->value);
+        Debug::setRuntime($logger, static fn (): int => DebugMode::Full->value);
 
         Debug::resetRuntime();
-        Debug::trace('after-reset', DebugMode::NORMAL);
+        Debug::trace('after-reset', DebugMode::Normal);
 
         self::assertSame([], $logger->messages);
     }
@@ -144,7 +144,7 @@ final class DebugTest extends TestCase
         // No runtime wired: readDebugMode() returns DISABLED (0), which still
         // satisfies a DISABLED-level trace, so emit() runs against the
         // NullLogger fallback without throwing.
-        Debug::trace('to-null-logger', DebugMode::DISABLED);
+        Debug::trace('to-null-logger', DebugMode::Disabled);
     }
 
     /**

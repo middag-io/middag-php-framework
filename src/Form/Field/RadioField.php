@@ -35,6 +35,6 @@ final class RadioField extends AbstractField
 
     protected function defaultType(): FieldType
     {
-        return FieldType::RADIO;
+        return FieldType::Radio;
     }
 }

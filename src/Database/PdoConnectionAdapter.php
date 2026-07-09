@@ -45,7 +45,7 @@ final readonly class PdoConnectionAdapter implements ConnectionAdapterInterface
     public function supports(Capability $feature): bool
     {
         return match ($feature) {
-            Capability::TRANSACTIONS, Capability::STREAMING => true,
+            Capability::Transactions, Capability::Streaming => true,
             default => false,
         };
     }
