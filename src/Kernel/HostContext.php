@@ -26,6 +26,19 @@ use Middag\Framework\Kernel\Contract\HostComponentContextInterface;
  * Mirrors the {@see ContainerFactory} boot-seam philosophy: the generic adapter
  * exposes the seam, the host wires the concrete value.
  *
+ * Multi-host limitation (read before using in a multi-component host): this is a
+ * single global slot, so it models exactly one active host per process. It is
+ * safe for single-component hosts — Moodle boots one plugin per request. It is
+ * NOT safe when several host components share a process: multiple WordPress
+ * plugins built on middag-io/wordpress in the same request would each call
+ * {@see self::set()} and the last write silently wins, leaking one plugin's
+ * identity, version, and paths into the others. Such consumers must NOT read
+ * this seam; they inject {@see HostComponentContextInterface} through their own
+ * DI container (each plugin has its own container, so isolation is natural). A
+ * keyed-by-component registry may replace this single slot in a future minor if
+ * a framework-level multi-component need arises; until then the slot stays as
+ * the single-host seam.
+ *
  * @api
  */
 final class HostContext
