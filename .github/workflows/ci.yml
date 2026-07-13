@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Test namespaces follow PSR-4 (autoload + autoload-dev)
+        run: composer dump-autoload --optimize --strict-psr
+
       - name: PHPStan + PHP-CS-Fixer + Rector (dry-run)
         run: composer check
 
