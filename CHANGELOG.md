@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.1](https://github.com/middag-io/middag-php-framework/compare/v1.7.0...v1.7.1) (2026-07-13)
+
+
+### Documentation
+
+* **kernel:** multi-host warning on HostContext (O5-FW-01) ([48974e2](https://github.com/middag-io/middag-php-framework/commit/48974e2f6355d841f04ca5c6969e0a76c1930f18))
+
+
+### Miscellaneous
+
+* merge develop (CI PSR-4 guards) into refactor/wp-lib-v2 ([9c81101](https://github.com/middag-io/middag-php-framework/commit/9c811017a36ed3d8b28abc1c8f3a455dd830846d))
+
 ## [1.7.0](https://github.com/middag-io/middag-php-framework/compare/v1.6.0...v1.7.0) (2026-07-09)
 
 
