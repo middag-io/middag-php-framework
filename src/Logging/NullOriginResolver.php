@@ -28,11 +28,16 @@ final class NullOriginResolver implements OriginResolverInterface
             return 'cli';
         }
 
+        /**
+         * @codeCoverageIgnoreStart — PHPUnit always runs under the cli SAPI,
+         * so the web-request tail is unreachable in any test run (R-05).
+         */
         $remote = $_SERVER['REMOTE_ADDR'] ?? '';
         if (is_string($remote) && $remote !== '') {
             return 'ip:' . $remote;
         }
 
         return 'system';
+        // @codeCoverageIgnoreEnd
     }
 }
