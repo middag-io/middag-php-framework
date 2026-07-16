@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/middag-io/middag-php-framework/compare/v1.7.2...v1.8.0) (2026-07-16)
+
+
+### Features
+
+* **database:** add MySQL dialect and host-agnostic query/transaction seams ([0c0b96b](https://github.com/middag-io/middag-php-framework/commit/0c0b96b1ece9441e13069e28d23652bf75c15ebc))
+* **shared:** add Typing::toNumber, Inflector and Arr::mergePreferNonNull utils ([7e7cf3e](https://github.com/middag-io/middag-php-framework/commit/7e7cf3ec5b12fbaa06b20af3e14b71136aed21fb))
+
 ## [1.7.2](https://github.com/middag-io/middag-php-framework/compare/v1.7.1...v1.7.2) (2026-07-16)
 
 
