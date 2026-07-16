@@ -201,6 +201,46 @@ class Typing
         return (float) $value;
     }
 
+    /**
+     * Normalizes a numeric value to int when integral, otherwise to float.
+     *
+     * Useful for values that are conceptually numbers but whose scale is not
+     * known upfront (grades, scores): whole numbers come back as int, fractional
+     * ones as float, so callers do not carry a spurious `.0`.
+     *
+     * Expected behavior:
+     * - null / "" → null
+     * - "5" / 5 / 5.0 → 5 (int)
+     * - "5.5" / 5.5 → 5.5 (float)
+     * - "abc" → exception
+     *
+     * @param mixed $value value to convert
+     *
+     * @return null|float|int int when integral, float when fractional, null when empty
+     */
+    public static function toNumber(mixed $value): float|int|null
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (!is_numeric($value)) {
+            throw new LogicException(
+                'Typing::toNumber(): Non-numeric value received: ' . var_export($value, true)
+            );
+        }
+
+        $float = (float) $value;
+
+        // Integral and within int range → int; otherwise keep it a float.
+        if (is_finite($float) && floor($float) === $float
+            && $float >= (float) PHP_INT_MIN && $float <= (float) PHP_INT_MAX) {
+            return (int) $float;
+        }
+
+        return $float;
+    }
+
     /*
      * =========================================================================
      * ID Normalization

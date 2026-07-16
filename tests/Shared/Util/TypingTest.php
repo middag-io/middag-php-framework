@@ -335,6 +335,46 @@ final class TypingTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('toNumberProvider')]
+    public function toNumberReturnsIntWhenIntegralAndFloatOtherwise(mixed $value, float|int|null $expected): void
+    {
+        self::assertSame($expected, Typing::toNumber($value));
+    }
+
+    /**
+     * @return iterable<string, array{mixed, null|float|int}>
+     */
+    public static function toNumberProvider(): iterable
+    {
+        yield 'null' => [null, null];
+
+        yield 'empty string' => ['', null];
+
+        yield 'integral string' => ['5', 5];
+
+        yield 'integral float' => [5.0, 5];
+
+        yield 'fractional string' => ['5.5', 5.5];
+
+        yield 'fractional float' => [5.5, 5.5];
+
+        yield 'zero' => ['0', 0];
+
+        yield 'negative integral' => ['-3', -3];
+
+        yield 'negative fractional' => [-3.25, -3.25];
+    }
+
+    #[Test]
+    public function toNumberThrowsOnNonNumeric(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Typing::toNumber()');
+
+        Typing::toNumber('abc');
+    }
+
+    #[Test]
     #[DataProvider('isNumericStringProvider')]
     public function isNumericStringDetectsDigitOnlyStrings(mixed $value, bool $expected): void
     {
