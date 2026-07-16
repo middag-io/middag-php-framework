@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.2](https://github.com/middag-io/middag-php-framework/compare/v1.7.1...v1.7.2) (2026-07-16)
+
+
+### Miscellaneous
+
+* release 1.7.2 ([6f31c1d](https://github.com/middag-io/middag-php-framework/commit/6f31c1dc11a12bd8b29303721dff6c8fbe53a063))
+* sync develop into main for 1.7.2 ([835ae05](https://github.com/middag-io/middag-php-framework/commit/835ae05e16b5cb8d8d7c2619879785c69ed00562))
+
 ## [1.7.1](https://github.com/middag-io/middag-php-framework/compare/v1.7.0...v1.7.1) (2026-07-13)
 
 
