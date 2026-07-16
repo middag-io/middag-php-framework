@@ -32,9 +32,12 @@ final class NativeSession implements SessionInterface
             return;
         }
 
+        // @codeCoverageIgnoreStart — PHPUnit always runs under the cli SAPI,
+        // so the web-only session path is unreachable in any test run (R-05).
         if (session_status() === \PHP_SESSION_NONE) {
             session_start();
         }
+        // @codeCoverageIgnoreEnd
     }
 
     public function has(string $key): bool
@@ -68,8 +71,10 @@ final class NativeSession implements SessionInterface
             return;
         }
 
+        // @codeCoverageIgnoreStart — PHPUnit always runs under the cli SAPI (R-05).
         if (session_status() === \PHP_SESSION_ACTIVE) {
             session_regenerate_id($deleteOld);
         }
+        // @codeCoverageIgnoreEnd
     }
 }

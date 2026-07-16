@@ -48,9 +48,13 @@ class SchemaBuilder
 
         $files = glob(rtrim($schemaDir, '/') . '/*.php');
 
+        // @codeCoverageIgnoreStart — glob() only returns false on system-level
+        // failure; with the directory already validated readable above there is
+        // no way to force this branch from a test (R-05).
         if ($files === false) {
             return $this;
         }
+        // @codeCoverageIgnoreEnd
 
         foreach ($files as $file) {
             $descriptor = require $file;
