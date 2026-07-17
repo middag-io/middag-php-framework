@@ -19,6 +19,7 @@ use Middag\Framework\Tests\Persistence\Query\Fixture\StubConnectionAdapter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Edge branches of the QueryBuilder not exercised by QueryBuilderTest:
@@ -110,5 +111,27 @@ final class QueryBuilderCoverageTest extends TestCase
         $builder = QueryBuilder::on(new StubConnectionAdapter(['aggregate' => null]), 'sales');
 
         self::assertSame(0, $builder->sum('amount'));
+    }
+
+    #[Test]
+    public function compilingANestedWhereWithACorruptedEntryThrows(): void
+    {
+        // whereNested() (reached through where(Closure)) already rejects any
+        // closure that doesn't return the QueryBuilder it received, so a
+        // 'query' entry that isn't a QueryBuilder can never arise through the
+        // public API. compileNestedWhere()'s own instanceof guard is a second
+        // line of defense against that same invariant — reachable only if the
+        // internal $wheres state is corrupted directly, as done here via
+        // reflection.
+        $builder = QueryBuilder::for('users')->where(static fn (QueryBuilder $q): QueryBuilder => $q->where('active', true));
+
+        $wheresProperty = new ReflectionProperty(QueryBuilder::class, 'wheres');
+        $wheres = $wheresProperty->getValue($builder);
+        $wheres[0]['query'] = 'not-a-query-builder';
+        $wheresProperty->setValue($builder, $wheres);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Nested where must hold a QueryBuilder.');
+        $builder->compile();
     }
 }

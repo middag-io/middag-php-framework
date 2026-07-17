@@ -14,11 +14,14 @@ namespace Middag\Framework\Tests\Http;
 
 use Middag\Framework\Http\FatalErrorHandler;
 use Middag\Framework\Observability\ProfileCollector;
+use Middag\Framework\Tests\Http\Fixture\FatalShutdownState;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use ReflectionMethod;
 use Stringable;
+
+require_once __DIR__ . '/Fixture/fatal_error_handler_functions.php';
 
 /**
  * @internal
@@ -33,6 +36,11 @@ final class FatalErrorHandlerTest extends TestCase
         'file' => '/app/Foo.php',
         'line' => 42,
     ];
+
+    protected function tearDown(): void
+    {
+        FatalShutdownState::reset();
+    }
 
     public function testBuildsJsonBodyWithCodeAndNoDetailInProduction(): void
     {
@@ -162,6 +170,74 @@ final class FatalErrorHandlerTest extends TestCase
         $code = $method->invoke($handler);
 
         self::assertMatchesRegularExpression('/^[0-9A-F]{8}$/', $code);
+    }
+
+    public function testHandleShutdownReportsAndEmitsTheNegotiatedJsonResponse(): void
+    {
+        FatalShutdownState::$active = true;
+        FatalShutdownState::$errorGetLast = self::ERROR;
+        FatalShutdownState::$headersSent = false;
+
+        $logger = new class extends AbstractLogger {
+            /** @var list<array{level: mixed, context: array<string, mixed>}> */
+            public array $records = [];
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                $this->records[] = ['level' => $level, 'context' => $context];
+            }
+        };
+        $profile = new ProfileCollector();
+        $handler = new FatalErrorHandler($logger, $profile, debug: true);
+
+        $server = $_SERVER;
+        $_SERVER['HTTP_ACCEPT'] = 'application/json';
+
+        try {
+            ob_start();
+            $handler->handleShutdown();
+            $body = ob_get_clean();
+        } finally {
+            $_SERVER = $server;
+        }
+
+        self::assertCount(1, $logger->records, 'the fatal is logged before anything is rendered');
+        self::assertSame('critical', $logger->records[0]['level']);
+        self::assertCount(1, $profile->events(), 'the fatal is recorded on the profiler');
+
+        self::assertSame([500], FatalShutdownState::$responseCodes);
+        self::assertContains('Content-Type: application/json', FatalShutdownState::$headers);
+
+        $decoded = json_decode((string) $body, true);
+        self::assertIsArray($decoded);
+        self::assertStringContainsString('Allowed memory size exhausted', $decoded['error']['detail']);
+        self::assertSame($logger->records[0]['context']['code'], $decoded['error']['code']);
+    }
+
+    public function testHandleShutdownStopsAfterReportingWhenHeadersAlreadySent(): void
+    {
+        FatalShutdownState::$active = true;
+        FatalShutdownState::$errorGetLast = self::ERROR;
+        FatalShutdownState::$headersSent = true;
+
+        $logger = new class extends AbstractLogger {
+            public int $calls = 0;
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                ++$this->calls;
+            }
+        };
+        $handler = new FatalErrorHandler($logger);
+
+        ob_start();
+        $handler->handleShutdown();
+        $body = ob_get_clean();
+
+        self::assertSame(1, $logger->calls, 'the fatal is still reported at critical');
+        self::assertSame('', $body, 'nothing is rendered once output has already started');
+        self::assertSame([], FatalShutdownState::$responseCodes, 'no status is sent once headers are already sent');
+        self::assertSame([], FatalShutdownState::$headers, 'no header is sent once headers are already sent');
     }
 
     /**

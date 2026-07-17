@@ -32,8 +32,9 @@ final class NativeSession implements SessionInterface
             return;
         }
 
-        // @codeCoverageIgnoreStart — PHPUnit always runs under the cli SAPI,
-        // so the web-only session path is unreachable in any test run (R-05).
+        // PHPUnit always runs under the cli SAPI, so the web-only session
+        // path below is unreachable in any test run (R-05).
+        // @codeCoverageIgnoreStart
         if (session_status() === \PHP_SESSION_NONE) {
             session_start();
         }
@@ -71,7 +72,8 @@ final class NativeSession implements SessionInterface
             return;
         }
 
-        // @codeCoverageIgnoreStart — PHPUnit always runs under the cli SAPI (R-05).
+        // PHPUnit always runs under the cli SAPI (R-05).
+        // @codeCoverageIgnoreStart
         if (session_status() === \PHP_SESSION_ACTIVE) {
             session_regenerate_id($deleteOld);
         }

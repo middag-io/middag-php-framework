@@ -24,15 +24,15 @@ final class NullOriginResolver implements OriginResolverInterface
 {
     public function resolve(): string
     {
+        $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+
         if (PHP_SAPI === 'cli') {
             return 'cli';
         }
 
-        /**
-         * @codeCoverageIgnoreStart — PHPUnit always runs under the cli SAPI,
-         * so the web-request tail is unreachable in any test run (R-05).
-         */
-        $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+        // PHPUnit always runs under the cli SAPI, so the web-request tail
+        // below is unreachable in any test run (R-05).
+        // @codeCoverageIgnoreStart
         if (is_string($remote) && $remote !== '') {
             return 'ip:' . $remote;
         }
