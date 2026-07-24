@@ -5,7 +5,7 @@ status: accepted
 date: 2026-03-29
 lang: en
 domains: [framework, events]
-deciders: ['PENDING — original decider not recorded during the legacy-vault reconstruction; confirm with Michael Meneses before ratifying']
+deciders: ['ratified 2026-07-24, including the public-surface specification below']
 related: [FW-008, FW-012]
 supersedes: []
 superseded_by: null
@@ -39,6 +39,39 @@ Three reactive mechanisms coexisted with distinct roles: a typed, framework-inte
 
 This framework ships the **generic seam**, not the governed engine (option 2 over 1): a `SignalDispatcherInterface` contract in `Bus/Contract/` is the stable publish-side interface a domain's typed pub/sub is expected to work against, with no OSS implementation of governed dispatch, hierarchy, or an outbox. What the framework does ship in full is the WordPress-style side: a per-instance `HookManager` (`Kernel/Manager/HookManager.php`, `Kernel/Contract/HookManagerInterface.php`) for `add_action`/`do_action` and `add_filter`/`apply_filters`, with priority ordering and opt-in profiling — deliberately per-instance state, not static globals (option 4 over 3). A `HostEventBridgeInterface` exists as an experimental, generic sync bridge contract with no default implementation (option 8 over 7). The historical failure-isolation rule — a reactive step's exception accompanies the main flow only when that step composes the contract promised to the caller, otherwise it is lateral, but "lateral" never means silently suppressed — survives as an authorial convention for whoever registers a hook callback: `HookManager` performs no automatic try/catch around callbacks (option 6 over 5).
 
+## Public surface (specification, ratified 2026-07-24)
+
+FW-007 decided the *model*; this section fixes **which of the `HookManager`
+seam is public API** and which is internal wiring. It closes the "specify the
+public hook surface" work item.
+
+### Public `@api` — third-party extension
+The extension contract is **`HookManagerInterface`**, consumed through
+`Kernel\Facade\HookFacade` (static) or the injected interface, plus the
+registration entry points `HookRegisterInterface`/`AbstractHookRegister` and
+`HookfileLoader`:
+
+- register/detach: `addAction`, `removeAction`, `addFilter`, `removeFilter`
+- emit: `doAction`, `applyFilters`
+- introspect: `hasAction`, `hasFilter`, `currentFilter`, `doingAction`, `didAction`
+
+### Internal — framework/host wiring only (NOT `@api`)
+Present on the concrete `HookManager`, deliberately absent from the interface:
+`__construct`, `setProfileCollector`, `setSlowThreshold`, `setLogger`.
+
+`reset()` is **lifecycle/test-only**: it clears the whole per-instance
+registry and has no product caller (a kernel re-init builds a fresh instance
+rather than resetting). It is not part of the extension surface — treat it as
+a test-harness/lifecycle affordance, not `@api` for extenders.
+
+### Tag naming & ownership
+Hook/filter tags follow a namespaced convention `{component}.{area}.{event}`;
+bare global names are reserved for framework-owned tags. The convention is
+enforced by a guard test reading an **overridable naming policy** (default in
+the framework; an adapter or `middag-io/core` may register its own
+prefixes/patterns — mirrors the `SettingsNamingPolicy` pattern), so hosts add
+their vocabulary without forking the guard.
+
 ## Consequences
 
 - The framework stays honest to its own OSS/core boundary rule: no governed pub/sub, no persistent outbox, no reentrance guard, no signal-vocabulary enum ships here — a consumer that genuinely needs those depends on `middag-io/core`, not on a workaround grafted onto this framework. See `architecture.md` §1, Pillar 3, for the full boundary this decision instantiates.
@@ -54,4 +87,4 @@ This framework ships the **generic seam**, not the governed engine (option 2 ove
 |---|---|---|
 | Governed dispatch, signal hierarchy, `#[on]` auto-discovery, reentrance guard, and the async outbox pipeline are `middag-io/core` concerns, not shipped here | No implementing class of `SignalDispatcherInterface` or `HostEventBridgeInterface` exists in this repo (`src/Bus/Contract/SignalDispatcherInterface.php`, `src/Kernel/Contract/HostEventBridgeInterface.php` are contracts only); full legacy mechanics preserved in the extracted reference doc | coded (docs) |
 | `HookManager` (`Kernel/Manager/HookManager.php`) holds per-instance registry state, not static globals | `tests/Kernel/Manager/HookManagerTest.php::testInstancesDoNotShareState` | coded |
-| Hook and filter callback exceptions are never automatically swallowed — no implicit try/catch in `HookManager` | No regression test currently asserts propagation | planned |
+| Hook and filter callback exceptions are never automatically swallowed — no implicit try/catch in `HookManager` | `tests/Kernel/Manager/HookManagerTest.php::testDoActionDoesNotSwallowCallbackExceptions` + `::testApplyFiltersDoesNotSwallowCallbackExceptions` | coded |
