@@ -13,3 +13,4 @@ composer.lock
 # Tooling temp artifacts
 .phpstan.neon.tmp
 .gstack/
+.deptrac.cache

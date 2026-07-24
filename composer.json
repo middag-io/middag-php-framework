@@ -67,6 +67,7 @@
     "symfony/validator": "^7.0 || ^8.0"
   },
   "require-dev": {
+    "deptrac/deptrac": "^3.0",
     "doctrine/dbal": "^4.0",
     "fakerphp/faker": "^1.23",
     "friendsofphp/php-cs-fixer": "^3.0",
@@ -114,7 +115,12 @@
     "check": [
       "@check:style",
       "@check:rector",
-      "@check:stan"
+      "@check:stan",
+      "@check:portability"
+    ],
+    "check:portability": [
+      "deptrac analyse --config-file=deptrac.yaml --no-progress --fail-on-uncovered",
+      "@php bin/portability-scan.php"
     ],
     "check:style": "php-cs-fixer fix --dry-run --verbose --config=.php-cs-fixer.dist.php",
     "check:rector": "rector process --dry-run --config=.php-rector.php",

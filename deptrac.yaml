@@ -1,0 +1,79 @@
+# FW-011 portability boundary (enforced by construction).
+#
+# The framework is a portable Composer package: it may depend on Symfony
+# components, PSR interfaces, Monolog, the PHP stdlib and its sibling OSS
+# package middag-io/ui — and NEVER on a host (Moodle / WordPress) namespace.
+#
+# This config measures the *namespace* axis of FW-011 rule 3. The complementary
+# "host globals / hard-coded paths / require_once discipline" axis (bare
+# `global $DB`, `get_string()`, absolute paths) is not expressible as a class
+# dependency and is measured by bin/portability-scan.php.
+#
+# Run: vendor/bin/deptrac analyse --config-file=deptrac.yaml
+deptrac:
+  paths:
+    - ./src
+  layers:
+    - name: Framework
+      collectors:
+        - type: classLike
+          value: ^Middag\\Framework\\.*
+    - name: Ui
+      collectors:
+        - type: classLike
+          value: ^Middag\\Ui\\.*
+    - name: Symfony
+      collectors:
+        - type: classLike
+          value: ^Symfony\\.*
+    - name: Psr
+      collectors:
+        - type: classLike
+          value: ^Psr\\.*
+    - name: Monolog
+      collectors:
+        - type: classLike
+          value: ^Monolog\\.*
+    - name: Nyholm
+      collectors:
+        - type: classLike
+          value: ^Nyholm\\.*
+    - name: Doctrine
+      collectors:
+        - type: classLike
+          value: ^Doctrine\\.*
+    - name: League
+      collectors:
+        - type: classLike
+          value: ^League\\.*
+    - name: Sentry
+      collectors:
+        - type: classLike
+          value: ^Sentry\\.*
+    - name: Host
+      collectors:
+        # Any Moodle / WordPress host namespace. Empty by construction today;
+        # a single match is a portability regression.
+        - type: classLike
+          value: ^(core\\|core_|mod_|local_|block_|tool_|WP_|Automattic\\).*
+  ruleset:
+    Framework:
+      - Ui
+      - Symfony
+      - Psr
+      - Monolog
+      - Nyholm
+      - Doctrine
+      - League
+      - Sentry
+    # Host intentionally absent from every ruleset: any Framework -> Host edge
+    # is a violation. No layer may depend on Host.
+    Ui: ~
+    Symfony: ~
+    Psr: ~
+    Monolog: ~
+    Nyholm: ~
+    Doctrine: ~
+    League: ~
+    Sentry: ~
+    Host: ~
