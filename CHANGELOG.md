@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/middag-io/middag-php-framework/compare/v1.10.0...v1.11.0) (2026-07-24)
+
+
+### Features
+
+* **http:** segregate ControllerInterface into role interfaces (ISP) ([04eebe3](https://github.com/middag-io/middag-php-framework/commit/04eebe3504c322a7ca35cd46ff7de936d5d07549))
+* **http:** segregate ControllerInterface into role interfaces (ISP) ([d50c66d](https://github.com/middag-io/middag-php-framework/commit/d50c66d4d2fee11a8cbd328613fb8f764e75cdc9))
+
 ## [1.10.0](https://github.com/middag-io/middag-php-framework/compare/v1.9.0...v1.10.0) (2026-07-24)
 
 
