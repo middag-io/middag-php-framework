@@ -92,8 +92,10 @@ final readonly class MysqlSchemaBuilderAdapter implements SchemaBuilderAdapterIn
         $this->connection->execute(sprintf('CREATE %sINDEX %s ON %s (%s)', $unique, $name, $tableName, $fields));
     }
 
-    public function dropIndex(string $tableName, string $indexName): void
+    public function dropIndex(string $tableName, string $indexName, array $fields = []): void
     {
+        // Identifier-based adapter: $fields is only consumed by field-set
+        // adapters (Moodle xmldb); MySQL drops by name.
         // MySQL/MariaDB reject `IF EXISTS` on DROP INDEX (valid only on
         // DROP TABLE/DATABASE), so emit the bare statement and swallow the
         // "index does not exist" error to keep the call idempotent.

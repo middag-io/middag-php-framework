@@ -66,10 +66,17 @@ interface SchemaBuilderAdapterInterface
     /**
      * Drop an index from an existing table.
      *
-     * @param string $tableName physical table name
-     * @param string $indexName index name to drop
+     * @param string       $tableName physical table name
+     * @param string       $indexName index name to drop (identifier-based adapters —
+     *                                SQL/dbal — use this directly)
+     * @param list<string> $fields    columns the index covers. Required by adapters
+     *                                that resolve an index by its field-set rather
+     *                                than by name (Moodle xmldb: index names are
+     *                                auto-generated and located via find_index_name);
+     *                                ignored by identifier-based adapters. Empty when
+     *                                the caller only knows the index name.
      */
-    public function dropIndex(string $tableName, string $indexName): void;
+    public function dropIndex(string $tableName, string $indexName, array $fields = []): void;
 
     /**
      * Check whether a table exists in the platform's database.

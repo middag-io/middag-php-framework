@@ -119,8 +119,10 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
         $schemaManager->alterTable(new TableDiff($current, addedIndexes: [$new]));
     }
 
-    public function dropIndex(string $tableName, string $indexName): void
+    public function dropIndex(string $tableName, string $indexName, array $fields = []): void
     {
+        // Identifier-based adapter: dbal resolves the index by name; $fields is
+        // only consumed by field-set adapters (Moodle xmldb).
         $schemaManager = $this->connection->createSchemaManager();
         $current = $schemaManager->introspectTable($tableName);
 

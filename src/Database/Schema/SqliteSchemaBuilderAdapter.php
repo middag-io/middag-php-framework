@@ -100,8 +100,10 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
         $this->connection->execute(sprintf('CREATE %s INDEX IF NOT EXISTS %s ON %s (%s)', $unique, $name, $tableName, $cols));
     }
 
-    public function dropIndex(string $tableName, string $indexName): void
+    public function dropIndex(string $tableName, string $indexName, array $fields = []): void
     {
+        // Identifier-based adapter: SQLite drops by name; $fields is only
+        // consumed by field-set adapters (Moodle xmldb).
         $this->connection->execute(sprintf('DROP INDEX IF EXISTS %s', $indexName));
     }
 
