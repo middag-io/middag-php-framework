@@ -15,6 +15,7 @@ namespace Middag\Framework\Tests\Kernel\Manager;
 use Middag\Framework\Kernel\Manager\HookManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
  * @internal
@@ -101,5 +102,36 @@ final class HookManagerTest extends TestCase
         // Per-instance state: the second manager never saw the filter.
         self::assertSame(1, $second->applyFilters('x', 1));
         self::assertSame(101, $first->applyFilters('x', 1));
+    }
+
+    /**
+     * FW-007 guarantee: HookManager performs no automatic try/catch around
+     * callbacks — a callback exception propagates to the caller, never
+     * silently suppressed ("lateral" describes ownership, not suppression).
+     */
+    public function testDoActionDoesNotSwallowCallbackExceptions(): void
+    {
+        $hooks = new HookManager();
+        $hooks->addAction('boom', static function (): never {
+            throw new RuntimeException('from action');
+        });
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('from action');
+
+        $hooks->doAction('boom');
+    }
+
+    public function testApplyFiltersDoesNotSwallowCallbackExceptions(): void
+    {
+        $hooks = new HookManager();
+        $hooks->addFilter('boom', static function (mixed $v): mixed {
+            throw new RuntimeException('from filter');
+        });
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('from filter');
+
+        $hooks->applyFilters('boom', 'x');
     }
 }
