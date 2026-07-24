@@ -12,11 +12,8 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Http\Contract;
 
-use Psr\Container\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
-
 /**
- * Public contract for controllers executed by the MIDDAG Kernel.
+ * Public contract for a full page controller executed by the MIDDAG Kernel.
  *
  * Lifecycle, in guaranteed order: the kernel injects collaborators
  * (setContainer(), setRequest()), applies the route's auth gate
@@ -27,23 +24,13 @@ use Symfony\Component\HttpFoundation\Request;
  * capabilities (context levels, sesskeys) are defined in host-specific
  * controller interfaces.
  *
+ * This is the composition of three segregated role interfaces
+ * ({@see ContainerAwareInterface}, {@see RequestHandlingInterface},
+ * {@see AuthorizationAwareInterface}); its total surface is unchanged, so
+ * existing implementations remain valid. An adapter whose dispatch model does
+ * not match the kernel's request → handle() cycle (e.g. a host REST stack) can
+ * implement only the roles it supports instead of this full contract.
+ *
  * @api
  */
-interface ControllerInterface
-{
-    public function handle(): void;
-
-    public function setContainer(ContainerInterface $container): void;
-
-    public function setRequest(Request $request): void;
-
-    public function preHandle(): void;
-
-    public function setRequireLogin(): void;
-
-    /**
-     * @param array<int, string> $capabilities
-     * @param string             $context      Platform-specific context type the adapter interprets
-     */
-    public function setRequireCapabilities(array $capabilities, string $context = 'system', int $instanceId = 0): void;
-}
+interface ControllerInterface extends ContainerAwareInterface, RequestHandlingInterface, AuthorizationAwareInterface {}
