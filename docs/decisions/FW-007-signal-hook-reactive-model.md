@@ -5,7 +5,7 @@ status: accepted
 date: 2026-03-29
 lang: en
 domains: [framework, events]
-deciders: ['Barbara — ratified 2026-07-24, including the public-surface specification below']
+deciders: ['ratified 2026-07-24, including the public-surface specification below']
 related: [FW-008, FW-012]
 supersedes: []
 superseded_by: null
