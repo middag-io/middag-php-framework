@@ -21,6 +21,7 @@ use JsonSerializable;
 use LogicException;
 use Middag\Framework\Database\Contract\ConnectionAdapterInterface;
 use Middag\Framework\Exception\MiddagNotFoundException;
+use Middag\Framework\Persistence\Contract\CastInterface;
 use Middag\Framework\Persistence\Contract\ConnectionResolverInterface;
 use Middag\Framework\Persistence\Query\QueryBuilder;
 use Middag\Framework\Persistence\Relation\BelongsTo;
@@ -28,6 +29,7 @@ use Middag\Framework\Persistence\Relation\BelongsToMany;
 use Middag\Framework\Persistence\Relation\HasMany;
 use Middag\Framework\Persistence\Relation\HasOne;
 use Middag\Framework\Persistence\Relation\Relation;
+use Psr\Container\ContainerInterface;
 use ReflectionMethod;
 
 /**
@@ -49,6 +51,12 @@ use ReflectionMethod;
 abstract class Model implements JsonSerializable
 {
     protected static ?ConnectionResolverInterface $resolver = null;
+
+    /**
+     * Optional PSR container used to instantiate custom {@see CastInterface}
+     * classes. When null (the standalone default), casts are built with `new`.
+     */
+    protected static ?ContainerInterface $castResolver = null;
 
     protected string $table = '';
 
@@ -81,6 +89,14 @@ abstract class Model implements JsonSerializable
     protected array $relations = [];
 
     protected bool $exists = false;
+
+    /**
+     * Per-FQCN cache of resolved custom cast instances. Casts are stateless and
+     * reused across every model, so each class is instantiated at most once.
+     *
+     * @var array<class-string<CastInterface>, CastInterface>
+     */
+    private static array $castInstances = [];
 
     /**
      * @param array<string, mixed> $attributes
@@ -149,6 +165,20 @@ abstract class Model implements JsonSerializable
     public static function getConnectionResolver(): ?ConnectionResolverInterface
     {
         return self::$resolver;
+    }
+
+    /**
+     * Bind (or clear) the PSR container used to instantiate custom cast classes.
+     *
+     * With a container set, a {@see CastInterface} may declare constructor
+     * dependencies and they are autowired; without one, casts are built with
+     * `new` and must be zero-arg constructible. Changing the resolver clears
+     * the instance cache so already-built casts are not reused across it.
+     */
+    public static function setCastResolver(?ContainerInterface $container): void
+    {
+        self::$castResolver = $container;
+        self::$castInstances = [];
     }
 
     public function resolveConnection(): ConnectionAdapterInterface
@@ -766,6 +796,12 @@ abstract class Model implements JsonSerializable
 
         $cast = $this->casts[$key];
 
+        // Consumer-defined cast wins over the built-in list: DB scalar -> PHP.
+        $custom = $this->resolveCast($cast);
+        if ($custom instanceof CastInterface) {
+            return $custom->get($value);
+        }
+
         if (enum_exists($cast)) {
             return $value instanceof $cast ? $value : $cast::from($value); // @phpstan-ignore-line — $cast is a backed enum; $value is its scalar DB value
         }
@@ -779,6 +815,35 @@ abstract class Model implements JsonSerializable
             'array', 'json' => $this->asArray($value),
             default => $value,
         };
+    }
+
+    /**
+     * Resolve a `$casts` entry to a custom cast instance, or null when the entry
+     * is a built-in name or a backed enum (both handled by the fixed fast-path).
+     *
+     * A cast is a class implementing {@see CastInterface}. Instances are cached
+     * per FQCN and built via the bound container when it can supply them,
+     * falling back to `new`.
+     */
+    private function resolveCast(string $cast): ?CastInterface
+    {
+        if (!is_a($cast, CastInterface::class, true)) {
+            return null;
+        }
+
+        /** @var class-string<CastInterface> $cast */
+        if (isset(self::$castInstances[$cast])) {
+            return self::$castInstances[$cast];
+        }
+
+        if (self::$castResolver instanceof ContainerInterface && self::$castResolver->has($cast)) {
+            /** @var CastInterface $instance */
+            $instance = self::$castResolver->get($cast);
+        } else {
+            $instance = new $cast();
+        }
+
+        return self::$castInstances[$cast] = $instance;
     }
 
     private function asString(mixed $value): string
@@ -857,6 +922,12 @@ abstract class Model implements JsonSerializable
     {
         if ($value === null || !isset($this->casts[$key])) {
             return $value;
+        }
+
+        // Consumer-defined cast wins over the built-in list: PHP -> DB scalar.
+        $custom = $this->resolveCast($this->casts[$key]);
+        if ($custom instanceof CastInterface) {
+            return $custom->set($value);
         }
 
         if ($value instanceof BackedEnum) {

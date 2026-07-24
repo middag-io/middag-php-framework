@@ -48,9 +48,21 @@ Five rules governed the extraction: (1) zero hard-coded references to the host p
 
 | Decision clause | Verification | State |
 |---|---|---|
-| Zero hard-coded host-plugin references outside `namespace`/`use` statements | `architecture.md` §10 pre-PR boundary checklist item 1 (manual, run before each PR) | planned |
-| Deptrac-enforced dependency boundary — `framework/` never depends on the host plugin's extensions, `base/`, or `base/facade/` | `architecture.md` §1 four-pillar hexagonal architecture, downward-only dependency; no `deptrac.yaml` exists in this repo yet (`architecture.md` line 391: "deptrac in Product/Core") | planned |
+| Zero hard-coded host-plugin references outside `namespace`/`use` statements | `bin/portability-scan.php` (host globals, host functions, hard-coded paths, require/include discipline across `src/`) — run via `composer check:portability` | coded |
+| Deptrac-enforced dependency boundary — `framework/` never depends on a host namespace | `deptrac.yaml` (`Framework` layer may depend only on Ui / Symfony / Psr / Monolog / Nyholm / Doctrine / League / Sentry; a `Host` layer catches any Moodle/WordPress namespace) — run via `composer check:portability` | coded |
 | Plugin-specific configuration flows in from the outside, never hard-coded | `ConfigResolverInterface`/`BootstrapInterface` bridge-contract (`architecture.md` §5) | coded |
 | Namespaces stay semantically stable, plugin-neutral | `composer.json` `autoload.psr-4` maps `Middag\\Framework\\` to `src/` | coded |
 | Host identity passed via argument/provider, never a global constant | `BootstrapInterface::getProjectRoot()`/`platform()` → `ContainerFactory::build()` (`bootstrap.md` §1) | coded |
 | Full historical audit (score, violations, accepted exceptions, blockers) preserved for archaeology | [framework/reference/portability-audit-historical](../../../../var/www/docs-middag-dev/docs/framework/reference/portability-audit-historical.md) | coded |
+
+### Acceptance floor (architect decision, 2026-07-24)
+
+**Floor = zero violations, on both axes, as a hard gate.** `composer check:portability`
+fails the build on any single violation — a `Framework → Host` namespace edge (deptrac),
+or a host global / host function / hard-coded absolute path / `require`-`include` in `src/`
+(`bin/portability-scan.php`). No percentage score, no exceptions allowlist: the legacy 69%
+metric is retired in favour of a binary "enforced by construction" gate.
+
+Re-measurement against the current PSR-4 tree (2026-07-24): **0 violations** — deptrac 945
+allowed edges / 0 uncovered / 0 violations; scan 250 files / 0 violations. None of the stale
+legacy-audit violations survive the move to PSR-4.

@@ -12,6 +12,7 @@
 /.specify                           export-ignore
 /.php-cs-fixer.dist.php             export-ignore
 /.php-rector.php                    export-ignore
+/deptrac.yaml                       export-ignore
 /.phpstan.neon                      export-ignore
 /.phpstan.neon.tmp                  export-ignore
 /.phpunit.cache                     export-ignore
