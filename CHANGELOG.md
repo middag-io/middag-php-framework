@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.0](https://github.com/middag-io/middag-php-framework/compare/v1.8.0...v1.9.0) (2026-07-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **database:** SchemaBuilderAdapterInterface::dropIndex() gains a third parameter ($fields); external implementations of the interface must add it to stay signature-compatible.
+
+### Features
+
+* **database:** resolve xmldb index drop by field-set ([d38ddce](https://github.com/middag-io/middag-php-framework/commit/d38ddce8635b3e5deefb34bbe5c18bd51d488c96))
+
+
+### Documentation
+
+* reformat FW-001..013 to MADR-compact, extract REF to docs-middag-dev ([b0b59c0](https://github.com/middag-io/middag-php-framework/commit/b0b59c00531ab5f762fd7b1af885ecb34ea2146e))
+
 ## [1.8.0](https://github.com/middag-io/middag-php-framework/compare/v1.7.2...v1.8.0) (2026-07-16)
 
 
