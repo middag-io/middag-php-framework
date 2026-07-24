@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.1](https://github.com/middag-io/middag-php-framework/compare/v1.9.0...v1.9.1) (2026-07-24)
+
+
+### Documentation
+
+* **events:** drop [@middag](https://github.com/middag).space from FW-007 decider line ([7c5f6d2](https://github.com/middag-io/middag-php-framework/commit/7c5f6d23b02372aa27dc3fe6739f311e5a047567))
+* **events:** drop decider name from FW-007 ratification line ([5e72255](https://github.com/middag-io/middag-php-framework/commit/5e722551f0cf79779f713b5f869c75363d5f205f))
+* **events:** specify public hook surface and ratify FW-007 ([f6a08ef](https://github.com/middag-io/middag-php-framework/commit/f6a08efa5dade30591e9a914587b956b1c6355f6))
+
 ## [1.9.0](https://github.com/middag-io/middag-php-framework/compare/v1.8.0...v1.9.0) (2026-07-24)
 
 
