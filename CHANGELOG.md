@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.10.0](https://github.com/middag-io/middag-php-framework/compare/v1.9.0...v1.10.0) (2026-07-24)
+
+
+### Features
+
+* FW batch — portability gate, route auto-discovery, custom casts, webhook primitives ([028520e](https://github.com/middag-io/middag-php-framework/commit/028520ed5dde1ecb14d34dcc234ba91ef650c49b))
+* **http:** non-blocking RetryPolicy with Retry-After support ([dfdb8df](https://github.com/middag-io/middag-php-framework/commit/dfdb8df84b75b72ce83b755cdd763d35c34ddbcd))
+* **http:** route auto-discovery bridge (opt-in, multi-dir) ([8206d0d](https://github.com/middag-io/middag-php-framework/commit/8206d0d72bde6a183bed1379c31c839ccd4ef7bd))
+* **persistence:** custom casts via CastInterface in $casts ([f1b1c2e](https://github.com/middag-io/middag-php-framework/commit/f1b1c2e71a4472c998ecf12e4adbd801b48728e5))
+* **portability:** wire deptrac + host-globals scan for FW-011 ([fb3a1c9](https://github.com/middag-io/middag-php-framework/commit/fb3a1c98970472422946a1ace69da0184197c071))
+* **security:** HMAC webhook signature verifier ([b3b900a](https://github.com/middag-io/middag-php-framework/commit/b3b900a36c567cce8845cb71643e99e30d6a2e08))
+
+
+### Documentation
+
+* **events:** specify public hook surface and ratify FW-007 ([a63e486](https://github.com/middag-io/middag-php-framework/commit/a63e486bac9eb64300a56cc5a3dd2b8f483c5635))
+
 ## [1.9.0](https://github.com/middag-io/middag-php-framework/compare/v1.8.0...v1.9.0) (2026-07-24)
 
 
