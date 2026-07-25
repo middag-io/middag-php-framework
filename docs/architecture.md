@@ -462,8 +462,35 @@ roadmap, not shipped.
 with opposite merge rules: `#[Auth]` is *override* (a method-level attribute replaces
 the class-level one — first non-empty wins), while `#[Middleware]` is *stacking*
 (class-level and method-level accumulate; class is outermost, method innermost, each
-in declaration order). Effective request order: route match → auth flags → auth gate
-→ `preHandle()` → [class middleware → method middleware → action].
+in declaration order).
+
+**Route middleware has two declaration sources, one chain.** Besides the attribute, a
+route *registrar* — a host adapter, or a fluent `Route::middleware()` facade downstream —
+declares ids imperatively on the Symfony route defaults, under `_middleware` and
+`_without_middleware` (both plain `list<string>`; the framework models no host vocabulary
+here). `Http/Routing/RouteMiddlewareStack` merges the two sources along one axis —
+**broader declaration scope wraps narrower**:
+
+```
+route defaults → class #[Middleware] → method #[Middleware] → action
+```
+
+Registration-site (and therefore group) middleware is the broadest scope and runs
+outermost, matching Laravel's group-wraps-controller semantics. An id named by more than
+one source runs **once**, at its outermost position, so the chain is a deterministic
+function of the declarations. `_without_middleware` is subtracted from the *whole* merged
+list — it removes an id inherited from an enclosing group **and** one contributed by an
+attribute; that is why the exclusion list travels alongside the inclusion list instead of
+being pre-subtracted by the registrar, since the attribute half is invisible at
+registration time. A declared id that cannot be resolved, or that does not implement
+`RouteMiddlewareInterface`, aborts the request naming the route and the id — never
+silently skipped, because a dropped middleware is a dropped guard.
+
+Both handler shapes run the chain: `[instance, method]` controllers and bare
+`Closure`/invokable handlers alike. A closure has no class or method to reflect, so its
+chain is whatever the route declared. Effective request order: route match → auth flags →
+auth gate → `preHandle()` → [route-default middleware → class middleware → method
+middleware → action].
 
 **Request validation has two styles, one resolver chain.** A controller validates
 input either by type-hinting an `AbstractFormRequest` subclass (declarative `rules()`

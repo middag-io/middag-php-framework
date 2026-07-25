@@ -37,6 +37,7 @@ use Middag\Framework\Http\Resolver\RouteParameterResolver;
 use Middag\Framework\Http\Resolver\ValidatedDtoResolver;
 use Middag\Framework\Http\Response\CacheHeaderApplier;
 use Middag\Framework\Http\Response\CorsHeaderApplier;
+use Middag\Framework\Http\Routing\RouteMiddlewareStack;
 use Middag\Framework\Http\Session\FlashBag;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\FallbackTranslator;
@@ -223,7 +224,21 @@ class HttpKernel implements HttpKernelInterface
 
             // Extract special Symfony route parameters
             $controller = $parameters['_controller'];
-            unset($parameters['_controller'], $parameters['_route']);
+            $routeName = is_string($parameters['_route'] ?? null) ? $parameters['_route'] : '';
+
+            // Route middleware declared imperatively by the registrar (a host
+            // adapter or a fluent facade downstream) travels on the route
+            // defaults. Read it before the keys are stripped: they are kernel
+            // vocabulary, not handler arguments, so they must not survive into
+            // the closure argument splat or the request attributes below.
+            $middlewareStack = RouteMiddlewareStack::fromRouteDefaults($routeName, $parameters);
+
+            unset(
+                $parameters['_controller'],
+                $parameters['_route'],
+                $parameters[RouteMiddlewareStack::MIDDLEWARE_DEFAULT],
+                $parameters[RouteMiddlewareStack::WITHOUT_MIDDLEWARE_DEFAULT],
+            );
 
             // Populate request attributes with route params (standard Symfony behaviour).
             // Enables $request->get('param'), $request->attributes->get('param') in controllers.
@@ -237,9 +252,24 @@ class HttpKernel implements HttpKernelInterface
             $actionController = null;
             $actionMethod = '';
 
-            // Handle closures/callables directly
+            // Handle closures/callables directly. A closure has no class/method to
+            // reflect, so its chain is whatever the route declared — but it IS a
+            // chain: skipping it here is what left `Route::…->middleware()` on a
+            // closure handler silently unprotected.
             if (is_callable($resolved) && !is_array($resolved)) {
-                $response = $resolved(...array_values($parameters));
+                $middlewares = $this->resolveRouteMiddleware($middlewareStack);
+
+                $response = $middlewares === []
+                    ? $resolved(...array_values($parameters))
+                    : $this->runRouteMiddleware(
+                        $middlewares,
+                        $symfonyRequest,
+                        static function () use ($resolved, $parameters): Response {
+                            $result = $resolved(...array_values($parameters));
+
+                            return $result instanceof Response ? $result : new JsonResponse($result);
+                        },
+                    );
             } else {
                 // Handle [instance, method] format
                 [$controllerInstance, $method] = $resolved;
@@ -269,10 +299,12 @@ class HttpKernel implements HttpKernelInterface
                 $parameterResolver = $this->buildParameterResolver($symfonyRequest);
                 $args = $parameterResolver->resolveArguments($controllerInstance, $method, $parameters);
 
-                // Wrap the action in any declared #[Middleware] (class-level
-                // outermost, then method-level). Zero overhead when none declared:
-                // the action is invoked directly, exactly as before.
-                $middlewares = $this->resolveRouteMiddleware($controllerInstance, $method);
+                // Wrap the action in the declared chain: route defaults outermost,
+                // then class-level #[Middleware], then method-level. Zero overhead
+                // when none declared: the action is invoked directly, exactly as before.
+                $middlewares = $this->resolveRouteMiddleware(
+                    $middlewareStack->append($this->attributeMiddlewareIds($controllerInstance, $method)),
+                );
 
                 if ($middlewares === []) {
                     $response = $controllerInstance->{$method}(...$args);
@@ -559,44 +591,76 @@ class HttpKernel implements HttpKernelInterface
     }
 
     /**
-     * Resolve the ordered route-middleware chain declared via #[Middleware].
+     * Read the middleware ids declared via #[Middleware] on an action.
      *
      * Class-level declarations come first (outermost), then method-level, each in
-     * declaration order; the attribute is repeatable so several accumulate. Each
-     * entry is fetched from the container — falling back to a zero-argument `new`
-     * when unregistered — and must implement {@see RouteMiddlewareInterface}.
+     * declaration order; the attribute is repeatable so several accumulate.
+     * Duplicates are kept here and collapsed by {@see RouteMiddlewareStack}, which
+     * owns the merge with the route-default chain.
      *
-     * @return list<RouteMiddlewareInterface>
+     * @return list<string>
      */
-    private function resolveRouteMiddleware(object $controller, string $method): array
+    private function attributeMiddlewareIds(object $controller, string $method): array
     {
         $attributes = [
             ...(new ReflectionClass($controller))->getAttributes(Middleware::class),
             ...(new ReflectionMethod($controller, $method))->getAttributes(Middleware::class),
         ];
 
-        if ($attributes === []) {
-            return [];
-        }
-
-        $resolved = [];
+        $ids = [];
 
         foreach ($attributes as $attribute) {
             foreach ($attribute->newInstance()->middleware as $id) {
-                $instance = $this->container->has($id)
-                    ? $this->container->get($id)
-                    : (class_exists($id) ? new $id() : null);
-
-                if (!$instance instanceof RouteMiddlewareInterface) {
-                    throw new RuntimeException(sprintf(
-                        'Route middleware "%s" must implement %s.',
-                        $id,
-                        RouteMiddlewareInterface::class,
-                    ));
-                }
-
-                $resolved[] = $instance;
+                $ids[] = $id;
             }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Instantiate a route's effective middleware chain, outermost first.
+     *
+     * Each id is fetched from the container — falling back to a zero-argument
+     * `new` when unregistered — and must implement {@see RouteMiddlewareInterface}.
+     *
+     * A declared middleware that cannot be resolved, or that does not honour the
+     * contract, aborts the request naming both the route and the id. It is never
+     * skipped: a middleware silently dropped from the chain is an auth/CSRF/rate-limit
+     * guard silently removed, so the loud failure is the safe outcome.
+     *
+     * @return list<RouteMiddlewareInterface>
+     *
+     * @throws RuntimeException on an unresolvable or non-conforming middleware id
+     */
+    private function resolveRouteMiddleware(RouteMiddlewareStack $stack): array
+    {
+        $resolved = [];
+
+        foreach ($stack->ids() as $id) {
+            $instance = $this->container->has($id)
+                ? $this->container->get($id)
+                : (class_exists($id) ? new $id() : null);
+
+            if ($instance === null) {
+                throw new RuntimeException(sprintf(
+                    'Route middleware "%s" declared on route "%s" cannot be resolved: it is neither bound in the container nor an existing class.',
+                    $id,
+                    $stack->routeName,
+                ));
+            }
+
+            if (!$instance instanceof RouteMiddlewareInterface) {
+                throw new RuntimeException(sprintf(
+                    'Route middleware "%s" declared on route "%s" must implement %s, got %s.',
+                    $id,
+                    $stack->routeName,
+                    RouteMiddlewareInterface::class,
+                    get_debug_type($instance),
+                ));
+            }
+
+            $resolved[] = $instance;
         }
 
         return $resolved;
