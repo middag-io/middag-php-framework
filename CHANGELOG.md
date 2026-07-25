@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0](https://github.com/middag-io/middag-php-framework/compare/v1.11.0...v1.12.0) (2026-07-25)
+
+
+### Features
+
+* **http:** execute route-default middleware on both handler paths ([9bb1f58](https://github.com/middag-io/middag-php-framework/commit/9bb1f5862f2f90c1fabae9cd314a1c8253a58d8b)), closes [#68](https://github.com/middag-io/middag-php-framework/issues/68)
+* **shared:** add Uuid value object with RFC 4122 parse and v4/v7 minting ([79ca257](https://github.com/middag-io/middag-php-framework/commit/79ca25725cb65aa84fd0e85d904aa50091fbbdb6)), closes [#69](https://github.com/middag-io/middag-php-framework/issues/69)
+
 ## [1.11.0](https://github.com/middag-io/middag-php-framework/compare/v1.10.0...v1.11.0) (2026-07-24)
 
 
