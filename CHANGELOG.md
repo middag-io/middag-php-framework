@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.12.1](https://github.com/middag-io/middag-php-framework/compare/v1.12.0...v1.12.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **http:** não responder visita Inertia com JSON puro ([c02dec2](https://github.com/middag-io/middag-php-framework/commit/c02dec28260bde75f7270e33fc021de2c0012aae))
+* **http:** não responder visita Inertia com JSON puro ([c0d86e1](https://github.com/middag-io/middag-php-framework/commit/c0d86e1335366a9c4a77a657b0b37a22ff484b76))
+* **http:** não responder visita Inertia com JSON puro ([#72](https://github.com/middag-io/middag-php-framework/issues/72)) ([c02dec2](https://github.com/middag-io/middag-php-framework/commit/c02dec28260bde75f7270e33fc021de2c0012aae))
+
 ## [1.12.0](https://github.com/middag-io/middag-php-framework/compare/v1.11.0...v1.12.0) (2026-07-25)
 
 
