@@ -775,6 +775,16 @@ class HttpKernel implements HttpKernelInterface
      */
     private function isJsonRequest(Request $request): bool
     {
+        // Inertia visits are XHR and send Content-Type: application/json, but the
+        // protocol forbids answering them with a bare JSON body — the client
+        // hard-fails with "All Inertia requests must receive a valid Inertia
+        // response" and the page dies. Errors must come back as 303-to-referer
+        // with the messages flashed, which createValidationResponse() already
+        // does on the non-JSON branch. So this check runs BEFORE the XHR one.
+        if ($request->headers->get('X-Inertia')) {
+            return false;
+        }
+
         if ($request->isXmlHttpRequest()) {
             return true;
         }
