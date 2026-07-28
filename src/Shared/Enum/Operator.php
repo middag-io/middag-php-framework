@@ -134,20 +134,20 @@ enum Operator: string
      */
     case IsNot = 'IS NOT';
 
-    /**
-     * Raw SQL operator (RAW).
+    /*
+     * There is deliberately no verbatim-SQL case here.
      *
-     * Allows insertion of arbitrary custom SQL operations without escaping.
-     * This bypasses all query builder safety mechanisms.
+     * `Raw = 'RAW'` existed until 1.13.0 and its own docblock said "never use with
+     * user-provided input" — a warning nothing enforced. Every compiler that saw it
+     * returned the value as SQL with no parameter binding, so the one thing downstream
+     * could not do was check it. A case every implementation has to refuse is a case
+     * that only exists to be refused.
      *
-     * WARNING: Use with extreme caution — high risk of SQL injection.
-     * Should ONLY be used internally when the input is fully trusted and validated.
-     * Never use with user-provided input.
-     *
-     * Usage: Internal use only for complex SQL expressions
-     * Accepts: trusted SQL string fragments
+     * The replacement is declared rather than absent: `middag-io/core`'s
+     * `Persistence\SafeSql\OpaqueSqlFragment` carries a verbatim fragment with a
+     * mandatory trust tier in its constructor, so the trust decision is a type instead
+     * of a comment.
      */
-    case Raw = 'RAW';
 
     /**
      * Return the SQL representation of this operator.
