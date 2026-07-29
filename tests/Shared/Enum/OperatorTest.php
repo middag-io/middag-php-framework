@@ -40,7 +40,20 @@ final class OperatorTest extends TestCase
         $this->assertContains('BETWEEN', $values);
         $this->assertContains('IS', $values);
         $this->assertContains('IS NOT', $values);
-        $this->assertContains('RAW', $values);
+    }
+
+    /**
+     * The verbatim case is gone and must not come back by accident (core#132).
+     *
+     * An absence is not asserted by the list above: adding a case makes that test pass
+     * either way. This one fails the day somebody reintroduces the one operator whose
+     * value reached SQL unbound.
+     */
+    #[Test]
+    public function thereIsNoVerbatimSqlOperator(): void
+    {
+        $this->assertNull(Operator::tryFrom('RAW'));
+        $this->assertNotContains('RAW', array_column(Operator::cases(), 'value'));
     }
 
     #[Test]
@@ -57,6 +70,6 @@ final class OperatorTest extends TestCase
     #[Test]
     public function totalOperatorCount(): void
     {
-        $this->assertCount(13, Operator::cases());
+        $this->assertCount(12, Operator::cases());
     }
 }
