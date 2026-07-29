@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.1](https://github.com/middag-io/middag-php-framework/compare/v1.13.0...v1.13.1) (2026-07-29)
+
+
+### Miscellaneous
+
+* **build:** cache do phpstan por repo, em vez do diretorio global da maquina ([a542fa7](https://github.com/middag-io/middag-php-framework/commit/a542fa7d2279dcbfa95796c8b05a5a61ff3b47db))
+* promove develop para main ([7ea5baa](https://github.com/middag-io/middag-php-framework/commit/7ea5baa508743e193299968fd26881438592f0cc))
+
 ## [1.13.0](https://github.com/middag-io/middag-php-framework/compare/v1.12.1...v1.13.0) (2026-07-29)
 
 
