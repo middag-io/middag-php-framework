@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.13.0](https://github.com/middag-io/middag-php-framework/compare/v1.12.1...v1.13.0) (2026-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **shared:** tira o caso Raw do enum Operator
+
+### Features
+
+* **shared:** tira o caso Raw do enum Operator ([b5f3179](https://github.com/middag-io/middag-php-framework/commit/b5f317982cbe26b5c5a06b462276bee4375d77a5))
+
 ## [1.12.1](https://github.com/middag-io/middag-php-framework/compare/v1.12.0...v1.12.1) (2026-07-27)
 
 
