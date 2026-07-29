@@ -2,6 +2,15 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
+    # Per-repo cache. PHPStan's default `tmpDir` is
+    # `sys_get_temp_dir() . '/phpstan'` — ONE cache for the whole machine. Since
+    # 2.2.6 the `phpinternal-*` entries written by `CachedPhpInternalSourceLocator`
+    # have a key with NO project path but a payload carrying the ABSOLUTE
+    # `phar://<project>/vendor/phpstan/phpstan/phpstan.phar/...` of the stub, so one
+    # project answers another project's lookup and the run dies with
+    # `"…/SPL.stub" is not a file` once the lending project is gone. `.cache/` is
+    # already gitignored here.
+    tmpDir: %currentWorkingDirectory%/.cache/phpstan
     level: 6
     paths:
         - src
