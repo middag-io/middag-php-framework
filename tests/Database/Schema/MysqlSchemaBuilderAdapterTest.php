@@ -16,6 +16,7 @@ use Middag\Framework\Database\Contract\ConnectionInterface;
 use Middag\Framework\Database\Schema\MysqlSchemaBuilderAdapter;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -40,6 +41,7 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
     }
 
     #[Test]
+    #[DoesNotPerformAssertions]
     public function dropIndexIsIdempotentWhenIndexAbsent(): void
     {
         $connection = new class implements ConnectionInterface {
@@ -65,9 +67,6 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
         };
 
         (new MysqlSchemaBuilderAdapter($connection))->dropIndex('demo_tasks', 'idx_title');
-
-        // No exception bubbled up — the drop is a no-op when the index is gone.
-        $this->addToAssertionCount(1);
     }
 
     #[Test]

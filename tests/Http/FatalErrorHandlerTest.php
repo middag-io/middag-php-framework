@@ -16,6 +16,7 @@ use Middag\Framework\Http\FatalErrorHandler;
 use Middag\Framework\Observability\ProfileCollector;
 use Middag\Framework\Tests\Http\Fixture\FatalShutdownState;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use ReflectionMethod;
@@ -105,6 +106,7 @@ final class FatalErrorHandlerTest extends TestCase
         self::assertStringContainsString('<pre>', $body, 'debug detail is rendered in a preformatted block');
     }
 
+    #[DoesNotPerformAssertions]
     public function testRegisterInstallsShutdownHandlerWithoutError(): void
     {
         $handler = new FatalErrorHandler();
@@ -112,8 +114,6 @@ final class FatalErrorHandlerTest extends TestCase
         // register_shutdown_function is a global side effect; the guarded
         // shutdown callback is a no-op at a clean process end (no fatal pending).
         $handler->register();
-
-        $this->addToAssertionCount(1);
     }
 
     public function testHandleShutdownIsNoOpWhenLastErrorIsNotFatal(): void

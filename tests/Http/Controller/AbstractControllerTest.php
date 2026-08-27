@@ -16,6 +16,7 @@ use Middag\Framework\Http\Controller\AbstractController;
 use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
@@ -57,6 +58,7 @@ final class AbstractControllerTest extends TestCase
     }
 
     #[Test]
+    #[DoesNotPerformAssertions]
     public function lifecycleHooksAreInertNoOps(): void
     {
         $controller = new AbstractControllerTestController();
@@ -65,8 +67,6 @@ final class AbstractControllerTest extends TestCase
         $controller->preHandle();
         $controller->setRequireLogin();
         $controller->setRequireCapabilities(['moodle/site:config'], 'course', 5);
-
-        $this->addToAssertionCount(1);
     }
 
     #[Test]

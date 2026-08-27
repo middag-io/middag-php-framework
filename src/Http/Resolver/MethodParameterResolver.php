@@ -63,9 +63,7 @@ class MethodParameterResolver
     ): array {
         $signature = $controller::class . '::' . $method;
 
-        if (!isset(self::$cache[$signature])) {
-            self::$cache[$signature] = (new ReflectionMethod($controller, $method))->getParameters();
-        }
+        self::$cache[$signature] ??= (new ReflectionMethod($controller, $method))->getParameters();
 
         $params = self::$cache[$signature];
         $arguments = [];

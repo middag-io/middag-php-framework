@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Kernel;
 
 use Middag\Framework\Kernel\ShutdownCleanup;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
@@ -75,6 +76,7 @@ final class ShutdownCleanupTest extends TestCase
         self::assertSame(1, $calls, 'cleanups drain after running; a second run() is a no-op');
     }
 
+    #[DoesNotPerformAssertions]
     public function testRegisterIsIdempotent(): void
     {
         $cleanup = new ShutdownCleanup();
@@ -83,7 +85,5 @@ final class ShutdownCleanupTest extends TestCase
         // guard so register_shutdown_function is never called twice.
         $cleanup->register();
         $cleanup->register();
-
-        $this->addToAssertionCount(1);
     }
 }

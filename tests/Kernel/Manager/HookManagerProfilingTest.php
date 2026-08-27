@@ -15,6 +15,7 @@ namespace Middag\Framework\Tests\Kernel\Manager;
 use Middag\Framework\Kernel\Manager\HookManager;
 use Middag\Framework\Observability\ProfileCollector;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
@@ -89,6 +90,7 @@ final class HookManagerProfilingTest extends TestCase
     }
 
     #[Test]
+    #[DoesNotPerformAssertions]
     public function slowActionFallsBackToNullLoggerWhenNoneInjected(): void
     {
         $hooks = new HookManager(slowThresholdMs: 1);
@@ -98,8 +100,6 @@ final class HookManagerProfilingTest extends TestCase
 
         // No logger set → warnIfSlow resolves a NullLogger lazily; must not error.
         $hooks->doAction('slow');
-
-        $this->addToAssertionCount(1);
     }
 
     #[Test]
