@@ -49,9 +49,7 @@ abstract class HookfileLoader implements HookfileLoaderInterface
      */
     final public function discover(): array
     {
-        if ($this->cachedPaths === null) {
-            $this->cachedPaths = $this->discoverPaths();
-        }
+        $this->cachedPaths ??= $this->discoverPaths();
 
         return $this->cachedPaths;
     }

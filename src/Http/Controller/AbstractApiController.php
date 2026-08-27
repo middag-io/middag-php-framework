@@ -50,9 +50,7 @@ abstract class AbstractApiController extends AbstractController
     {
         $payload = is_array($data) ? $data : ['data' => $data];
 
-        if (!isset($payload['success'])) {
-            $payload['success'] = $status >= Response::HTTP_OK && $status < Response::HTTP_MULTIPLE_CHOICES;
-        }
+        $payload['success'] ??= $status >= Response::HTTP_OK && $status < Response::HTTP_MULTIPLE_CHOICES;
 
         return parent::jsonResponse($payload, $status);
     }
