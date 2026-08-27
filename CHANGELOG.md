@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.14.0](https://github.com/middag-io/middag-php-framework/compare/v1.13.1...v1.14.0) (2026-08-27)
+
+
+### Features
+
+* add shared retry contracts for the outbox/job backends ([6f5c171](https://github.com/middag-io/middag-php-framework/commit/6f5c1712ce3de449bb006c6543d34be7a4e94569))
+* add shared retry contracts for the outbox/job backends (core[#164](https://github.com/middag-io/middag-php-framework/issues/164) F1) ([330aaa2](https://github.com/middag-io/middag-php-framework/commit/330aaa207552a4e11440a6c8cf993b0df9dbcff3))
+
+
+### Bug Fixes
+
+* **ci:** replace removed PHPUnitSetList::PHPUNIT_120 with composer-based set ([a24da86](https://github.com/middag-io/middag-php-framework/commit/a24da86fd418749a92e8f8398ac6211b764aee87))
+* **ci:** replace removed PHPUnitSetList::PHPUNIT_120 with composer-based set ([9a75f3c](https://github.com/middag-io/middag-php-framework/commit/9a75f3c73befef6546f29a9ae1ffcd0728714daa))
+
+
+### Documentation
+
+* canonical AGENTS.md, CLAUDE.md symlink (ADR-017) ([b89906c](https://github.com/middag-io/middag-php-framework/commit/b89906cbcf9d42dc0e96a2477f075e829a6f7ac6))
+
 ## [1.13.1](https://github.com/middag-io/middag-php-framework/compare/v1.13.0...v1.13.1) (2026-07-29)
 
 
