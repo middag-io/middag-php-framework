@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/middag-io/middag-php-framework/compare/v1.15.0...v1.16.0) (2026-08-28)
+
+
+### Features
+
+* **bus:** rewrite CommandWorker into a production-grade queue worker ([1fa376c](https://github.com/middag-io/middag-php-framework/commit/1fa376cb967fccfc769b47e1fc087f37fc0ede82))
+* **bus:** rewrite CommandWorker into a production-grade queue worker ([d8a3078](https://github.com/middag-io/middag-php-framework/commit/d8a307810776d96c4fa24277305264a2d9a68057))
+
+
+### Refactoring
+
+* **bus:** name transports by transport, not by lane, in the OSS API ([96ab1e0](https://github.com/middag-io/middag-php-framework/commit/96ab1e01c01552e9d1f1078a7cc80485500cdebf))
+
 ## [1.15.0](https://github.com/middag-io/middag-php-framework/compare/v1.14.0...v1.15.0) (2026-08-28)
 
 
