@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.0](https://github.com/middag-io/middag-php-framework/compare/v1.16.0...v1.17.0) (2026-08-28)
+
+
+### Features
+
+* **bus:** carry user context across persistent transports ([4b0d0a6](https://github.com/middag-io/middag-php-framework/commit/4b0d0a61ef0c85ade1c9008e10c44ee220ab6191))
+* **bus:** carry user context across persistent transports ([56c5c43](https://github.com/middag-io/middag-php-framework/commit/56c5c4364c2469852762ceea55805699396e1464))
+
 ## [1.16.0](https://github.com/middag-io/middag-php-framework/compare/v1.15.0...v1.16.0) (2026-08-28)
 
 
