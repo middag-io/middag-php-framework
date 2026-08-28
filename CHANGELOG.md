@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.0](https://github.com/middag-io/middag-php-framework/compare/v1.14.0...v1.15.0) (2026-08-28)
+
+
+### Features
+
+* **bus:** preserve whitelisted Messenger stamps in CommandSerializer round-trip ([a8f99e7](https://github.com/middag-io/middag-php-framework/commit/a8f99e7afa86d06b8a45951339d0b8dac6d9586b))
+* **bus:** preserve whitelisted Messenger stamps in CommandSerializer round-trip ([9c80b9d](https://github.com/middag-io/middag-php-framework/commit/9c80b9df20f8f39304d633c082bf31926e1d9859))
+
 ## [1.14.0](https://github.com/middag-io/middag-php-framework/compare/v1.13.1...v1.14.0) (2026-08-27)
 
 
