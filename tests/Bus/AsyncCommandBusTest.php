@@ -114,12 +114,13 @@ final class AsyncCommandBusTest extends TestCase
         self::assertSame(0, $worker->drain());
     }
 
-    public function testWorkerRejectsAndRethrowsWhenTheBusFails(): void
+    public function testWorkerRejectsAndSurvivesWhenTheBusFails(): void
     {
         $transport = new InMemoryTransport();
         $transport->send(new Envelope(new RecordCommand('doomed')));
 
-        // A bus that always fails: drain() must reject the envelope and rethrow.
+        // A bus that always fails: drain() must reject the envelope and keep
+        // running — never rethrow out of the loop (core#164 F4).
         $bus = new class implements MessageBusInterface {
             public function dispatch(object $message, array $stamps = []): Envelope
             {
@@ -129,9 +130,10 @@ final class AsyncCommandBusTest extends TestCase
 
         $worker = new CommandWorker($transport, $bus);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('handler blew up');
-        $worker->drain();
+        $handled = $worker->drain();
+
+        self::assertSame(1, $handled, 'the failed message still counts as processed');
+        self::assertSame([], iterator_to_array($transport->get()), 'rejected, not left on the queue');
     }
 
     /**
