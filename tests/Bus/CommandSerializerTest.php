@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Bus;
 
+use DateTimeImmutable;
 use Middag\Framework\Bus\Command\CommandSerializer;
 use Middag\Framework\Exception\MiddagInfrastructureException;
 use Middag\Framework\Tests\Bus\Fixture\RecordCommand;
@@ -19,6 +20,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Stamp\BusNameStamp;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
+use Symfony\Component\Messenger\Stamp\RedeliveryStamp;
+use Symfony\Component\Messenger\Stamp\TransportNamesStamp;
 
 /**
  * @internal
@@ -76,5 +81,76 @@ final class CommandSerializerTest extends TestCase
         $this->expectExceptionMessage('only encodes');
 
         $this->serializer->encode(new Envelope(new stdClass()));
+    }
+
+    public function testEncodeDecodeRoundTripPreservesWhitelistedStamps(): void
+    {
+        $redeliveredAt = new DateTimeImmutable('2026-01-15T10:30:00+00:00');
+        $envelope = new Envelope(new RecordCommand('payload-x'), [
+            new RedeliveryStamp(3, $redeliveredAt),
+            new BusNameStamp('command.bus'),
+        ]);
+
+        $encoded = $this->serializer->encode($envelope);
+
+        self::assertArrayHasKey('X-Message-Stamp-' . RedeliveryStamp::class, $encoded['headers']);
+        self::assertArrayHasKey('X-Message-Stamp-' . BusNameStamp::class, $encoded['headers']);
+
+        $decoded = $this->serializer->decode($encoded);
+
+        $redeliveryStamps = $decoded->all(RedeliveryStamp::class);
+        self::assertCount(1, $redeliveryStamps);
+        self::assertSame(3, $redeliveryStamps[0]->getRetryCount());
+        self::assertSame(
+            $redeliveredAt->format(DATE_ATOM),
+            $redeliveryStamps[0]->getRedeliveredAt()->format(DATE_ATOM),
+        );
+
+        $busNameStamps = $decoded->all(BusNameStamp::class);
+        self::assertCount(1, $busNameStamps);
+        self::assertSame('command.bus', $busNameStamps[0]->getBusName());
+    }
+
+    public function testEncodeDiscardsNonWhitelistedStampsSilently(): void
+    {
+        $envelope = new Envelope(new RecordCommand('payload-x'), [
+            new DelayStamp(5000),
+        ]);
+
+        $encoded = $this->serializer->encode($envelope);
+
+        self::assertArrayNotHasKey('X-Message-Stamp-' . DelayStamp::class, $encoded['headers']);
+
+        $decoded = $this->serializer->decode($encoded);
+
+        self::assertCount(0, $decoded->all(DelayStamp::class));
+    }
+
+    public function testEncodeDecodeRoundTripWithoutStampsStaysUnaffected(): void
+    {
+        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x')));
+
+        self::assertSame(['type' => RecordCommand::class], $encoded['headers']);
+
+        $decoded = $this->serializer->decode($encoded);
+
+        self::assertInstanceOf(RecordCommand::class, $decoded->getMessage());
+        self::assertSame([], $decoded->all()[RedeliveryStamp::class] ?? []);
+    }
+
+    public function testEncodeDecodeRoundTripPreservesMultipleStampsOfSameClass(): void
+    {
+        $envelope = new Envelope(new RecordCommand('payload-x'), [
+            new TransportNamesStamp('async'),
+            new TransportNamesStamp(['async', 'failed']),
+        ]);
+
+        $encoded = $this->serializer->encode($envelope);
+        $decoded = $this->serializer->decode($encoded);
+
+        $transportNamesStamps = $decoded->all(TransportNamesStamp::class);
+        self::assertCount(2, $transportNamesStamps);
+        self::assertSame(['async'], $transportNamesStamps[0]->getTransportNames());
+        self::assertSame(['async', 'failed'], $transportNamesStamps[1]->getTransportNames());
     }
 }
