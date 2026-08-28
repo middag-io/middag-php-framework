@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Bus;
 
 use DateTimeImmutable;
 use Middag\Framework\Bus\Command\CommandSerializer;
+use Middag\Framework\Bus\Context\UserContextStamp;
 use Middag\Framework\Exception\MiddagInfrastructureException;
 use Middag\Framework\Tests\Bus\Fixture\RecordCommand;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -152,5 +153,19 @@ final class CommandSerializerTest extends TestCase
         self::assertCount(2, $transportNamesStamps);
         self::assertSame(['async'], $transportNamesStamps[0]->getTransportNames());
         self::assertSame(['async', 'failed'], $transportNamesStamps[1]->getTransportNames());
+    }
+
+    public function testEncodeDecodeRoundTripPreservesUserContextStamp(): void
+    {
+        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
+            new UserContextStamp(42),
+        ]));
+
+        self::assertArrayHasKey('X-Message-Stamp-' . UserContextStamp::class, $encoded['headers']);
+
+        $stamp = $this->serializer->decode($encoded)->last(UserContextStamp::class);
+
+        self::assertInstanceOf(UserContextStamp::class, $stamp);
+        self::assertSame(42, $stamp->getUserId());
     }
 }
