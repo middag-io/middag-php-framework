@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Architecture;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use Middag\Framework\Runtime\StandaloneKernel;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
