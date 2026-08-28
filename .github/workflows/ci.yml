@@ -25,12 +25,44 @@ jobs:
       - name: Validate composer.json
         run: composer validate --no-check-publish --no-check-lock
 
+      - name: Cache vendor
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php8.2-vendor-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php8.2-vendor-
+
       # `middag-io/ui` resolves from public Packagist (Apache-2.0); no auth needed.
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Test namespaces follow PSR-4 (autoload + autoload-dev)
         run: composer dump-autoload --optimize --strict-psr
+
+      - name: Cache PHP-CS-Fixer (incremental analysis)
+        uses: actions/cache@v4
+        with:
+          path: .cache/php-cs-fixer.cache
+          key: ${{ runner.os }}-cs-fixer-${{ hashFiles('composer.lock', '.php-cs-fixer.dist.php') }}
+          restore-keys: |
+            ${{ runner.os }}-cs-fixer-
+
+      - name: Cache Rector (incremental analysis)
+        uses: actions/cache@v4
+        with:
+          path: .cache/rector
+          key: ${{ runner.os }}-rector-${{ hashFiles('composer.lock', '.php-rector.php') }}
+          restore-keys: |
+            ${{ runner.os }}-rector-
+
+      - name: Cache PHPStan (result cache)
+        uses: actions/cache@v4
+        with:
+          path: .cache/phpstan
+          key: ${{ runner.os }}-phpstan-${{ hashFiles('composer.lock', '.phpstan.neon', 'phpstan-baseline.neon') }}
+          restore-keys: |
+            ${{ runner.os }}-phpstan-
 
       - name: PHPStan + PHP-CS-Fixer + Rector (dry-run)
         run: composer check
