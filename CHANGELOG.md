@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/middag-io/middag-php-framework/compare/v1.17.0...v1.18.0) (2026-08-28)
+
+
+### Features
+
+* **runtime:** standalone kernel + `doctrine` transport (core[#164](https://github.com/middag-io/middag-php-framework/issues/164) F6 level 1) ([#89](https://github.com/middag-io/middag-php-framework/issues/89)) ([d5c2785](https://github.com/middag-io/middag-php-framework/commit/d5c27858cdcd8fbb0a17f1e81fc6915c28d43d05))
+
 ## [1.17.0](https://github.com/middag-io/middag-php-framework/compare/v1.16.0...v1.17.0) (2026-08-28)
 
 
