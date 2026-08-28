@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Bus\Command;
 
 use DateTimeImmutable;
+use Middag\Framework\Bus\Context\UserContextStamp;
 use Middag\Framework\Bus\Contract\CommandInterface;
 use Middag\Framework\Exception\MiddagInfrastructureException;
 use Symfony\Component\Messenger\Envelope;
@@ -47,6 +48,7 @@ final class CommandSerializer implements SerializerInterface
         RedeliveryStamp::class,
         TransportNamesStamp::class,
         BusNameStamp::class,
+        UserContextStamp::class,
     ];
 
     /**
@@ -175,6 +177,9 @@ final class CommandSerializer implements SerializerInterface
             $stamp instanceof BusNameStamp => [
                 'busName' => $stamp->getBusName(),
             ],
+            $stamp instanceof UserContextStamp => [
+                'userId' => $stamp->getUserId(),
+            ],
             default => throw new MiddagInfrastructureException(sprintf(
                 'CommandSerializer has no encoding rule for whitelisted stamp %s.',
                 $stamp::class,
@@ -199,6 +204,9 @@ final class CommandSerializer implements SerializerInterface
                 is_array($data['transportNames'] ?? null) ? $data['transportNames'] : [],
             ),
             BusNameStamp::class => new BusNameStamp((string) ($data['busName'] ?? '')),
+            UserContextStamp::class => new UserContextStamp(
+                isset($data['userId']) ? (int) $data['userId'] : null,
+            ),
             default => throw new MiddagInfrastructureException(sprintf(
                 'CommandSerializer has no decoding rule for whitelisted stamp %s.',
                 $stampClass,
