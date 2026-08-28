@@ -14,7 +14,7 @@ on:
 # reusable workflows from a PRIVATE repository, so the wrapper fails to start
 # here with "error parsing called workflow ... release-please.yml@main". Until
 # the reusable workflows are published to a PUBLIC repo (e.g. middag-io/.github),
-# this repo inlines release-please + sync-develop so releases are not blocked.
+# this repo inlines release-please so releases are not blocked.
 # Matches the same fix applied to middag-php-ui/moodle/wordpress.
 permissions:
   contents: write
@@ -34,22 +34,3 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
-
-  # Keep develop current with whatever release-please shipped onto main, so the
-  # GitFlow loop stays closed and develop never drifts behind.
-  sync-develop:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: develop
-          fetch-depth: 0
-      - name: Merge main into develop
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git merge origin/main --no-edit
-          git push origin develop
