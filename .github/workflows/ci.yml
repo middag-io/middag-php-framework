@@ -40,6 +40,14 @@ jobs:
       - name: Test namespaces follow PSR-4 (autoload + autoload-dev)
         run: composer dump-autoload --optimize --strict-psr
 
+      - name: Cache PHP-CS-Fixer (incremental analysis)
+        uses: actions/cache@v4
+        with:
+          path: .cache/php-cs-fixer.cache
+          key: ${{ runner.os }}-cs-fixer-${{ hashFiles('composer.lock', '.php-cs-fixer.dist.php') }}
+          restore-keys: |
+            ${{ runner.os }}-cs-fixer-
+
       - name: Cache Rector (incremental analysis)
         uses: actions/cache@v4
         with:
