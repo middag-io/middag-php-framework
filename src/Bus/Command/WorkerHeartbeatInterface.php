@@ -28,12 +28,12 @@ namespace Middag\Framework\Bus\Command;
 interface WorkerHeartbeatInterface
 {
     /**
-     * Record that $workerName is alive and currently draining $lanes.
+     * Record that $workerName is alive and currently draining $transportNames.
      *
      * Must be cheap and must never throw: a beat failure is a monitoring
      * concern, not a reason to interrupt message processing.
      *
-     * @param list<string> $lanes transport names this worker drains
+     * @param list<string> $transportNames transport names this worker drains
      */
-    public function beat(string $workerName, array $lanes): void;
+    public function beat(string $workerName, array $transportNames): void;
 }

@@ -314,7 +314,7 @@ final class CommandWorkerTest extends TestCase
 
         // 2 messages + the final "queue is now empty" check.
         self::assertCount(3, $heartbeat->beats);
-        self::assertSame(['async'], $heartbeat->beats[0]['lanes']);
+        self::assertSame(['async'], $heartbeat->beats[0]['transports']);
         self::assertNotSame('', $heartbeat->beats[0]['workerName']);
     }
 
@@ -335,20 +335,20 @@ final class CommandWorkerTest extends TestCase
             $async,
             $this->recordingBus($handled),
             heartbeat: $heartbeat,
-            lanes: $locator,
-            additionalLaneNames: ['reports'],
+            transportLocator: $locator,
+            additionalTransportNames: ['reports'],
         );
 
         self::assertSame(2, $worker->drain());
         self::assertSame(['async-one', 'reports-one'], $handled);
 
         foreach ($heartbeat->beats as $beat) {
-            self::assertSame(['async', 'reports'], $beat['lanes']);
+            self::assertSame(['async', 'reports'], $beat['transports']);
         }
     }
 
     #[Test]
-    public function additionalLaneNameWithoutATransportLocatorThrowsAtConstruction(): void
+    public function additionalTransportNameWithoutATransportLocatorThrowsAtConstruction(): void
     {
         $handled = [];
         $this->expectException(InvalidArgumentException::class);
@@ -356,12 +356,12 @@ final class CommandWorkerTest extends TestCase
         new CommandWorker(
             new InMemoryTransport(),
             $this->recordingBus($handled),
-            additionalLaneNames: ['reports'],
+            additionalTransportNames: ['reports'],
         );
     }
 
     #[Test]
-    public function additionalLaneNameResolvingToSomethingOtherThanATransportThrowsAtConstruction(): void
+    public function additionalTransportNameResolvingToSomethingOtherThanATransportThrowsAtConstruction(): void
     {
         $locator = new class implements ContainerInterface {
             public function get(string $id): stdClass
@@ -381,8 +381,8 @@ final class CommandWorkerTest extends TestCase
         new CommandWorker(
             new InMemoryTransport(),
             $this->recordingBus($handled),
-            lanes: $locator,
-            additionalLaneNames: ['reports'],
+            transportLocator: $locator,
+            additionalTransportNames: ['reports'],
         );
     }
 

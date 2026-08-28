@@ -45,7 +45,7 @@ final readonly class WorkerLimits
     }
 
     /**
-     * No stop condition on any axis — drain() runs until its lanes are empty.
+     * No stop condition on any axis — drain() runs until its transports are empty.
      */
     public static function unlimited(): self
     {

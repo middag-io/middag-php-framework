@@ -21,11 +21,11 @@ use Middag\Framework\Bus\Command\WorkerHeartbeatInterface;
  */
 final class RecordingHeartbeat implements WorkerHeartbeatInterface
 {
-    /** @var list<array{workerName: string, lanes: list<string>}> */
+    /** @var list<array{workerName: string, transports: list<string>}> */
     public array $beats = [];
 
-    public function beat(string $workerName, array $lanes): void
+    public function beat(string $workerName, array $transportNames): void
     {
-        $this->beats[] = ['workerName' => $workerName, 'lanes' => $lanes];
+        $this->beats[] = ['workerName' => $workerName, 'transports' => $transportNames];
     }
 }

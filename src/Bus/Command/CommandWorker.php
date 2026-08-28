@@ -31,7 +31,7 @@ use Symfony\Component\Messenger\Stamp\StampInterface;
 use Throwable;
 
 /**
- * Drains queued messages from one or more transports ("lanes") and
+ * Drains queued messages from one or more transports ("transports") and
  * re-dispatches each through the {@see MessageBus} carrying a
  * {@see ReceivedStamp} — so the send middleware skips re-queueing and the
  * handle middleware runs the handler. Async execution therefore reuses the
@@ -40,8 +40,8 @@ use Throwable;
  * Call drain() from a long-lived process (systemd/supervisor) or a periodic
  * OS/host cron invocation; symfony/console (suggested) wraps it as a
  * `messenger:consume`-style CLI worker. Each call makes exactly one pass over
- * every lane's transport — draining it until empty, a stop condition trips,
- * or a decode failure forces that lane to stop early — then returns. A
+ * every transport's transport — draining it until empty, a stop condition trips,
+ * or a decode failure forces that transport to stop early — then returns. A
  * long-lived caller simply calls drain() again in its own loop; that is also
  * what makes drain() safe to call from a one-shot cron tick.
  *
@@ -63,9 +63,9 @@ use Throwable;
  * available) and from the transport's own `get()` iterator, which can throw
  * *while advancing to the next item* rather than only from the handler.
  * Iterating a `foreach` gives no chance to catch that: the exception surfaces
- * between loop bodies, not inside one. `drain()` therefore walks each lane's
+ * between loop bodies, not inside one. `drain()` therefore walks each transport's
  * iterator by hand (`valid()`/`current()`/`next()`) so a poison message can
- * be caught, logged, and the lane cleanly stopped for this pass — without an
+ * be caught, logged, and the transport cleanly stopped for this pass — without an
  * envelope to reject (decoding failed before one could be produced), that is
  * the best this worker can do; the row itself staying claimed-but-stuck is a
  * transport/store concern (typically a claim timeout), not the worker's.
@@ -74,8 +74,8 @@ use Throwable;
  */
 final class CommandWorker
 {
-    /** @var array<string, TransportInterface> lane name => transport, insertion order */
-    private readonly array $laneTransports;
+    /** @var array<string, TransportInterface> transport name => transport, insertion order */
+    private readonly array $transports;
 
     private readonly WorkerLimits $limits;
 
@@ -86,20 +86,20 @@ final class CommandWorker
     private bool $signalHandlersInstalled = false;
 
     /**
-     * @param string                  $transportName       lane name for $transport (matches the alias
-     *                                                     routed messages are sent under, e.g. via
-     *                                                     {@see TransportLocator})
-     * @param LoggerInterface         $logger              PSR-3 sink for failures and stop reasons; optional
-     * @param null|WorkerLimits       $limits              stop conditions; null means unlimited
-     * @param null|ContainerInterface $lanes               resolves $additionalLaneNames to their
-     *                                                     {@see TransportInterface} (e.g. a
-     *                                                     {@see TransportLocator}); required only when
-     *                                                     $additionalLaneNames is non-empty
-     * @param list<string>            $additionalLaneNames extra lanes to drain alongside $transportName,
-     *                                                     each resolved through $lanes; drain() cycles all
-     *                                                     lanes, $transportName first
-     * @param null|string             $name                this worker's identity for {@see WorkerHeartbeatInterface};
-     *                                                     defaults to a host+pid derived value
+     * @param string                  $transportName            transport name for $transport (matches the alias
+     *                                                          routed messages are sent under, e.g. via
+     *                                                          {@see TransportLocator})
+     * @param LoggerInterface         $logger                   PSR-3 sink for failures and stop reasons; optional
+     * @param null|WorkerLimits       $limits                   stop conditions; null means unlimited
+     * @param null|ContainerInterface $transportLocator         resolves $additionalTransportNames to their
+     *                                                          {@see TransportInterface} (e.g. a
+     *                                                          {@see TransportLocator}); required only when
+     *                                                          $additionalTransportNames is non-empty
+     * @param list<string>            $additionalTransportNames extra transports to drain alongside $transportName,
+     *                                                          each resolved through $transportLocator; drain() cycles all
+     *                                                          transports, $transportName first
+     * @param null|string             $name                     this worker's identity for {@see WorkerHeartbeatInterface};
+     *                                                          defaults to a host+pid derived value
      */
     public function __construct(
         TransportInterface $transport,
@@ -110,19 +110,19 @@ final class CommandWorker
         private readonly ?WorkerHeartbeatInterface $heartbeat = null,
         private readonly LoggerInterface $logger = new NullLogger(),
         ?WorkerLimits $limits = null,
-        ?ContainerInterface $lanes = null,
-        array $additionalLaneNames = [],
+        ?ContainerInterface $transportLocator = null,
+        array $additionalTransportNames = [],
         ?string $name = null,
     ) {
         $this->limits = $limits ?? WorkerLimits::unlimited();
         $this->name = $name ?? $this->defaultWorkerName();
-        $this->laneTransports = $this->resolveLanes($transportName, $transport, $lanes, $additionalLaneNames);
+        $this->transports = $this->resolveTransports($transportName, $transport, $transportLocator, $additionalTransportNames);
     }
 
     /**
-     * Drain every configured lane once: process each lane's currently
+     * Drain every configured transport once: process each transport's currently
      * available messages until it is exhausted, a stop condition trips, or a
-     * decode failure forces that lane to stop early for this pass.
+     * decode failure forces that transport to stop early for this pass.
      *
      * Once a SIGTERM/SIGINT has been observed, {@see self::isStopRequested()}
      * stays true for the rest of this worker's lifetime — drain() does NOT
@@ -131,7 +131,7 @@ final class CommandWorker
      * work a shutdown signal already asked it to stop.
      *
      * @return int number of messages this call processed (handled or failed),
-     *             across every lane — not just the ones successfully acked
+     *             across every transport — not just the ones successfully acked
      */
     public function drain(): int
     {
@@ -140,12 +140,12 @@ final class CommandWorker
         $startedAt = microtime(true);
         $processed = 0;
 
-        foreach ($this->laneTransports as $laneName => $transport) {
+        foreach ($this->transports as $transportName => $transport) {
             if ($this->shouldStop($processed, $startedAt)) {
                 break;
             }
 
-            $processed += $this->drainLane($laneName, $transport, $processed, $startedAt);
+            $processed += $this->drainTransport($transportName, $transport, $processed, $startedAt);
         }
 
         return $processed;
@@ -162,15 +162,15 @@ final class CommandWorker
     }
 
     /**
-     * @return int messages processed on this lane during this pass
+     * @return int messages processed on this transport during this pass
      */
-    private function drainLane(string $laneName, TransportInterface $transport, int $processedSoFar, float $startedAt): int
+    private function drainTransport(string $transportName, TransportInterface $transport, int $processedSoFar, float $startedAt): int
     {
         $iterator = self::toIterator($transport->get());
         $processed = 0;
 
         while (true) {
-            $this->heartbeat?->beat($this->name, array_keys($this->laneTransports));
+            $this->heartbeat?->beat($this->name, array_keys($this->transports));
             $this->dispatchSignals();
 
             if ($this->shouldStop($processedSoFar + $processed, $startedAt)) {
@@ -185,21 +185,21 @@ final class CommandWorker
                 $envelope = $iterator->current();
             } catch (MessageDecodingFailedException $e) {
                 $this->logger->error('Discarding a queued message: the transport could not decode it while iterating.', [
-                    'lane' => $laneName,
+                    'transport' => $transportName,
                     'exception' => $e,
                 ]);
 
                 break;
             }
 
-            $this->processEnvelope($laneName, $transport, $envelope);
+            $this->processEnvelope($transportName, $transport, $envelope);
             ++$processed;
 
             try {
                 $iterator->next();
             } catch (MessageDecodingFailedException $e) {
                 $this->logger->error('Discarding a queued message: the transport could not decode the next item while advancing.', [
-                    'lane' => $laneName,
+                    'transport' => $transportName,
                     'exception' => $e,
                 ]);
 
@@ -210,14 +210,14 @@ final class CommandWorker
         return $processed;
     }
 
-    private function processEnvelope(string $laneName, TransportInterface $transport, Envelope $envelope): void
+    private function processEnvelope(string $transportName, TransportInterface $transport, Envelope $envelope): void
     {
         $stamp = $envelope->last(AttemptStamp::class);
 
         try {
-            $this->bus->dispatch($envelope->with(new ReceivedStamp($laneName)));
+            $this->bus->dispatch($envelope->with(new ReceivedStamp($transportName)));
         } catch (MessageDecodingFailedException $e) {
-            $this->logger->error('Discarding a message that failed to decode.', ['lane' => $laneName, 'exception' => $e]);
+            $this->logger->error('Discarding a message that failed to decode.', ['transport' => $transportName, 'exception' => $e]);
 
             if ($this->attemptStore instanceof AttemptStoreInterface && $stamp instanceof StampInterface) {
                 $this->attemptStore->markDead($stamp->getId(), $e);
@@ -227,7 +227,7 @@ final class CommandWorker
 
             return;
         } catch (Throwable $e) {
-            $this->handleFailure($laneName, $transport, $envelope, $stamp, $e);
+            $this->handleFailure($transportName, $transport, $envelope, $stamp, $e);
 
             return;
         }
@@ -239,13 +239,13 @@ final class CommandWorker
         $transport->ack($envelope);
     }
 
-    private function handleFailure(string $laneName, TransportInterface $transport, Envelope $envelope, ?AttemptStamp $stamp, Throwable $e): void
+    private function handleFailure(string $transportName, TransportInterface $transport, Envelope $envelope, ?AttemptStamp $stamp, Throwable $e): void
     {
         $hasRetryBookkeeping = $this->retryPolicy instanceof RetryPolicyInterface && $this->attemptStore instanceof AttemptStoreInterface && $stamp instanceof AttemptStamp;
 
         if (!$hasRetryBookkeeping) {
             $this->logger->error('Command handler failed; no retry bookkeeping is configured for this message, rejecting.', [
-                'lane' => $laneName,
+                'transport' => $transportName,
                 'exception' => $e,
             ]);
 
@@ -265,14 +265,14 @@ final class CommandWorker
             $availableAt = time() + intdiv($retryPolicy->getWaitingTime($item, $e), 1000);
             $attemptStore->recordFailure($stamp->getId(), $e, $availableAt);
             $this->logger->warning('Command handler failed; scheduled for retry.', [
-                'lane' => $laneName,
+                'transport' => $transportName,
                 'exception' => $e,
                 'availableAt' => $availableAt,
             ]);
         } else {
             $attemptStore->markDead($stamp->getId(), $e);
             $this->logger->error('Command handler failed; retries exhausted, marking dead.', [
-                'lane' => $laneName,
+                'transport' => $transportName,
                 'exception' => $e,
             ]);
         }
@@ -356,45 +356,45 @@ final class CommandWorker
     }
 
     /**
-     * @param list<string> $additionalLaneNames
+     * @param list<string> $additionalTransportNames
      *
      * @return array<string, TransportInterface>
      */
-    private function resolveLanes(
+    private function resolveTransports(
         string $primaryName,
         TransportInterface $primaryTransport,
-        ?ContainerInterface $lanes,
-        array $additionalLaneNames,
+        ?ContainerInterface $transportLocator,
+        array $additionalTransportNames,
     ): array {
-        $laneTransports = [$primaryName => $primaryTransport];
+        $transports = [$primaryName => $primaryTransport];
 
-        foreach ($additionalLaneNames as $laneName) {
-            if ($laneName === $primaryName) {
+        foreach ($additionalTransportNames as $transportName) {
+            if ($transportName === $primaryName) {
                 continue;
             }
 
-            if (!$lanes instanceof ContainerInterface) {
+            if (!$transportLocator instanceof ContainerInterface) {
                 throw new InvalidArgumentException(sprintf(
-                    'CommandWorker cannot resolve lane "%s": no transport locator was given.',
-                    $laneName,
+                    'CommandWorker cannot resolve transport "%s": no transport locator was given.',
+                    $transportName,
                 ));
             }
 
-            $resolved = $lanes->get($laneName);
+            $resolved = $transportLocator->get($transportName);
 
             if (!$resolved instanceof TransportInterface) {
                 throw new InvalidArgumentException(sprintf(
-                    'CommandWorker cannot resolve lane "%s": expected a %s, got %s.',
-                    $laneName,
+                    'CommandWorker cannot resolve transport "%s": expected a %s, got %s.',
+                    $transportName,
                     TransportInterface::class,
                     get_debug_type($resolved),
                 ));
             }
 
-            $laneTransports[$laneName] = $resolved;
+            $transports[$transportName] = $resolved;
         }
 
-        return $laneTransports;
+        return $transports;
     }
 
     private function defaultWorkerName(): string
