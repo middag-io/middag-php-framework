@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.1](https://github.com/middag-io/middag-php-framework/compare/v1.18.0...v1.18.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* **inertia:** scope the output-buffer purge to the JSON branch ([#91](https://github.com/middag-io/middag-php-framework/issues/91)) ([945488a](https://github.com/middag-io/middag-php-framework/commit/945488a1bcca78f0d6a1de3ff83fd34a517d6513))
+
 ## [1.18.0](https://github.com/middag-io/middag-php-framework/compare/v1.17.0...v1.18.0) (2026-08-28)
 
 
