@@ -162,6 +162,24 @@ final class InertiaResponseTest extends TestCase
         self::assertSame('', $leftover);
     }
 
+    #[Test]
+    public function htmlBootstrapKeepsHostOutputBufferedBeforeTheBody(): void
+    {
+        // Arrange: a document navigation (no X-Inertia) on a host that has
+        // already emitted its own chrome — the wp-admin shell, for example.
+        $request = Request::create('/dashboard', 'GET');
+
+        // Act
+        ob_start();
+        echo '<!DOCTYPE html><html><head>HOST HEAD</head><body>';
+        (new InertiaResponse('Dashboard', [], $request))->toResponse();
+        $buffered = ob_get_clean();
+
+        // Assert: the host document survives — the purge is a JSON-payload
+        // guard and must never eat the HTML bootstrap's host output.
+        self::assertSame('<!DOCTYPE html><html><head>HOST HEAD</head><body>', $buffered);
+    }
+
     // ── partial-aware, lazy prop resolution ────────────────────────────
 
     #[Test]
