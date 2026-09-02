@@ -96,13 +96,6 @@ final class InertiaResponse
      */
     public function toResponse(): Response
     {
-        // Purge stray host output (WordPress notices, Moodle debug echoes,
-        // BOM, whitespace) buffered before the body, so it cannot corrupt the
-        // X-Inertia JSON payload. Guarded: only act when a buffer is active.
-        if (ob_get_level() > 0) {
-            ob_clean();
-        }
-
         $page = [
             'component' => $this->component,
             'props' => $this->resolveProps(),
@@ -171,6 +164,17 @@ final class InertiaResponse
                         && (!$hasOnly || in_array((string) $k, $only, true)),
                     ARRAY_FILTER_USE_KEY
                 );
+            }
+
+            // Purge stray host output (WordPress notices, Moodle debug echoes,
+            // BOM, whitespace) buffered before the body, so it cannot corrupt
+            // the X-Inertia JSON payload. Guarded: only act when a buffer is
+            // active. Scoped to the JSON branch on purpose: the HTML bootstrap
+            // shares the buffer with the host document (the wp-admin shell),
+            // and purging there would swallow <!DOCTYPE>/<head>/<body> and the
+            // scripts the host already emitted.
+            if (ob_get_level() > 0) {
+                ob_clean();
             }
 
             return new JsonResponse($page, 200, ['X-Inertia' => 'true'] + $inertiaHeaders);
