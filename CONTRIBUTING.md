@@ -6,9 +6,9 @@ workflow, coding standards, and quality pipeline the project expects.
 ## Workflow
 
 1. Fork and clone.
-2. Create a feature branch off `develop`.
+2. Create a feature branch off `main`.
 3. Run the full check suite locally before pushing: `composer check && composer test`.
-4. Open a pull request against `develop`.
+4. Open a pull request against `main`.
 
 ## Coding standards
 
@@ -92,7 +92,7 @@ Longer body when the "why" isn't obvious.
 - Mark a breaking change with `!` (e.g. `feat(kernel)!: …`) or a
   `BREAKING CHANGE:` footer; the hook accepts both.
 - **Never** add `Co-Authored-By` trailers.
-- The branch base is **`develop`**.
+- The branch base is **`main`**.
 
 ### Versioning (release-please)
 
