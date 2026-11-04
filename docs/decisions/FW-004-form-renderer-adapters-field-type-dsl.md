@@ -1,52 +1,49 @@
 ---
-id: FW-004
-title: 'Renderer Adapter Boundary & Field Type DSL'
+title: 'The renderer seam lives in ui; host widgets only in adapters'
 status: accepted
 date: 2026-04-13
+last-updated: 2026-11-04
 lang: en
 domains: [framework, forms]
-deciders: ['PENDING — original decider not recorded during the legacy-vault reconstruction; confirm with Michael Meneses before ratifying']
-related: [FW-003]
+deciders: [leadership]
+decision: 'Render targets implement the ui renderer interface over a closed field vocabulary; host widgets exist only in adapters.'
+related: [FW-003, FW-015, middag-php-ui:UI-001]
 supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [framework/reference/form-field-catalog-and-anti-corruption]
-decision: 'FormRendererInterface (target() + render()) is the sole anti-corruption boundary between the host-agnostic form schema and renderer internals, backed by a closed, versioned field-type DSL behind a single FieldFactory.'
+  docs: []
 ---
 
-# FW-004: Renderer Adapter Boundary & Field Type DSL
-
-> [!NOTE]
-> **Provenance.** Reconstructed from the `moodle-local_middag` legacy vault (`ADR-805`, decided 2026-04-13, renderer adapters; `ADR-806`, decided 2026-04-13, field type DSL contract). Merged: the field DSL only matters because a closed set of renderer adapters has to translate it faithfully, and the two ADRs were decided the same day as two halves of one boundary.
+# FW-004: The renderer seam lives in ui; host widgets only in adapters
 
 ## Context
 
-The form schema (FW-003) must render to more than one target — a host's native form widgets, and an Inertia SPA payload — without the public DSL ever leaking a host-specific type into code that should stay host-agnostic. A field-type catalog with no fixed boundary invites both silent host-type leakage and an ever-growing, inconsistent set of ad hoc field variants.
+A form schema renders to more than one target: a host's native form widgets and an SPA payload. Host widget types must not leak into code that has to stay host-agnostic, and the shape a renderer emits is part of the UI wire contract, which belongs to ui. Without a fixed field vocabulary, every new UI need would add a new field variant.
 
 ## Considered Options
 
-1. **No fixed renderer boundary** — let each renderer consume or expose its own host-specific types directly against the shared schema layer. Rejected: invites silent host-type leakage into code that must stay host-agnostic.
-2. **An open, ad hoc field-type catalog** — add a new field class whenever a new UI need appears, with no closed factory or naming validation. Rejected: produces an ever-growing, inconsistent set of variants with no single point enforcing reserved names or naming rules.
-3. **A closed anti-corruption boundary (`FormRendererInterface`) plus a closed, versioned field-type DSL behind a single `FieldFactory`** ← chosen.
+1. A renderer interface owned by the framework.
+2. No fixed boundary: each renderer reads and exposes host types directly in the form layer.
+3. Host renderers, such as a Moodle mform renderer, shipped inside the framework.
+4. Render targets implement ui's renderer interface against a closed, versioned field vocabulary behind a single factory. The framework ships only the host-neutral SPA renderer, and host widget renderers live only in adapters. ← chosen
 
 ## Decision
 
-`FormRendererInterface` is the anti-corruption boundary: `target(): RenderTarget` (an enum) plus `render(FormInterface): RendererOutput` — no renderer's internals ever escape into the schema layer. Each renderer is an internal implementation targeting one output shape; a controller picks a default renderer, with a per-call override when a specific route needs a different target. The field-type DSL is a closed, versioned catalog behind a single static factory (`FieldFactory`) — concrete field classes are `@internal`; only the factory is `@api`. Reserved field names (`id`, `submit`, `cancel`, `save`, `_token`) and snake_case-equivalent naming are validated at construction, not left to convention.
+The renderer seam is `FormRendererInterface` in ui. Every render target implements it. The framework ships one host-neutral renderer, for Inertia. Renderers that produce a host's native widgets exist only in that host's adapter. The renderer consumes a closed, versioned field vocabulary that is built through a single factory, which validates names when a field is constructed. The catalog lives in the reference.
 
 ## Consequences
 
-- The DSL never depends on a specific renderer's types — swapping or adding a renderer never touches `Form/` schema code.
-- A closed factory means field types grow by adding a factory method plus (when needed) a backing enum case, not by an unbounded set of ad hoc classes.
-- **Already the real implementation, evolved beyond the legacy names.** `Form/Renderer/InertiaRenderer.php` implements `Middag\Ui\Form\FormRendererInterface` — the interface itself now lives in `middag-io/ui`, not in this framework, because the UI package owns the wire contract a renderer emits. The live `FieldFactory` renamed the legacy `int()`/`float()` methods to `integer()`/`decimal()`, and collapses `email()`/`password()`/`url()` into `TextField` variants selected by an explicit `FieldType` case rather than separate field classes — see `framework/reference/form-field-catalog-and-anti-corruption` (in `docs-middag-dev`) for the full before/after catalog.
-- Since the standalone package ships no host-specific renderer, the "densest part of the project" risk the legacy ADR flagged — mapping every field type × modifier onto a host's native widgets — now lives entirely in whichever adapter repo builds that renderer, not in this framework; the concrete shape of such a renderer (e.g. a Moodle `mform`-style mapping) belongs in that adapter's own decisions record.
-- The page-contract/composition model that consumes rendered form output as a block is a separate decision — see `middag-io/ui`'s UI-002.
+- (+) No host widget type can enter the form layer, and adding a renderer never touches schema code.
+- (+) Field types grow in one place instead of as unrelated classes.
+- (−) The framework depends on ui for the renderer interface.
+- (−) Mapping every field and modifier onto host widgets, the hardest part of the work, is done again in each adapter.
 
 ## Enforcement
 
 | Decision clause | Verification | State |
 |---|---|---|
-| `FormRendererInterface` (`target()` + `render()`) is the sole anti-corruption boundary between schema and renderer internals | doc `framework/reference/form-field-catalog-and-anti-corruption` | **coded** |
-| Field-type DSL closed behind a single `@api` `FieldFactory`; concrete field classes `@internal` | doc `framework/reference/form-field-catalog-and-anti-corruption` | **coded** |
-| Reserved field names (`id`, `submit`, `cancel`, `save`, `_token`) and naming rules validated at field construction | runtime check in `FieldFactory`/`AbstractField` (throws `InvalidArgumentException`) | **coded** |
-| No host-specific rendering type (e.g. an mform type) may appear inside `Form/` | no automated import-boundary check in this repo — currently true only because no host renderer ships here; a host adapter must police its own boundary | **planned** |
+| The framework renderer implements ui's interface | test `tests/Form/Renderer/InertiaRendererTest.php` | coded |
+| A single factory with name validation at construction | tests `tests/Form/FieldFactoryTest.php`, `tests/Form/Field/AbstractFieldTest.php` | coded |
+| No host type or host renderer in the framework | test `tests/Architecture/NoHostAdapterDirectoryTest.php`; deptrac `Host` layer in `composer check:portability` | coded |
+| Field catalog and anti-corruption rules | doc `docs-middag-dev:docs/framework/reference/form-field-catalog-and-anti-corruption.md` | coded |
