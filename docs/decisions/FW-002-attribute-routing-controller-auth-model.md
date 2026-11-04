@@ -30,14 +30,15 @@ Several entry points share one kernel and one route collection. A route's auth r
 
 ## Decision
 
-Routing, auth requirements and route middleware are declared as PHP attributes on the controller. The kernel applies them at a fixed stage before the action runs. The framework enforces login itself. Capability checks are delegated to the host adapter through a kernel hook (`applyPlatformAuth`). The framework does not use symfony/security. A declared middleware that cannot be resolved aborts the request instead of being skipped. Precedence, merge rules and the resolver chain live in the reference.
+Routing, auth requirements and route middleware are declared as PHP attributes on the controller. The kernel applies them at a fixed stage before the action runs. The framework enforces login itself when an authenticator is bound; without one, the login gate is inert and login is left to the host adapter. Capability checks are delegated to the host adapter through a kernel hook (`applyPlatformAuth`). The framework does not use symfony/security. A declared middleware that cannot be resolved aborts the request instead of being skipped. Precedence, merge rules and the resolver chain live in the reference.
 
 ## Consequences
 
-- (+) A route's auth requirement can be read at its declaration, and one missed call in an action body cannot open the endpoint.
+- (+) A route's auth requirement can be read at its declaration, and, once an authenticator or adapter is wired, one missed call in an action body cannot open the endpoint.
 - (+) Every controller shape goes through the same gate.
 - (+) Each host keeps its own capability model.
-- (−) Without an adapter, the OSS kernel enforces only login. Capability enforcement exists only where an adapter or consumer implements the hook.
+- (−) On a bare OSS kernel with no authenticator bound, the auth attribute is inert: a route that requires login fails open. A standalone consumer has to bind an authenticator.
+- (−) Without an adapter, the OSS kernel enforces at most login. Capability enforcement exists only where an adapter or consumer implements the hook.
 - (−) The auth attribute overrides from method to class, while the middleware attribute stacks. Authors have to know both merge rules.
 - (−) The OSS kernel does not discover routes on its own. The host assembles the route collection.
 
@@ -46,6 +47,7 @@ Routing, auth requirements and route middleware are declared as PHP attributes o
 | Decision clause | Verification | State |
 |---|---|---|
 | The auth gate runs before the action | test `tests/Http/AuthGateTest.php` | coded |
+| The OSS login gate applies only when an authenticator is bound | test `tests/Http/AuthGateTest.php` (`gateIsInertWhenNoAuthenticatorBound`) | coded |
 | An unresolvable middleware aborts the request | test `tests/Http/Middleware/RouteMiddlewareTest.php` (`anUnresolvableMiddlewareIdAbortsTheRequestNamingTheRouteAndTheId`) | coded |
 | Capability checks are delegated to the adapter hook | doc `docs-middag-dev:docs/framework/reference/attribute-routing-and-auth-model.md` | coded |
 | Attribute model, precedence, resolver chain and stage order | doc `docs-middag-dev:docs/framework/reference/attribute-routing-and-auth-model.md` | coded |

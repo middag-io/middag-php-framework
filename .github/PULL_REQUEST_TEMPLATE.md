@@ -1,6 +1,6 @@
 <!--
 Thanks for contributing to middag-io/framework!
-Please fill in the sections below. PRs target the `develop` branch.
+Please fill in the sections below. PRs target the `main` branch.
 -->
 
 ## Summary
@@ -44,7 +44,7 @@ correctly matters: without the footer the break ships as a silent patch.
 
 ## Checklist
 
-- [ ] Targets the `develop` branch
+- [ ] Targets the `main` branch
 - [ ] `composer check` passes locally
 - [ ] `composer test` passes locally
 - [ ] Commits follow Conventional Commits

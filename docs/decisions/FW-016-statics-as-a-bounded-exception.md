@@ -6,7 +6,7 @@ last-updated: 2026-11-04
 lang: en
 domains: [framework, kernel]
 deciders: [leadership]
-decision: 'State is per instance; static facades and boot-time composition-root registries are the only bounded exceptions.'
+decision: 'State is per instance; facades, composition-root registries, request-scoped SPA props and immutable caches are the bounded exceptions.'
 related: [FW-006, FW-007, FW-012, FW-013, FW-015, middag-php-moodle:MDL-001, middag-php-wordpress:WP-002]
 supersedes: []
 superseded_by: null
@@ -25,19 +25,26 @@ Per-instance state keeps several plugins in one PHP process isolated from each o
 
 1. No static state at all.
 2. Static state allowed wherever it is convenient.
-3. Per-instance state as the rule. The only exceptions are static facades that proxy the compiled container, composition-root registries that the consumer writes once at boot, and process-wide caches of immutable reflection data. Each exception has an injectable equivalent. ← chosen
+3. Per-instance state as the rule, with a closed set of static categories, each with a seam to reset or override it. ← chosen
 
 ## Decision
 
-State is per instance. Static state is allowed only in three cases. The first is facades that proxy the compiled container. The second is composition-root registries that the consumer writes once during boot: host identity, the SPA protocol's shared configuration and the Active Record connection resolver. The third is process-wide caches of immutable reflection data. Every static path has an injectable equivalent. A consumer whose host runs several plugins in one process must not read the single host-identity slot. It injects identity through its own container instead.
+State is per instance. Static state is allowed only in four categories:
+
+- facades that proxy the compiled container, with their cache of resolved instances;
+- composition-root registries that the consumer writes during boot: host identity, the SPA protocol's configuration, the Active Record connection and cast resolvers, and the debug tracer's runtime;
+- the SPA protocol's shared props, which middleware writes on every request and which are therefore request-scoped;
+- process-wide caches of immutable data, such as reflection results.
+
+Every static slot has a seam to reset or override it. A consumer whose host runs several plugins in one process must not read the single host-identity slot. It injects identity through its own container instead.
 
 ## Consequences
 
 - (+) Host callbacks and short static entry points work without a container in reach.
-- (+) The exceptions are a closed list that can be reviewed.
+- (+) The categories are a closed set that can be reviewed.
 - (−) The host-identity registry is one global slot. In a process with several plugins the last write wins, so those consumers must avoid it.
 - (−) Facades are service locators, and nothing stops them from being used inside domain code.
-- (−) Not every static slot has a reset, so tests have to restore the state they change.
+- (−) Nothing resets static state automatically. Tests have to restore what they change, and a long-running worker has to flush the request-scoped SPA shared props between requests, or one request's flash messages, errors and CSRF token leak into the next.
 
 ## Enforcement
 
@@ -45,5 +52,5 @@ State is per instance. Static state is allowed only in three cases. The first is
 |---|---|---|
 | The host-identity registry is a boot-time slot that can be read safely when unset | test `tests/Kernel/HostContextTest.php` | coded |
 | The hook registry is per instance | test `tests/Kernel/Manager/HookManagerTest.php` (`testInstancesDoNotShareState`) | coded |
-| The list of allowed static state | doc `docs/architecture.md` §9 | coded |
+| The list of static slots and their reset or override seams | doc `docs/architecture.md` §9 (Bounded statics) | coded |
 | No facade use inside domain code | static-analysis rule | planned |

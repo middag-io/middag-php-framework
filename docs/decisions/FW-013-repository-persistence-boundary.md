@@ -26,16 +26,17 @@ Domain code needs one path to storage that keeps schema details out of the domai
 1. Eloquent (illuminate/database) as the ORM.
 2. Doctrine ORM.
 3. Active Record only, with domain entities extending the model.
-4. The framework's own host-agnostic Active Record, an immutable query builder and Data-Mapper repositories over the connection seam. The domain reaches storage only through repositories, and a transaction writes one aggregate. ← chosen
+4. The framework's own host-agnostic Active Record, an immutable query builder and Data-Mapper repositories over the connection seam. The domain reaches storage only through repositories, and a transaction writes one aggregate by default. ← chosen
 
 ## Decision
 
-The framework has its own persistence layer: an Active Record model for fast writes inside infrastructure, an immutable query builder, and Data-Mapper repositories that hydrate plain domain objects. All of it runs on the connection seam. Domain code reaches storage only through repositories, and no domain entity extends the Active Record model. A transaction writes one aggregate. Caching wraps a repository as a decorator and is never part of the repository itself. The Eloquent-compatible surface and its differences live in the reference.
+The framework has its own persistence layer: an Active Record model for fast writes inside infrastructure, an immutable query builder, and Data-Mapper repositories that hydrate plain domain objects. All of it runs on the connection seam. Domain code reaches storage only through repositories, and no domain entity extends the Active Record model. By default a transaction writes one aggregate; a transaction that spans aggregates is an exception justified at the call site. The Eloquent-compatible surface and its differences live in the reference.
 
 ## Consequences
 
 - (+) No ORM dependency and no host coupling.
 - (+) Developers who know Laravel recognise most of the surface.
+- (+) Caching can wrap a repository as a decorator, so it never has to live inside the repository itself.
 - (−) Some behaviour differs from Eloquent: for example, an immutable builder call that is not reassigned does nothing. These traps are documented, not prevented.
 - (−) Governed features (model events, global scopes, audited soft delete, the product schema families) live in downstream packages.
 - (−) The repository-only rule, the one-aggregate rule and the no-entity-extends-model rule are not checked by any tool.
@@ -47,6 +48,6 @@ The framework has its own persistence layer: an Active Record model for fast wri
 |---|---|---|
 | Repository and mapper path | test `tests/Persistence/Repository/AbstractRepositoryTest.php` | coded |
 | Immutable query builder | test `tests/Persistence/Query/QueryBuilderTest.php` | coded |
-| No domain entity extends the model; one aggregate per transaction | static-analysis rule | planned |
+| No domain entity extends the model; one aggregate per transaction by default | static-analysis rule | planned |
 | Eloquent compatibility matrix | doc `docs-middag-dev:docs/framework/reference/active-record-eloquent-compatibility.md` | coded |
 | Persistence families and anti-patterns | doc `docs-middag-dev:docs/framework/reference/repository-persistence-families.md` | coded |

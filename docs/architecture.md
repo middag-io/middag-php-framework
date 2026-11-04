@@ -203,24 +203,30 @@ the framework and hand the UI only the ready data.
 Adapters plug the host in by implementing these contracts. The framework already
 ships an **OSS default** for each, so it runs standalone with no adapter.
 
+Adapter class names as of `middag-php-moodle` `6aae04d` and `middag-php-wordpress`
+`bc1bc59`; the maintained, complete table (database, logging and observability ports
+included) is the hub page
+[Bridge Contracts](https://docs.middag.dev/framework/reference/bridge-contracts).
+"—" means the adapter does not implement the port and the OSS default applies.
+
 | Contract                       | Home (concern) + OSS default                           | Moodle                  | WordPress             |
 |--------------------------------|--------------------------------------------------------|-------------------------|-----------------------|
-| `BootstrapInterface`           | `Kernel/Contract/`                                     | MoodleBootstrap         | WordPressBootstrap    |
+| `BootstrapInterface`           | `Kernel/Contract/` — a standalone app writes its own   | MoodleBootstrap         | WpBootstrap           |
 | `ConfigResolverInterface`      | `Kernel/Contract/` — default `EnvConfigResolver`       | MoodleConfigResolver    | WpConfigResolver      |
-| `HostEventBridgeInterface` *(experimental)* | `Kernel/Contract/` — generic sync bridge, no default; the core signal layer is used in practice | —       | —  |
-| `HostComponentContextInterface` | `Kernel/Contract/` — neutral component identity (`componentName`/`assetVersion`/`basePath`); registered once via `Kernel/HostContext::set()`, read via `::get()` (null when unset) | MoodleHostContext | WpComponentContext |
+| `HostEventBridgeInterface` (`@api`) | `Kernel/Contract/` — stable sync bridge, no framework implementation | MoodleHostEventBridge (delegates to `HookManager`) | WpHostEventBridge (native `do_action`) |
+| `HostComponentContextInterface` | `Kernel/Contract/` — neutral component identity (`componentName`/`assetVersion`/`basePath`); optional process-wide slot `Kernel/HostContext` (`set()`/`get()`, null when unset) | MoodleHostContext (via `HostContext`) | WpComponentContext (injected, never via `HostContext`; FW-016) |
 | `ConnectionAdapterInterface`          | `Database/Contract/` — default `PdoConnectionAdapter`  | MoodleConnectionAdapter | WpdbConnectionAdapter |
 | `UserContextResolverInterface` | `Bus/Contract/` — default `NullUserContextResolver`    | MoodleUserContext       | WpUserContext         |
-| `MaintenanceGateInterface`     | `Kernel/Contract/` — default `NullMaintenanceGate`     | `$CFG->upgraderunning`  | `wp_is_maintenance_mode()` |
-| `FormRendererInterface`        | **`middag-io/ui`** — framework provides `InertiaRenderer` | MformRenderer        | InertiaFormRenderer   |
+| `MaintenanceGateInterface`     | `Kernel/Contract/` — default `NullMaintenanceGate`     | MoodleMaintenanceGate   | WpMaintenanceGate     |
+| `FormRendererInterface`        | **`middag-io/ui`** — framework provides `InertiaRenderer` | MformRenderer        | — (framework `InertiaRenderer`) |
 | `TranslatorInterface`          | `Translation/Contract/` — default `FallbackTranslator` | MoodleTranslator        | WpTranslator          |
-| `MailerInterface`              | `Mail/Contract/` — default `NullMailer` (discards)     | MailerAdapter (`email_to_user`) | WpMailer (`wp_mail`) |
-| `FilesystemInterface`          | `Filesystem/Contract/` — default `LocalFilesystem`     | MoodleFilesystem (moodledata) | WpFilesystem (uploads) |
-| `PasswordHasherInterface`      | `Security/Contract/` — default `NativePasswordHasher`  | delegates to the host hasher | delegates to the host hasher |
+| `MailerInterface`              | `Mail/Contract/` — default `NullMailer` (discards)     | MoodleMailer (`email_to_user`) | WpMailer (`wp_mail`) |
+| `FilesystemInterface`          | `Filesystem/Contract/` — default `LocalFilesystem`     | MoodledataFilesystem    | WpUploadsFilesystem   |
+| `PasswordHasherInterface`      | `Security/Contract/` — default `NativePasswordHasher`  | —                       | —                     |
 
 > `Mailer`/`Filesystem`/`PasswordHasher` are **infra ports with a working OSS
-> default** (they run standalone); the adapter overrides them to talk to the
-> host's protected storage/credentials.
+> default** (they run standalone); an adapter overrides mail and filesystem to
+> use the host's delivery and storage. No adapter overrides the password hasher.
 
 An adapter **never imports core**; core governance runs first, and the adapter
 delivers an opaque envelope.
@@ -369,7 +375,7 @@ habits blindly breaks.
   `InMemoryTransport`; for a **standalone** host the OSS also ships a durable
   Doctrine-backed transport (`Bus/Transport/DoctrineTransportFactory`), retry
   policies and a cron engine (FW-008). **Governed Signal + outbox = core.**
-- **Host events**: `HostEventBridgeInterface` (an experimental generic sync bridge; the core signal layer is used in practice) +
+- **Host events**: `HostEventBridgeInterface` (the stable `@api` sync bridge; the framework ships no implementation, both adapters implement it) +
   per-instance `HookManager` (priority filters/actions, profiling). The
   framework ships no PSR-14 event dispatcher; the **adapter** bridges host
   events to and from `do_action()`/triggers. The outbox (post-commit dispatch) =
@@ -407,13 +413,28 @@ resolution belongs to the tier above. Documented for architectural honesty.
 
 | Boundary | OSS seam that exists | Who resolves it |
 |----------|----------------------|-----------------|
-| Multi-plugin collision (same host, different versions) | per-instance state; static state only as the bounded exceptions of FW-016 (container facades, boot-time composition-root registries such as `HostContext`, reflection caches) | Product (PHP-Scoper/Mozart at build); multi-plugin consumers inject identity instead of reading `HostContext` |
+| Multi-plugin collision (same host, different versions) | per-instance state; static state only as the bounded exceptions of FW-016 (see [Bounded statics](#bounded-statics-fw-016)) | Product (PHP-Scoper/Mozart at build); multi-plugin consumers inject identity instead of reading `HostContext` |
 | No built-in rate limiting | `#[Middleware]` (+ `suggest symfony/rate-limiter`) | Adapter/Product/Core |
 | Input sanitisation not centralised (validation only) | `AbstractFormRequest::rules()` / `#[ValidatedDto]` | Controller/Adapter |
 | Host → framework boundary linted here; domain-layer boundaries are not | `composer check:portability` (deptrac + `bin/portability-scan.php`, FW-011) | Product/Core for their own domain layers |
 | Forward-only migrations (no `down()`) | `MigrationRunner::onUpgrade()` | Adapter (xmldb/dbDelta) |
 | No service-locator guard (Facades are service locators) | discipline + `composer check` | PR convention / dev-tools PHPStan rule |
 | Outbox (post-commit) + governed job records | `SignalDispatcherInterface`/`MessageBusInterface`; a durable standalone transport ships in OSS (FW-008) | **Core** (by design); the host refuses the standalone transport under Moodle/WordPress |
+
+### Bounded statics (FW-016)
+
+State is per instance, except for the static slots below. Every slot has a
+reset or override seam; nothing resets them automatically.
+
+| Static state | Where | Lifetime | Reset / override seam |
+|---|---|---|---|
+| Facade container and resolved instances | `Kernel/Facade/AbstractFacade` | boot | `setFacadeContainer()`, `swap()`, `reset()` |
+| Active host component context | `Kernel/HostContext` | boot (one slot per process) | `set()`, `reset()`; `get()` returns null when unset |
+| Inertia URL generator, asset version, bootstrap HTML, app id | `Http/Inertia/InertiaAdapter`, `InertiaVersionManager`, `InertiaFactory` | boot | the setters |
+| Inertia shared props | `Http/Inertia/InertiaManager::$shared` | **request** — written by `ShareFlashMiddleware` and `VerifyCsrfMiddleware` | `InertiaManager::flush()`; a long-running worker must call it between requests |
+| Active Record connection and cast resolvers, cast instances | `Persistence/Model` | boot | `setConnectionResolver()`, `setConnection()`, `setCastResolver()` (clears the cast instances) |
+| Debug logger and config reader | `Shared/Util/Debug` | boot | `setRuntime()`, `resetRuntime()` |
+| Reflection cache | `Http/Resolver/MethodParameterResolver` | process | pure cache of immutable reflection results |
 
 ### 9.1 Contextual binding (native Symfony DI — no framework code)
 

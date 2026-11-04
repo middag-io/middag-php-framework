@@ -30,12 +30,12 @@ Fields used to be declared once for the UI and again for validation, and nothing
 
 ## Decision
 
-The declared schema is the single source of rendering and validation. It is either a form's schema or a DTO marked `#[ValidatedDto]`. A FormRequest is an optional escalation for cross-field rules, rules that need the database, or rules shared with a REST endpoint. It is never the default path. Every validation style fails with the framework's validation exception (HTTP 422) and the same error-map shape, and is resolved through the controller-parameter resolver chain. Conditional field behaviour is schema data, not code.
+The declared schema is the single source of rendering and validation. It is either a form's schema or a DTO marked `#[ValidatedDto]`. A FormRequest is an optional escalation for cross-field rules, rules that need the database, or rules shared with a REST endpoint. It is never the default path. Every validation style fails by throwing the framework's validation exception (status 422) carrying the same field-level error map, and is resolved through the controller-parameter resolver chain. How that failure reaches each kind of client is in the reference. Conditional field behaviour is schema data, not code.
 
 ## Consequences
 
 - (+) The UI and validation cannot drift, because only one declaration exists.
-- (+) Page clients and API clients receive the same error contract.
+- (+) Page clients and API clients receive the same field-level error map, whatever the validation style.
 - (+) Every renderer reads conditional behaviour from the same data.
 - (−) Pairing a FormRequest with a form is a convention of the controller signature. The two resolvers are independent and the framework does not enforce the pairing.
 - (−) Nothing checks automatically that a schema rule and a FormRequest rule for the same field agree.
