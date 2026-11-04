@@ -1,50 +1,49 @@
 ---
-id: FW-001
-title: 'Adopt PSR-15 as the Public HTTP Kernel Boundary'
+title: 'Build on Symfony and PSR; public contracts are PSR or framework-owned'
 status: accepted
 date: 2026-05-20
+last-updated: 2026-11-04
 lang: en
 domains: [framework, http]
-deciders: ['PENDING — original decider not recorded during the legacy-vault reconstruction; confirm with Michael Meneses before ratifying']
-related: [FW-002]
+deciders: [leadership]
+decision: 'Symfony, PSR and Monolog stay inside; public boundaries expose only PSR types and framework-owned types.'
+related: [FW-002, FW-011]
 supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [framework/reference/psr15-bridge-and-middleware]
-decision: 'PSR-15 (RequestHandlerInterface + MiddlewareInterface) is the public HTTP kernel boundary; Symfony HttpKernel/HttpFoundation remain an internal implementation detail bridged at the edges.'
+  docs: [docs/architecture.md]
 ---
 
-# FW-001: Adopt PSR-15 as the Public HTTP Kernel Boundary
-
-> [!NOTE]
-> **Provenance.** Reconstructed from the `moodle-local_middag` legacy vault (`ADR-208`, decided 2026-04-08, formally **Superseded**; `ADR-209`, decided 2026-05-20, the active decision). This is an archaeology pass, not a new decision — dates and rationale are historical. Included together because ADR-208's rejection is what motivates ADR-209's shape.
+# FW-001: Build on Symfony and PSR; public contracts are PSR or framework-owned
 
 ## Context
 
-The framework needed one public contract for "handle an HTTP request, get a response" that every entry point, every controller, and every future host adapter could compile against. HttpFoundation is a implementation detail Symfony happens to use internally, not a spec; a plugin ecosystem's public contract should not be framework-bound.
+The framework needs HTTP handling, dependency injection, a message bus and logging. Writing them from scratch adds code to maintain and bugs to fix. Reusing a vendor library directly can also leak that vendor's types into every consumer's domain code, so a consumer ends up coupled to the vendor.
 
 ## Considered Options
 
-1. **`Symfony\Component\HttpKernel\HttpKernel` directly** (`ADR-208`) — `handle(Request $request, ...): Response` built on pure HttpFoundation; pragmatic, but welds the public boundary to a single framework's object model — rejected, superseded five weeks later without ever shipping.
-2. **PSR-15** (`Psr\Http\Server\RequestHandlerInterface` + `Psr\Http\Server\MiddlewareInterface`) ← chosen (`ADR-209`).
+1. Write the HTTP kernel, container, bus and logger from scratch.
+2. Expose the vendor types directly: Symfony HttpKernel/HttpFoundation as the public kernel contract, and Symfony attributes and transports imported by consumer code.
+3. Build on Symfony, PSR and Monolog internally, and expose at the public boundaries only PSR types (PSR-15/PSR-7 for HTTP) and framework-owned types. Where a consumer would otherwise import a vendor type, the framework ships its own shadow type that reuses the vendor machinery. ← chosen
 
 ## Decision
 
-**PSR-15** is the public HTTP kernel boundary — `HttpKernelInterface extends RequestHandlerInterface`, `handle(ServerRequestInterface): ResponseInterface`. Symfony HttpKernel/HttpFoundation remain a valid **internal** implementation detail: the kernel bridges PSR-7 in to HttpFoundation via `HttpFoundationFactory`, runs routing/resolvers/controllers unchanged against `Request -> Response`, then bridges the final `Response` back to PSR-7 on the way out. CORS, exception mapping and pre-dispatch concerns are native PSR-15 middleware, not framework-specific hook points. Bridge wiring detail and the middleware catalog live in `framework/reference/psr15-bridge-and-middleware` (in `docs-middag-dev`).
+Symfony, PSR and Monolog are implementation details of the framework. The public HTTP boundary is PSR-15 over PSR-7 messages. Where consumer code would otherwise import a vendor type, the framework defines its own type and keeps the vendor machinery underneath it. Examples are the framework's own lazy-service marker and its Doctrine messenger transport, which is a `final` subclass with an empty body. The list of shadows and the bridge mechanics live in the reference.
 
 ## Consequences
 
-- The public surface is a PSR spec, not a Symfony type — any future adapter or consumer can compile against `HttpKernelInterface` without a hard Symfony dependency at the boundary, even though Symfony is used underneath.
-- Internal HttpFoundation usage preserves its ergonomics (`JsonResponse`, `BinaryFileResponse`, `StreamedResponse`, `RedirectResponse`) for controller authors — the PSR-15 boundary only wraps entry and exit.
-- The top-level `handle()` signature is a breaking change versus any pre-PSR-15 caller (`void` → `ResponseInterface`) — external consumers need a deprecation path.
-- **Already the real implementation, not aspirational.** `src/Http/HttpKernel.php` implements this boundary today; `composer.json` carries exactly the dependency set ADR-209 called for (`psr/http-server-handler`, `psr/http-server-middleware`, `psr/http-message`, `symfony/psr-http-message-bridge`, `nyholm/psr7`) — the migration this ADR describes as planned is complete in the current codebase.
-- Routing table, controller hierarchy, the resolver chain and the declarative auth attribute build on top of this boundary — see [FW-002](./FW-002-attribute-routing-controller-auth-model.md).
+- (+) Proven libraries do the heavy lifting, so the framework carries less code of its own.
+- (+) A consumer's domain and its adapters compile against PSR and framework types, not against a vendor's object model.
+- (−) The framework carries a large vendor dependency set. Being host-agnostic does not make it vendor-free.
+- (−) The PSR boundary covers the kernel's entry and exit. Controller code still uses Symfony's routing attribute and HttpFoundation responses.
+- (−) Each shadow type is one more type that must be kept aligned with its vendor original.
 
 ## Enforcement
 
 | Decision clause | Verification | State |
 |---|---|---|
-| PSR-15 (`RequestHandlerInterface`/`MiddlewareInterface`) is the public kernel boundary; `HttpKernelInterface extends RequestHandlerInterface` | doc `framework/reference/psr15-bridge-and-middleware` | **coded** |
-| Dependency set (`psr/http-server-handler`, `psr/http-server-middleware`, `psr/http-message`, `symfony/psr-http-message-bridge`, `nyholm/psr7`) present in `composer.json` | no automated check | **planned** |
-| `handle()` breaking-change deprecation path for pre-PSR-15 callers | no automated check | **planned** |
+| The public kernel contract extends the PSR-15 request handler | test `tests/Kernel/HttpKernelTest.php` | coded |
+| The framework depends only on ui, Symfony, PSR, Monolog and a fixed set of vendors | deptrac `deptrac.yaml` with `--fail-on-uncovered`, run by `composer check:portability` | coded |
+| Shadow types, the PSR-7/HttpFoundation bridge and the middleware catalog | doc `docs-middag-dev:docs/framework/reference/psr15-bridge-and-middleware.md` | coded |
+| Vendor dependency set and its rationale | doc `docs/architecture.md` §2 | coded |

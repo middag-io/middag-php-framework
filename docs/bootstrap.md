@@ -48,24 +48,28 @@ The adapter (Moodle/WordPress) is what plugs the host in. It implements:
 
 | Contract                       | For                                                                | Moodle (ref.)                                        | WordPress (ref.)           |
 |--------------------------------|--------------------------------------------------------------------|------------------------------------------------------|----------------------------|
-| `BootstrapInterface`           | register host services + define `platform()`/`getProjectRoot()`    | `MoodleBootstrap`                                    | `WordPressBootstrap`       |
+| `BootstrapInterface`           | register host services + define `platform()`/`getProjectRoot()`    | `MoodleBootstrap`                                    | `WpBootstrap`              |
 | `ConnectionAdapterInterface`   | `$DB`/`$wpdb` as a connection                                      | `MoodleConnectionAdapter`                            | `WpdbConnectionAdapter`    |
-| `MaintenanceGateInterface`     | host under upgrade/maintenance                                     | `$CFG->upgraderunning \|\| during_initial_install()` | `wp_is_maintenance_mode()` |
+| `MaintenanceGateInterface`     | host under upgrade/maintenance                                     | `MoodleMaintenanceGate` (`$CFG->upgraderunning \|\| during_initial_install()`) | `WpMaintenanceGate` (`wp_is_maintenance_mode()`) |
 | `ConfigResolverInterface`      | host config                                                        | `MoodleConfigResolver`                               | `WpConfigResolver`         |
 | `UserContextResolverInterface` | host user identity                                                 | `MoodleUserContext`                                  | `WpUserContext`            |
-| `TranslatorInterface`          | host i18n                                                          | `get_string()` wrap                                  | `__()` wrap                |
-| `HostEventBridgeInterface` *(experimental)* | translate an event ↔ native hook (the core signal layer is used in practice) | —                                  | —     |
-| `HostComponentContextInterface` | neutral host component identity (`componentName()`) + `assetVersion()` + `basePath()`, registered once by the composition root via `HostContext::set()` | `MoodleHostContext`                | `WpComponentContext`       |
+| `TranslatorInterface`          | host i18n                                                          | `MoodleTranslator` (`get_string()`)                  | `WpTranslator` (`__()`)    |
+| `HostEventBridgeInterface` (`@api`) | broadcast a named host event to void listeners; the framework ships no implementation | `MoodleHostEventBridge` (delegates to `HookManager`) | `WpHostEventBridge` (native `do_action`) |
+| `HostComponentContextInterface` | neutral host component identity (`componentName()`) + `assetVersion()` + `basePath()` | `MoodleHostContext` (registered via `HostContext::set()`) | `WpComponentContext` (injected per plugin, never via `HostContext`) |
 
-> The names `MoodleBootstrap`/`WordPressBootstrap` (and likewise `MoodleHostContext`/`WpComponentContext`)
-> live in the **adapter repos** (`middag-php-moodle`, `middag-php-wordpress`) — they do **not** exist in
-> this OSS repo (the adapters are not built yet).
+> These classes live in the **adapter repos** (`middag-php-moodle`, `middag-php-wordpress`), not in
+> this repo. Names as of `middag-php-moodle` `6aae04d` and `middag-php-wordpress` `bc1bc59`; the
+> maintained table is the hub page
+> [Bridge Contracts](https://docs.middag.dev/framework/reference/bridge-contracts).
 
-> **Host context registration.** The host composition root calls `HostContext::set()` **once** during
+> **Host context registration.** `HostContext` is a single process-wide slot, so it models one active host
+> component per process. That holds for Moodle, whose composition root calls `HostContext::set()` **once** during
 > bootstrap, before any Inertia/bootstrap logic reads it. `HostContext` is a composition-root registry,
 > **not** a synthetic in the DI graph: static adapter helpers that live outside the container read the
 > active context via `HostContext::get()`, which returns `null` when no host has configured one — so
-> those callers degrade gracefully instead of failing.
+> those callers degrade gracefully instead of failing. It does not hold for WordPress, where several
+> plugins share one PHP process and the last `set()` would win: WordPress consumers never read
+> `HostContext` and inject their `WpComponentContext` instead (FW-016).
 >
 > **Relationship to `ComponentNameResolverInterface`.** Both surface the identifier of the host component
 > that owns the boot cycle (a Moodle frankenstyle like `local_example`, or a WordPress plugin slug), but

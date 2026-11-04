@@ -35,8 +35,9 @@ platform upgrades.
 
 - **A host** — it never knows Moodle or WordPress; that lives in adapters.
 - **The governed domain engine** — reliable event delivery (Signal + outbox),
-  async jobs with retry/audit, EAV, multi-tenancy and licensing are the
-  proprietary `middag-io/core`, layered on top. The framework ships only the
+  async jobs with retry/audit, EAV and multi-tenancy are the proprietary
+  `middag-io/core`, and licensing is the separate proprietary
+  `middag-io/licensing`, both layered on top. The framework ships only the
   generic seam (for example the `SignalDispatcherInterface` contract; the outbox
   implementation is core).
 - **A framework that hides your domain** — the goal is the opposite: your domain
@@ -44,9 +45,9 @@ platform upgrades.
 
 The five promises the framework keeps — the domain is absolute (POPO), the host
 is a detail (Ports & Adapters), persistence is isolated to infrastructure, DX
-without guilt (DI + Facades as real proxies), and native events in a modern
-language (PSR-14 events translated to host hooks) — map directly onto the
-boundaries below.
+without guilt (DI + Facades as real proxies), and host-neutral extension points
+(a per-instance action/filter `HookManager`; adapters bridge host events) — map
+directly onto the boundaries below.
 
 ## 1. The four pillars (dependency rings)
 
@@ -63,23 +64,33 @@ The ecosystem is **Hexagonal (Ports & Adapters)** in four rings. Dependency
         │ (proprietary)  │                  │ (OSS)            │
         │ Signal/outbox, │                  │ middag-php-moodle│
         │ Job, EAV,      │                  │ middag-php-      │
-        │ multi-tenant,  │                  │ wordpress        │
-        │ licensing      │                  │ ($DB/$wpdb wrap) │
-        └───────┬────────┘                  └────────┬─────────┘
-                │ imports                            │ imports
-                └──────────────┬─────────────────────┘
-                       ┌───────▼─────────────────────────────────┐
-                       │ Pillar 1 — OSS Foundation                │
-                       │ middag-php-framework  ──▶  middag-php-ui  │
-                       │ (Ports: contracts, kernel, query, forms) │
-                       └──────────────────────────────────────────┘
+        │ multi-tenant   │                  │ wordpress        │
+        └──┬──────────┬──┘                  │ ($DB/$wpdb wrap) │
+           │ imports  │ imports             └────────┬─────────┘
+           │   ┌──────▼────────────┐                 │ imports
+           │   │ middag-php-       │                 │
+           │   │ licensing         │                 │
+           │   │ (proprietary leaf,│                 │
+           │   │ no MIDDAG deps)   │                 │
+           │   └───────────────────┘                 │
+           └──────────────┬──────────────────────────┘
+                  ┌───────▼─────────────────────────────────┐
+                  │ Pillar 1 — OSS Foundation                │
+                  │ middag-php-framework  ──▶  middag-php-ui  │
+                  │ (Ports: contracts, kernel, query, forms) │
+                  └──────────────────────────────────────────┘
+
+  middag-php-dev-tools (proprietary, build-only): required as require-dev;
+  at runtime it depends only on middag-php-framework.
 ```
 
 | Pillar | Repositories                                           | What it is | Dependency rule |
 |--------|--------------------------------------------------------|------------|-----------------|
-| **1. OSS Foundation** | `middag-php-framework`, `middag-php-ui`                | The **Ports**: contracts, DI, HTTP, query, forms, bus, PSR-14 events. | `framework` **wraps Symfony/PSR/Monolog** (not zero-dep — see §2). `ui` is **pure PHP** (`require: php` only). |
-| **2. OSS Adapters** | `middag-php-moodle`, `middag-php-wordpress`            | The **Adapters**: implement the bridge contracts by talking to `$DB`/`$wpdb`. | Depend **strictly** on `middag-php-framework` + the platform. **Never** import `core` (they are OSS). |
-| **3. CORE (proprietary)** | `middag-php-core`, `middag-php-licensing`, `middag-php-dev-tools` | The business engine: governed Signal + outbox, async Job, EAV, multi-tenant, licensing. | Depends only on `middag-php-framework`. Does **not** depend on the adapters — it runs identically on WP and Moodle by programming against the Pillar 1 interfaces. |
+| **1. OSS Foundation** | `middag-php-framework`, `middag-php-ui`                | The **Ports**: contracts, DI, HTTP, query, forms, bus, hooks. | `framework` **wraps Symfony/PSR/Monolog** (not zero-dep — see §2). `ui` is **pure PHP** (`require: php` only). |
+| **2. OSS Adapters** | `middag-php-moodle`, `middag-php-wordpress`            | The **Adapters**: implement the bridge contracts by talking to `$DB`/`$wpdb`. | Depend **strictly** on `middag-php-framework` + the platform. **Never** import proprietary code (they are OSS). |
+| **3. CORE (proprietary)** | `middag-php-core`                                      | The business engine: governed Signal + outbox, async Job, EAV, multi-tenant. | Depends on `middag-php-framework`, `middag-php-ui` and `middag-php-licensing`. Does **not** depend on the adapters at runtime — it runs identically on WP and Moodle by programming against the Pillar 1 interfaces. |
+| **Proprietary leaf** | `middag-php-licensing`                                 | License lifecycle, entitlement, delivery. | **No** MIDDAG dependency at all; consumed by core. |
+| **Build-only tooling** | `middag-php-dev-tools`                                 | CLI, analysis, code generation, release. | A `require-dev` of the other libs; at runtime it depends only on `middag-php-framework`. |
 | **4. Composition Root** | `moodle-local_middag`, `wp-plugin-middag-account`      | The real modular monolith: Aggregate Roots, vertical slices. | The only one that wires everything: imports framework + core + a specific adapter. |
 
 ### The boundary invariant (the rule everything respects)
@@ -112,7 +123,7 @@ the adapters link here rather than restating it.
 - **`middag-php-framework` — wraps Symfony.** It does not reinvent the wheel: it
   wraps **Symfony** (`dependency-injection`, `http-kernel`, `routing`,
   `messenger`, `validator`, `serializer`, `cache`, `uid`, `clock`), **PSR**
-  (3/6/7/11/14/15/16/17/18), **Monolog** and **nyholm/psr7** under one coherent,
+  (3/7/11/15/16/17/18/20), **Monolog** and **nyholm/psr7** under one coherent,
   Symfony-like API. `illuminate/database` appears **only as a `suggest`** (an
   optional connection adapter for those who want real Eloquent), never a
   `require`.
@@ -192,24 +203,30 @@ the framework and hand the UI only the ready data.
 Adapters plug the host in by implementing these contracts. The framework already
 ships an **OSS default** for each, so it runs standalone with no adapter.
 
+Adapter class names as of `middag-php-moodle` `6aae04d` and `middag-php-wordpress`
+`bc1bc59`; the maintained, complete table (database, logging and observability ports
+included) is the hub page
+[Bridge Contracts](https://docs.middag.dev/framework/reference/bridge-contracts).
+"—" means the adapter does not implement the port and the OSS default applies.
+
 | Contract                       | Home (concern) + OSS default                           | Moodle                  | WordPress             |
 |--------------------------------|--------------------------------------------------------|-------------------------|-----------------------|
-| `BootstrapInterface`           | `Kernel/Contract/`                                     | MoodleBootstrap         | WordPressBootstrap    |
+| `BootstrapInterface`           | `Kernel/Contract/` — a standalone app writes its own   | MoodleBootstrap         | WpBootstrap           |
 | `ConfigResolverInterface`      | `Kernel/Contract/` — default `EnvConfigResolver`       | MoodleConfigResolver    | WpConfigResolver      |
-| `HostEventBridgeInterface` *(experimental)* | `Kernel/Contract/` — generic sync bridge, no default; the core signal layer is used in practice | —       | —  |
-| `HostComponentContextInterface` | `Kernel/Contract/` — neutral component identity (`componentName`/`assetVersion`/`basePath`); registered once via `Kernel/HostContext::set()`, read via `::get()` (null when unset) | MoodleHostContext | WpComponentContext |
+| `HostEventBridgeInterface` (`@api`) | `Kernel/Contract/` — stable sync bridge, no framework implementation | MoodleHostEventBridge (delegates to `HookManager`) | WpHostEventBridge (native `do_action`) |
+| `HostComponentContextInterface` | `Kernel/Contract/` — neutral component identity (`componentName`/`assetVersion`/`basePath`); optional process-wide slot `Kernel/HostContext` (`set()`/`get()`, null when unset) | MoodleHostContext (via `HostContext`) | WpComponentContext (injected, never via `HostContext`; FW-016) |
 | `ConnectionAdapterInterface`          | `Database/Contract/` — default `PdoConnectionAdapter`  | MoodleConnectionAdapter | WpdbConnectionAdapter |
 | `UserContextResolverInterface` | `Bus/Contract/` — default `NullUserContextResolver`    | MoodleUserContext       | WpUserContext         |
-| `MaintenanceGateInterface`     | `Kernel/Contract/` — default `NullMaintenanceGate`     | `$CFG->upgraderunning`  | `wp_is_maintenance_mode()` |
-| `FormRendererInterface`        | **`middag-io/ui`** — framework provides `InertiaRenderer` | MformRenderer        | InertiaFormRenderer   |
+| `MaintenanceGateInterface`     | `Kernel/Contract/` — default `NullMaintenanceGate`     | MoodleMaintenanceGate   | WpMaintenanceGate     |
+| `FormRendererInterface`        | **`middag-io/ui`** — framework provides `InertiaRenderer` | MformRenderer        | — (framework `InertiaRenderer`) |
 | `TranslatorInterface`          | `Translation/Contract/` — default `FallbackTranslator` | MoodleTranslator        | WpTranslator          |
-| `MailerInterface`              | `Mail/Contract/` — default `NullMailer` (discards)     | MailerAdapter (`email_to_user`) | WpMailer (`wp_mail`) |
-| `FilesystemInterface`          | `Filesystem/Contract/` — default `LocalFilesystem`     | MoodleFilesystem (moodledata) | WpFilesystem (uploads) |
-| `PasswordHasherInterface`      | `Security/Contract/` — default `NativePasswordHasher`  | delegates to the host hasher | delegates to the host hasher |
+| `MailerInterface`              | `Mail/Contract/` — default `NullMailer` (discards)     | MoodleMailer (`email_to_user`) | WpMailer (`wp_mail`) |
+| `FilesystemInterface`          | `Filesystem/Contract/` — default `LocalFilesystem`     | MoodledataFilesystem    | WpUploadsFilesystem   |
+| `PasswordHasherInterface`      | `Security/Contract/` — default `NativePasswordHasher`  | —                       | —                     |
 
 > `Mailer`/`Filesystem`/`PasswordHasher` are **infra ports with a working OSS
-> default** (they run standalone); the adapter overrides them to talk to the
-> host's protected storage/credentials.
+> default** (they run standalone); an adapter overrides mail and filesystem to
+> use the host's delivery and storage. No adapter overrides the password hasher.
 
 An adapter **never imports core**; core governance runs first, and the adapter
 delivers an opaque envelope.
@@ -355,23 +372,34 @@ habits blindly breaks.
 
 - **One bus**: `Bus/MessageBus` (`CommandBus`, CQRS sync) + async via
   `MessageBusInterface` (Symfony Messenger) + transport routing. OSS default =
-  `InMemoryTransport`. **Governed Signal + outbox = core.**
-- **Host events**: `HostEventBridgeInterface` (an experimental generic sync bridge; the core signal layer is used in practice) +
-  per-instance `HookManager` (priority filters/actions, profiling). The domain
-  fires rich PSR-14 events; the **adapter** translates them to the host's
-  `do_action()`/triggers. The outbox (post-commit dispatch) = **core**.
+  `InMemoryTransport`; for a **standalone** host the OSS also ships a durable
+  Doctrine-backed transport (`Bus/Transport/DoctrineTransportFactory`), retry
+  policies and a cron engine (FW-008). **Governed Signal + outbox = core.**
+- **Host events**: `HostEventBridgeInterface` (the stable `@api` sync bridge; the framework ships no implementation, both adapters implement it) +
+  per-instance `HookManager` (priority filters/actions, profiling). The
+  framework ships no PSR-14 event dispatcher; the **adapter** bridges host
+  events to and from `do_action()`/triggers. The outbox (post-commit dispatch) =
+  **core**.
 
 ## 8. Locked architectural decisions
 
-- **D1** — the framework defines interfaces; adapters implement the kernel pattern.
+The decision records in [`decisions/`](decisions/) are the normative source;
+this list is a short index of the original D-handles and the record that now
+carries each one.
+
+- **D1** — the framework defines interfaces; adapters implement the kernel
+  pattern (FW-015).
 - **D2** — `ExtensionInterface` → `ModuleInterface` (`Kernel/Module/`). The MIDDAG
-  Extension + loaders are core; adapters only know `ModuleInterface` (OSS).
+  Extension + loaders are core; adapters only know `ModuleInterface` (OSS)
+  (FW-012).
 - **D3** — the QueryBuilder is **immutable**; execution is the adapter's, via
-  `ConnectionAdapterInterface`.
+  `ConnectionAdapterInterface` (FW-013, FW-017).
+- **D4** — not recorded in this repository; the handle is not reused.
 - **D5** — async convergence: one sync bus + async via Messenger + routing.
-  Signal/outbox → core.
-- **D6** — a `ConnectorRegistry` interface + a `NullConnector` in the framework.
-- **D7** — neutral host identity via `HostComponentContextInterface`
+  Signal/outbox → core (FW-008).
+- **D6** — withdrawn: the planned `ConnectorRegistry`/`NullConnector` never
+  shipped and no such type exists in `src/`; the handle is not reused.
+- **D7** (FW-015, FW-016) — neutral host identity via `HostComponentContextInterface`
   (`componentName`/`assetVersion`/`basePath`), registered **once** at boot in the
   `HostContext` composition-root registry (`set()`/`get()`, `get()` returns null
   when unset) so static adapter helpers outside the DI graph degrade gracefully.
@@ -385,13 +413,28 @@ resolution belongs to the tier above. Documented for architectural honesty.
 
 | Boundary | OSS seam that exists | Who resolves it |
 |----------|----------------------|-----------------|
-| Multi-plugin collision (same host, different versions) | per-instance state (no `static`) | Product (PHP-Scoper/Mozart at build) |
+| Multi-plugin collision (same host, different versions) | per-instance state; static state only as the bounded exceptions of FW-016 (see [Bounded statics](#bounded-statics-fw-016)) | Product (PHP-Scoper/Mozart at build); multi-plugin consumers inject identity instead of reading `HostContext` |
 | No built-in rate limiting | `#[Middleware]` (+ `suggest symfony/rate-limiter`) | Adapter/Product/Core |
 | Input sanitisation not centralised (validation only) | `AbstractFormRequest::rules()` / `#[ValidatedDto]` | Controller/Adapter |
-| No boundary linter (host → domain) | convention + PHPStan | deptrac in Product/Core |
+| Host → framework boundary linted here; domain-layer boundaries are not | `composer check:portability` (deptrac + `bin/portability-scan.php`, FW-011) | Product/Core for their own domain layers |
 | Forward-only migrations (no `down()`) | `MigrationRunner::onUpgrade()` | Adapter (xmldb/dbDelta) |
 | No service-locator guard (Facades are service locators) | discipline + `composer check` | PR convention / dev-tools PHPStan rule |
-| Outbox (post-commit) + durable job queue | `SignalDispatcherInterface`/`MessageBusInterface` | **Core** (by design) |
+| Outbox (post-commit) + governed job records | `SignalDispatcherInterface`/`MessageBusInterface`; a durable standalone transport ships in OSS (FW-008) | **Core** (by design); the host refuses the standalone transport under Moodle/WordPress |
+
+### Bounded statics (FW-016)
+
+State is per instance, except for the static slots below. Every slot has a
+reset or override seam; nothing resets them automatically.
+
+| Static state | Where | Lifetime | Reset / override seam |
+|---|---|---|---|
+| Facade container and resolved instances | `Kernel/Facade/AbstractFacade` | boot | `setFacadeContainer()`, `swap()`, `reset()` |
+| Active host component context | `Kernel/HostContext` | boot (one slot per process) | `set()`, `reset()`; `get()` returns null when unset |
+| Inertia URL generator, asset version, bootstrap HTML, app id | `Http/Inertia/InertiaAdapter`, `InertiaVersionManager`, `InertiaFactory` | boot | the setters |
+| Inertia shared props | `Http/Inertia/InertiaManager::$shared` | **request** — written by `ShareFlashMiddleware` and `VerifyCsrfMiddleware` | `InertiaManager::flush()`; a long-running worker must call it between requests |
+| Active Record connection and cast resolvers, cast instances | `Persistence/Model` | boot | `setConnectionResolver()`, `setConnection()`, `setCastResolver()` (clears the cast instances) |
+| Debug logger and config reader | `Shared/Util/Debug` | boot | `setRuntime()`, `resetRuntime()` |
+| Reflection cache | `Http/Resolver/MethodParameterResolver` | process | pure cache of immutable reflection results |
 
 ### 9.1 Contextual binding (native Symfony DI — no framework code)
 
@@ -429,8 +472,9 @@ binding is **product opt-in**.
   error translation · native filesystem/mailer · host schema (xmldb/dbDelta) +
   prefix · uninstall/roles.
 - **[CORE] Core (proprietary):** governed event delivery · async jobs · EAV query
-  engine · multi-tenancy · licensing — the governed domain infrastructure built on
-  top of this OSS, opt-in; the framework never imports it.
+  engine · multi-tenancy — the governed domain infrastructure built on top of this
+  OSS, opt-in; the framework never imports it. Licensing is a separate
+  proprietary leaf package that core consumes.
 - **[PRODUCT] Product (composition root):** per-route rate limiting · single-run lock
   (`symfony/lock`) · CORS wiring · slugifier · vault/secrets · Redis driver ·
   seeders · E2E · timezone policy · settings memoisation.
