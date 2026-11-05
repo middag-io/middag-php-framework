@@ -1,57 +1,53 @@
 ---
-id: FW-008
-title: 'Command Bus & Async Job Model'
+title: 'One command bus over Messenger; sync or async decided by routing'
 status: accepted
 date: 2026-03-29
+last-updated: 2026-11-04
 lang: en
 domains: [framework, bus]
-deciders: ['PENDING — original decider not recorded during the legacy-vault reconstruction; confirm with Michael Meneses before ratifying']
-related: [FW-007]
+deciders: [leadership]
+decision: 'One Messenger bus where routing picks sync or async; OSS ships durable transport, retry and cron for standalone.'
+related: [FW-007, FW-015, FW-017]
 supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [framework/reference/command-bus]
-decision: 'A single MessageBus::dispatch() surface serves both sync and async command execution (routing/middleware decides transport, not a different method); handlers resolve by naming convention or an #[AsCommandHandler] attribute; payloads serialize through a dedicated to_payload()/from_payload() contract, never generic serialization.'
+  docs: []
 ---
 
-# FW-008: Command Bus & Async Job Model
-
-> [!NOTE]
-> **Provenance.** Reconstructed from the `moodle-local_middag` legacy vault (`ADR-705`, decided 2026-03-29). This is an archaeology pass, not a new decision — dates and rationale are historical.
+# FW-008: One command bus over Messenger; sync or async decided by routing
 
 ## Context
 
-Business-meaningful work needs a first-class unit that is neither "whatever a cron task happens to do" nor an ad hoc method call — cron/task adapters accumulating business logic directly makes that logic hard to test and impossible to trigger any other way. A command needs one consistent way to run synchronously or asynchronously, with a governed-execution wrapper available for the cases that need retry, correlation, or observability.
+Business work needs a first-class unit that can be tested and triggered outside a scheduler, and that runs either inline or later on a worker. A product running standalone, with no Moodle or WordPress cron and no proprietary packages, still needs a durable queue and recurring triggers.
 
 ## Considered Options
 
-1. **Business logic living directly inside host cron/task adapters**, with no first-class command unit — rejected: makes the logic hard to test and impossible to trigger any other way than through the scheduler.
-2. **Two separate dispatch methods for sync and async**, exactly as the legacy `ADR-705` specified: `$bus->dispatch($command)` for sync, `$bus->dispatch_async($command)` for async — this was the original historical decision, but the shipped implementation converged on a single unified surface instead (see Decision).
-3. **A static facade dispatch API**, `command_bus::handle($command)` / `command_bus::dispatch_async($command)`, as the legacy REF companion (`ref-705`) documented — a genuine naming mismatch against `ADR-705` itself that the legacy synthesis flagged as needing source-code confirmation. Never implemented; the real code resolves the discrepancy a third way (see Decision).
-4. **Generic serialization** (`serialize()`/`json_encode()`) for command payloads — rejected in favour of a dedicated `to_payload()`/`from_payload()` contract, keeping a queued payload's shape independent of PHP's own serialization format.
+1. Business logic inside host cron and task adapters.
+2. Separate dispatch methods for sync and async.
+3. Generic PHP or JSON serialization of command payloads.
+4. Only an in-memory transport in the OSS, with durable transport, retry and recurring triggers left to proprietary packages.
+5. One bus over Symfony Messenger, where routing decides sync or async, with an explicit payload contract. The OSS ships a durable transport, retry and a cron engine for standalone hosts. Locking belongs to the host and job governance lives downstream. ← chosen
 
 ## Decision
 
-`command` is the unit of explicit, executable work; `schedule` is a declarative periodic trigger; a host's native task/cron mechanism is an adapter around this model, never the place business logic itself lives. A handler is resolved for a command by naming convention (`{Command}` → `{Command}Handler`), through dependency injection. One dispatch surface serves both sync and async execution — the caller always calls the same method, and whether a message type is routed to a transport (making it async, drained later by a worker) or handled inline is a middleware/routing concern, not a different method the caller picks. Command payloads serialize through a dedicated `to_payload()`/`from_payload()` contract, never a generic `serialize()`/`json_encode()`.
-
-Confirmed directly in the live `Bus/MessageBus.php` (extending Symfony Messenger's `MessageBus`): `dispatch()` is the only call — there is no separate `dispatch_async()` or `handle()` method. This settles the option-2/option-3 discrepancy above: `ADR-705`'s `dispatch()` naming was the closer of the two historical guesses, but the real design goes further than either legacy document by collapsing sync/async into one call entirely (`architecture.md` §7, decision D5: "async convergence: one sync bus + async via Messenger + routing").
+Commands are the unit of explicit work, and a host's cron or task mechanism is only a thin trigger around them. There is one dispatch call. Whether a message runs inline or goes to a transport for a worker is decided by routing, not by the caller. Payloads cross the queue through the command's own `toPayload`/`fromPayload` contract. The OSS includes the standalone plumbing that holds no product knowledge: a durable database-backed transport, retry policies and a cron engine for recurring commands (decision A2). Running a worker or a schedule only once at a time is the host's job. Governed job records (attempts, correlation, deduplication, audit) are a concern of downstream proprietary packages.
 
 ## Consequences
 
-- Cron/task code stays a thin adapter; the actual unit of work is testable and triggerable outside any scheduler.
-- One dispatch surface for sync and async removes an entire class of "did I call the sync or async method" mistakes — a deliberate divergence from `ADR-705`'s original two-method design (Considered Option 2).
-- Changing a queued command's payload shape incompatibly still requires explicit rollout coordination — no automatic payload versioning exists.
-- Handler resolution grew a second path beyond naming convention: `AttributeHandlersLocator`, resolving `#[AsCommandHandler(command: ...)]`, for a host whose native naming does not fit the `{Command}Handler` convention (e.g. a Moodle-style snake_case `*_command_handler`) — a real, `@api` extension beyond the legacy design, not a discrepancy.
-- Governed job observability (retry, correlation, dedup) is core, not framework. `architecture.md` places "async jobs with retry/audit" in Pillar 3 (proprietary `middag-io/core`); this framework's OSS surface stops at `Bus/MessageBus`, `Bus/Transport/InMemoryTransport` (the OSS default transport) and `Bus/Command/CommandWorker` — the rich `job` aggregate (uuid, attempts, correlation id, dedup key, group key) described by the legacy ADR is governed infrastructure that lives downstream.
-- The reactive signal/hook/outbox mechanism is a deliberately distinct concept — observation of something that already happened, versus explicit intent to do work — see [FW-007](./FW-007-signal-hook-reactive-model.md); it is not this ADR's concern.
-- Declarative scheduling syntax, the full legacy `job` field catalog, and dispatch-API/handler-resolution anti-patterns are documented in full in the extracted reference doc (see Enforcement).
+- (+) Units of work can be tested and triggered without a scheduler.
+- (+) A standalone product can run a worker with OSS code only.
+- (−) The durable transport fits standalone hosts only. Inside Moodle or WordPress it opens a second connection and creates a table outside the host's schema tooling, and the host has to refuse it.
+- (−) The OSS has no concurrency control. Overlapping workers or schedule runs are prevented by the host.
+- (−) An incompatible change to a payload's shape needs coordinated rollout, because payloads are not versioned.
 
 ## Enforcement
 
 | Decision clause | Verification | State |
 |---|---|---|
-| Single `dispatch()` surface for both sync and async — no separate `dispatch_async()`/`handle()` method | none automated | planned |
-| Handler resolved by `{Command}Handler` naming convention or `#[AsCommandHandler]` attribute | none automated | planned |
-| Commands serialize via `to_payload()`/`from_payload()`, never generic `serialize()`/`json_encode()` | none automated | planned |
-| Scheduling DSL, job field catalog, dispatch-API history, handler-resolution and anti-pattern detail | `framework/reference/command-bus` | coded |
+| One dispatch call; routing decides sync or async | test `tests/Bus/AsyncCommandBusTest.php` | coded |
+| Explicit payload contract | test `tests/Bus/CommandSerializerTest.php` | coded |
+| Handler resolution by convention or attribute | test `tests/Bus/AttributeHandlersLocatorTest.php` | coded |
+| Durable standalone transport | test `tests/Bus/Transport/DoctrineTransportFactoryTest.php` | coded |
+| Retry policy and cron engine | tests `tests/Bus/Retry/MultiplierRetryPolicyTest.php`, `tests/Bus/Schedule/ScheduleSupportTest.php` | coded |
+| Scheduling syntax, worker limits, transport selection, anti-patterns | doc `docs-middag-dev:docs/framework/reference/command-bus.md` | coded |

@@ -18,6 +18,31 @@ documented breaking change — see
 - **[Bootstrap](bootstrap.md)** — the boot phases, what the kernel provides at boot, the bridge
   contracts an adapter implements, and the concrete boot flow.
 
+## Decision records
+
+Why the framework is shaped the way it is. Each record holds one decision; the specification lives
+in the reference docs its Enforcement table points to.
+
+| Id | Decision |
+|----|----------|
+| [FW-001](decisions/FW-001-psr15-http-kernel-boundary.md) | Build on Symfony and PSR; public contracts are PSR or framework-owned |
+| [FW-002](decisions/FW-002-attribute-routing-controller-auth-model.md) | Declarative routing and authorization |
+| [FW-003](decisions/FW-003-schema-first-forms-form-request-escalation.md) | Validation declared as data |
+| [FW-004](decisions/FW-004-form-renderer-adapters-field-type-dsl.md) | The renderer seam lives in ui; host widgets only in adapters |
+| [FW-005](decisions/FW-005-multi-mode-rendering-model.md) | Multi-mode rendering, no template engine |
+| [FW-006](decisions/FW-006-inertia-spa-bridge.md) | Inertia server side inside the framework |
+| [FW-007](decisions/FW-007-signal-hook-reactive-model.md) | The OSS ships only the generic reactive seam |
+| [FW-008](decisions/FW-008-command-bus-async-job-model.md) | One command bus over Messenger; sync or async decided by routing |
+| [FW-009](decisions/FW-009-shortcode-processing.md) | Output sanitized by default; opt out with `#[TrustedOutput]` |
+| [FW-010](decisions/FW-010-typed-exception-hierarchy.md) | One framework exception family that carries the HTTP status |
+| [FW-011](decisions/FW-011-framework-composer-portability.md) | Why a separate FRAMEWORK package exists |
+| [FW-012](decisions/FW-012-kernel-boot-lifecycle.md) | Compiled container as the only resolver, frozen before modules boot |
+| [FW-013](decisions/FW-013-repository-persistence-boundary.md) | Own Active Record and Data-Mapper |
+| [FW-014](decisions/FW-014-segregated-controller-role-interfaces.md) | Segregated controller role interfaces |
+| [FW-015](decisions/FW-015-hosts-are-adapters-of-framework-ports.md) | Hosts are ADAPTERS of framework ports |
+| [FW-016](decisions/FW-016-statics-as-a-bounded-exception.md) | Static state as a bounded exception |
+| [FW-017](decisions/FW-017-database-abstraction.md) | Database abstraction |
+
 ## Quick start
 
 Requires PHP `^8.2`. Install via Composer:

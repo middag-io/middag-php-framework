@@ -15,6 +15,7 @@ namespace Middag\Framework\Http\Resolver;
 use Middag\Framework\Http\Contract\MethodArgumentResolverInterface;
 use ReflectionNamedType;
 use ReflectionParameter;
+use ReflectionType;
 use RuntimeException;
 
 /**
@@ -42,7 +43,7 @@ final class RouteParameterResolver implements MethodArgumentResolverInterface
         $type = $parameter->getType();
 
         // 1. If it has no type, assume it's a route scalar.
-        if ($type === null) {
+        if (!$type instanceof ReflectionType) {
             return true;
         }
 

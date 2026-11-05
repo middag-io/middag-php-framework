@@ -88,10 +88,25 @@ are orthogonal to the 3-tier and compose with it. Decide per-lib when the first 
 
 ## Bridge contracts and locked decisions
 
-The bridge contracts adapters implement (with their OSS defaults) and the locked architectural
-decisions (D1–D6) live in [`docs/architecture.md`](docs/architecture.md) §5 and §8. In short: the
-framework defines interfaces and adapters implement them; the QueryBuilder is immutable (execution is
-the adapter's, via `ConnectionAdapterInterface`); there is one sync bus + async via Messenger.
+The bridge contracts adapters implement (with their OSS defaults) live in
+[`docs/architecture.md`](docs/architecture.md) §5; §8 indexes the original D-handles against the
+decision records. In short: the framework defines interfaces and adapters implement them; the
+QueryBuilder is immutable (execution is the adapter's, via `ConnectionAdapterInterface`); there is one
+sync bus + async via Messenger.
+
+## Decision records
+
+Architecture decisions live in [`docs/decisions/`](docs/decisions/) as `FW-NNN` records in the
+MIDDAG-MADR compact format (`docs-middag-ops` ADR-014): frontmatter, then Context → Considered Options
+→ Decision → Consequences → Enforcement. A record states **why** (the choice, the alternatives, the
+consequences); specification (class lists, catalogs, pipelines, naming tables) lives in the reference
+docs its Enforcement table points to, mostly at docs.middag.dev (`docs-middag-dev`,
+`docs/framework/`). Ids are never reused. OSS records never cite proprietary record ids. `deciders`
+is a role id (`leadership`), never a person.
+
+**`domains` vocabulary** (a record uses only these): `framework`, `http`, `forms`, `rendering`,
+`events`, `bus`, `content`, `exceptions`, `portability`, `kernel`, `persistence`, `database`,
+`adapters`.
 
 ## DDD/util ownership split
 
@@ -116,7 +131,7 @@ vocabulary live downstream:
   hook rejects comma multi-scope); mark breaking changes with `!` or a `BREAKING CHANGE:` footer.
   On the `1.x` line: fix → patch, feat → minor; a breaking change only ships in a minor cut
   deliberately via `Release-As` (never in a patch) — policy in [`API-STABILITY.md`](API-STABILITY.md).
-  Branch base: `develop`.
+  Branch base: `main`.
 - **Repo boundary:** this repo is OSS (Apache-2.0). It depends only on `middag-io/ui` and never on
   the proprietary layer; the framework defines contracts that downstream packages implement.
 
