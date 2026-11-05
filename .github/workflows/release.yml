@@ -1,36 +1,47 @@
 name: Release
 
+# Opens or updates the release pull request from the Conventional Commits on
+# main and, when that pull request merges, creates the tag and the GitHub
+# release.
+#
+# release-please runs through the release-please component of
+# middag-io/actions, pinned by commit SHA with the tag in a comment, with the
+# token of the release GitHub App (client id in an organization variable,
+# private key in an organization secret). A release pull request opened or
+# updated with the App token triggers the pull request workflows of this
+# repository, including the required version family check.
+#
+# QG-OSS-02: the release is gated on a green CI run of a push to main. The
+# workflow_run trigger fires only after CI finishes; the job guard requires
+# success. workflow_dispatch bypasses the gate deliberately (retry). Never
+# publish a tag while CI is red. No paths filter: the merge of the release
+# pull request must always run release-please. workflow_run runs nothing from
+# the triggering run: the component checks out only the configuration and the
+# manifest of the default branch, and the job also requires a push event.
 on:
-  workflow_run:
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: [CI]
     types: [completed]
     branches: [main]
   workflow_dispatch:
 
-# Self-contained release-please workflow.
-#
-# NOTE (ADR-006 deviation): the org pattern is a thin wrapper over the reusable
-# workflows in middag-io/.github-private. A PUBLIC repository cannot consume
-# reusable workflows from a PRIVATE repository, so the wrapper fails to start
-# here with "error parsing called workflow ... release-please.yml@main". Until
-# the reusable workflows are published to a PUBLIC repo (e.g. middag-io/.github),
-# this repo inlines release-please so releases are not blocked.
-# Matches the same fix applied to middag-php-ui/moodle/wordpress.
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release-please:
-    # QG-OSS-02: gate the release on a green CI run. `workflow_run` above only
-    # fires after CI finishes; this guard requires success (workflow_dispatch
-    # bypasses deliberately). Never publish a tag while CI is red.
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-      version: ${{ steps.release.outputs.version }}
-    steps:
-      - uses: googleapis/release-please-action@v5
-        id: release
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+    uses: middag-io/actions/.github/workflows/release-please.yml@c448e654322ecb3905afe697ad63ef6ae822bf94 # release-please-v1.0.0
+    # The component only checks out the configuration and the manifest; every
+    # write (release branch, pull request, tag, release) uses the App token.
+    permissions:
+      contents: read
+    with:
+      config-file: release-please-config.json
+      manifest-file: .release-please-manifest.json
+      app-client-id: ${{ vars.GH_APPS_MIDDAG_CI_RELEASE_CLIENT_ID }}
+    secrets:
+      app-private-key: ${{ secrets.GH_APPS_MIDDAG_CI_RELEASE_PRIVATE_KEY }}
