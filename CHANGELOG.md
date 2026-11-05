@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.18.2](https://github.com/middag-io/middag-php-framework/compare/v1.18.1...v1.18.2) (2026-11-05)
+
+
+### Documentation
+
+* align the versioning policy with the version family (ADR-032) ([53c7e18](https://github.com/middag-io/middag-php-framework/commit/53c7e188a0c78c1c2cf92af183c209fe7113a4e8))
+* align the versioning policy with the version family (ADR-032) ([50e7ebb](https://github.com/middag-io/middag-php-framework/commit/50e7ebb9b4d92a977c9b6b51545e73ef9a101422))
+* **architecture:** fix drift against the current code and the main branch base ([4634087](https://github.com/middag-io/middag-php-framework/commit/46340877835eda0e0415be5b2cdfbcfe179b54e9))
+* **decisions:** correct FW-002/003/007/013/016 and bridge tables against current code ([8c3207c](https://github.com/middag-io/middag-php-framework/commit/8c3207c0e325cb96ba8e73348b480a89207dca53))
+* **decisions:** rewrite FW-001..FW-014 as architecture decisions; add FW-015..FW-017 ([cb3c97e](https://github.com/middag-io/middag-php-framework/commit/cb3c97ef5041a93f99b4221cd495631845ab8bd1))
+* **decisions:** rewrite FW-001..FW-014 as architecture decisions; add FW-015..FW-017 ([6e9765d](https://github.com/middag-io/middag-php-framework/commit/6e9765d8a9ccb16c69f9247f2efaef454f4c584d))
+* tighten the 1.x break rule and the window notes ([b83645c](https://github.com/middag-io/middag-php-framework/commit/b83645c91a6a105fd3fbe71c2de71f2f8b133751))
+
 ## [1.18.1](https://github.com/middag-io/middag-php-framework/compare/v1.18.0...v1.18.1) (2026-09-02)
 
 
