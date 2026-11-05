@@ -26,7 +26,7 @@ jobs:
         run: composer validate --no-check-publish --no-check-lock
 
       - name: Cache vendor
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: ${{ runner.os }}-php8.2-vendor-${{ hashFiles('composer.lock') }}
@@ -41,7 +41,7 @@ jobs:
         run: composer dump-autoload --optimize --strict-psr
 
       - name: Cache PHP-CS-Fixer (incremental analysis)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/php-cs-fixer.cache
           key: ${{ runner.os }}-cs-fixer-${{ hashFiles('composer.lock', '.php-cs-fixer.dist.php') }}
@@ -49,7 +49,7 @@ jobs:
             ${{ runner.os }}-cs-fixer-
 
       - name: Cache Rector (incremental analysis)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/rector
           key: ${{ runner.os }}-rector-${{ hashFiles('composer.lock', '.php-rector.php') }}
@@ -57,7 +57,7 @@ jobs:
             ${{ runner.os }}-rector-
 
       - name: Cache PHPStan (result cache)
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/phpstan
           key: ${{ runner.os }}-phpstan-${{ hashFiles('composer.lock', '.phpstan.neon', 'phpstan-baseline.neon') }}
