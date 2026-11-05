@@ -17,6 +17,7 @@ use Middag\Framework\Persistence\Contract\EntityTypeInterface;
 use Middag\Framework\Persistence\Contract\EntityTypeRegistryInterface;
 use Middag\Framework\Persistence\Entity\DefaultEntityType;
 use ReflectionClass;
+use ReflectionMethod;
 
 /**
  * Populates the {@see EntityTypeRegistryInterface} standalone from a set of
@@ -78,6 +79,6 @@ final readonly class EntityTypeRegistrar
 
         $constructor = $reflection->getConstructor();
 
-        return $constructor === null || $constructor->getNumberOfRequiredParameters() === 0;
+        return !$constructor instanceof ReflectionMethod || $constructor->getNumberOfRequiredParameters() === 0;
     }
 }
