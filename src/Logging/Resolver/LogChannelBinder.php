@@ -16,6 +16,7 @@ use Middag\Framework\Logging\Attribute\LogChannel;
 use Middag\Framework\Logging\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionNamedType;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -48,7 +49,7 @@ final class LogChannelBinder
 
         $constructor = $reflection->getConstructor();
 
-        if ($constructor === null) {
+        if (!$constructor instanceof ReflectionMethod) {
             return;
         }
 

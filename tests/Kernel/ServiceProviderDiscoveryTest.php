@@ -81,7 +81,7 @@ final class ServiceProviderDiscoveryTest extends TestCase
         $container = new ContainerBuilder();
         $container->register(TranslatorInterface::class, FallbackTranslator::class)->setPublic(true);
 
-        DiscoveryServiceProvider::register($container, dirname(__DIR__) . '/Fixture/Discovery');
+        DiscoveryServiceProvider::register($container, __DIR__ . '/../Fixture/Discovery');
 
         $arguments = $container->getDefinition(FormValidator::class)->getArguments();
         self::assertCount(2, $arguments);
@@ -91,7 +91,7 @@ final class ServiceProviderDiscoveryTest extends TestCase
     private function discover(): ContainerBuilder
     {
         $container = new ContainerBuilder();
-        DiscoveryServiceProvider::register($container, dirname(__DIR__) . '/Fixture/Discovery');
+        DiscoveryServiceProvider::register($container, __DIR__ . '/../Fixture/Discovery');
 
         return $container;
     }
