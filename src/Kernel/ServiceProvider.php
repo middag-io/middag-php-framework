@@ -45,6 +45,7 @@ use Psr\SimpleCache\CacheInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use ReflectionMethod;
 use SplFileInfo;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -497,11 +498,8 @@ class ServiceProvider
 
         // Skip classes with non-public constructors (static factories).
         $constructor = $reflection->getConstructor();
-        if ($constructor !== null && !$constructor->isPublic()) {
-            return false;
-        }
 
-        return true;
+        return !$constructor instanceof ReflectionMethod || $constructor->isPublic();
     }
 
     /**
