@@ -1,4 +1,6 @@
-# CLAUDE.md — middag-io/framework
+# AGENTS.md — middag-io/framework
+
+Claude Code and Codex read this file; there is no `CLAUDE.md` in this repository.
 
 > A **durable** orientation guide for the agent: principles, boundaries, conventions, workflow.
 > **Not a file index** (an index breaks on every move). To locate symbols, use Glob/Grep.
