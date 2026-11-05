@@ -30,17 +30,22 @@ Closes #
 
 <!--
 Does this PR change public API or behavior in a backward-incompatible way?
-If so, add a `BREAKING CHANGE:` footer to the relevant commit and describe the
-break below.
+If so, describe the break and the migration below.
 
-Note: on the 1.x line a breaking change ships only in a deliberately cut minor
-(a maintainer sets a `Release-As:` footer at release time) — a bare
-`BREAKING CHANGE:` footer makes release-please propose a major, which is never
-merged without explicit maintainer sign-off (see API-STABILITY.md). Flagging it
-correctly matters: without the footer the break ships as a silent patch.
+On the 1.x line, do NOT use `!` or a `BREAKING CHANGE:` footer: release-please
+would cut 2.0.0 in this lib alone, and the family window check
+(`php-version-family-check / check`) refuses both outside a family MAJOR
+window. Until 2026-11-30 a break ships as `feat:` (never `fix:`, so it cuts a
+minor and never a patch) with the break and the migration in the commit body; from 2026-12-01 no break lands on 1.x.
+
+From 2.0.0, `feat:` waits for a family MINOR window and a break for a family
+MAJOR window, both opened by the product owner through the organization
+variable `PHP_LIBS_OPEN_RELEASE`. Keep a waiting PR current by merging `main`
+into it (never rebase or force-push). See API-STABILITY.md.
 -->
 
-- [ ] This PR introduces a breaking change (a `BREAKING CHANGE:` footer is present on the relevant commit)
+- [ ] This PR introduces a breaking change (described in the commit body and below)
+- [ ] The family window check passes
 
 ## Checklist
 

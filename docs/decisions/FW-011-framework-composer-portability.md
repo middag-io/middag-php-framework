@@ -2,12 +2,12 @@
 title: 'Why a separate FRAMEWORK package exists'
 status: accepted
 date: 2026-04-11
-last-updated: 2026-11-04
+last-updated: 2026-11-05
 lang: en
 domains: [framework, portability]
 deciders: [leadership]
 decision: 'The framework is a separate OSS package with no host and no proprietary code; dependencies only point down.'
-related: [FW-015, FW-012, middag-php-ui:UI-001, docs-middag-ops:ADR-003, docs-middag-ops:ADR-025]
+related: [FW-015, FW-012, middag-php-ui:UI-001, docs-middag-ops:ADR-003, docs-middag-ops:ADR-025, docs-middag-ops:ADR-032]
 supersedes: []
 superseded_by: null
 enforced_by:

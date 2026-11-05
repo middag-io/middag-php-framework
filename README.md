@@ -18,7 +18,7 @@
 
 > Your domain should not know, or care, where it runs.
 
-Status: `1.x` — the API is still consolidating, so a minor release may carry a documented breaking change (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
+Status: `1.x` — until 2026-11-30 a minor release may carry a breaking change described in its commit; from `2.0.0` the framework is part of the `middag-php-*` version family, where a minor never breaks (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
 
 ## Why middag-io/framework?
 
@@ -136,7 +136,7 @@ Git hooks are wired automatically on install; the `commit-msg` hook enforces [Co
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, coding standards and quality pipeline. Please also read the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Found a security issue? Follow [`SECURITY.md`](SECURITY.md).
 
-Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the `1.x` versioning policy (breaking changes may land in minors, always flagged in the changelog), and the host-neutral contracts frozen for the whole `1.x` line.
+Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface, the `1.x` versioning policy and the version family from `2.0.0` (shared MAJOR.MINOR, fix-only patches, the family window check on every PR), and the host-neutral contracts frozen for the whole `1.x` line.
 
 ## License
 
