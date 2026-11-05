@@ -128,11 +128,13 @@ vocabulary live downstream:
 - **Commits:** Conventional Commits; **NEVER** `Co-Authored-By`. One scope per commit (the commit-msg
   hook rejects comma multi-scope). On the `1.x` line: fix → patch, feat → minor; never `!` or a
   `BREAKING CHANGE:` footer (release-please would cut `2.0.0` in this lib alone) — until 2026-11-30 a
-  break ships as `feat:`/`fix:` with the break described in the body, and from 2026-12-01 no break
+  break ships as `feat:` (a minor, never `fix:`) with the break described in the body, and from 2026-12-01 no break
   lands on `1.x`. From `2.0.0` (version family, ADR-032 of `docs-middag-ops`): `feat:` waits for a
   family MINOR window, `!`/`BREAKING CHANGE:` for a family MAJOR window. The PR check
   `php-version-family-check / check` enforces this against the org variable `PHP_LIBS_OPEN_RELEASE`;
-  a waiting feature PR is kept current by merging `main` (never rebase/force-push). Policy:
+  a waiting feature PR is kept current by merging `main` (never rebase/force-push). A window counts
+  as open only when it is ahead of the current version; while one is open, merge the Release PR only
+  at the coordinated `X.Y.0`. Policy:
   [`API-STABILITY.md`](API-STABILITY.md).
   Branch base: `main`.
 - **Repo boundary:** this repo is OSS (Apache-2.0). It depends only on `middag-io/ui` and never on

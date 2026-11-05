@@ -110,9 +110,10 @@ when the product owner decides the cut:
 | `feat:` | MINOR | waits for a family MINOR window |
 | `!` or `BREAKING CHANGE:` | not allowed | only in a family MAJOR window, after a deprecation in an earlier MINOR |
 
-- **Breaking changes on `1.x`.** Until 2026-11-30, under the exception to
-  `MSR-015.R1(b)`, a break may ship in a minor as a `feat:` or `fix:` commit
-  whose body describes the break and the migration. From 2026-12-01 no break
+- **Breaking changes on `1.x`.** Until 2026-11-30, under a recorded exception
+  that is not renewed, a break may ship in a minor as a `feat:` commit (so it
+  cuts a minor, never a patch) whose body describes the break and the
+  migration; never as `fix:`, `refactor:` or `chore:`. From 2026-12-01 no break
   lands on `1.x` until the family `2.0.0`. A breaking change never ships in a
   patch.
 - **From `2.0.0`.** Every library of the family shares MAJOR.MINOR. A patch
@@ -123,7 +124,11 @@ when the product owner decides the cut:
   `X.Y` = family minor window, `X.0` = family major window). Give each commit
   the type that matches the change. A feature PR waiting for a window stays
   open and is kept current by merging `main` into it — never by rebase or
-  force-push; re-run the check when the window opens.
+  force-push; re-run the check when the window opens. A window counts as open
+  only when it is ahead of the current version; a stale value reads as closed.
+  While a window is open, merge the Release PR only at the coordinated
+  `X.Y.0`. After the `2.0.0` cut, a PR opened before it must merge `main` in
+  so that the check reads the new version.
 
 The complete policy, including the frozen contracts and the check rules, lives
 in [`API-STABILITY.md`](API-STABILITY.md).

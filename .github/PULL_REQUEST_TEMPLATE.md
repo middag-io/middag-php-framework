@@ -35,8 +35,8 @@ If so, describe the break and the migration below.
 On the 1.x line, do NOT use `!` or a `BREAKING CHANGE:` footer: release-please
 would cut 2.0.0 in this lib alone, and the family window check
 (`php-version-family-check / check`) refuses both outside a family MAJOR
-window. Until 2026-11-30 a break ships as `feat:`/`fix:` with the break and the
-migration in the commit body; from 2026-12-01 no break lands on 1.x.
+window. Until 2026-11-30 a break ships as `feat:` (never `fix:`, so it cuts a
+minor and never a patch) with the break and the migration in the commit body; from 2026-12-01 no break lands on 1.x.
 
 From 2.0.0, `feat:` waits for a family MINOR window and a break for a family
 MAJOR window, both opened by the product owner through the organization
