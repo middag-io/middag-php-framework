@@ -89,33 +89,44 @@ Longer body when the "why" isn't obvious.
   `ci`, `chore`, `revert` — the set `release-please` maps to CHANGELOG sections.
 - One scope per commit, lowercase — the `commit-msg` hook rejects
   comma-separated multi-scope subjects.
-- Mark a breaking change with `!` (e.g. `feat(kernel)!: …`) or a
-  `BREAKING CHANGE:` footer; the hook accepts both.
+- Do **not** mark a breaking change with `!` or a `BREAKING CHANGE:` footer
+  outside a family major window: the hook accepts both, but the family window
+  check refuses them (see [Versioning](#versioning-release-please)). On `1.x`,
+  describe a break and its migration in the commit body instead.
 - **Never** add `Co-Authored-By` trailers.
 - The branch base is **`main`**.
 
 ### Versioning (release-please)
 
 Releases are cut **exclusively** by `release-please` — never by a manual tag.
-It reads the commit history to compute the next version and the CHANGELOG, so
-the commit **type** drives the bump. The package is on the **`1.x`** line:
+It reads the commit history to compute the next version and the CHANGELOG. The
+framework is on the **`1.x`** line and belongs to the MIDDAG PHP library
+version family (ADR-032 of `docs-middag-ops`), which crosses `2.0.0` together
+when the product owner decides the cut:
 
-| Commit | Bump on `1.x` |
-| ------ | ------------- |
-| `fix:` | PATCH |
-| `feat:` | MINOR |
-| breaking (`!` or `BREAKING CHANGE:`) | proposes MAJOR — see below |
+| Commit | On `1.x` | From `2.0.0` |
+| ------ | -------- | ------------ |
+| `fix:` | PATCH | PATCH |
+| `feat:` | MINOR | waits for a family MINOR window |
+| `!` or `BREAKING CHANGE:` | not allowed | only in a family MAJOR window, after a deprecation in an earlier MINOR |
 
-While the API consolidates on `1.x`, a **breaking change may still ship in a
-minor** instead of forcing `2.0`: a maintainer cuts that release deliberately
-with a `Release-As: 1.Y.0` footer, and the change is always marked (`!` /
-`BREAKING CHANGE:`) so it lands in the CHANGELOG's **⚠ BREAKING CHANGES**
-section. A breaking change never ships in a patch. Full strict semver
-(breaking only in majors) starts at `2.0`. A major release is never cut
-automatically: it happens only by explicit maintainer decision, when the break
-genuinely impacts Composer consumers — a release PR proposing a major bump is
-not merged without that sign-off. The complete policy, including the frozen
-contracts, lives in [`API-STABILITY.md`](API-STABILITY.md).
+- **Breaking changes on `1.x`.** Until 2026-11-30, under the exception to
+  `MSR-015.R1(b)`, a break may ship in a minor as a `feat:` or `fix:` commit
+  whose body describes the break and the migration. From 2026-12-01 no break
+  lands on `1.x` until the family `2.0.0`. A breaking change never ships in a
+  patch.
+- **From `2.0.0`.** Every library of the family shares MAJOR.MINOR. A patch
+  carries fixes only. A family minor or major is a coordinated `Release-As`
+  in every library, decided by the product owner.
+- **Family window check.** Every PR runs `php-version-family-check / check`
+  against the organization variable `PHP_LIBS_OPEN_RELEASE` (empty = closed,
+  `X.Y` = family minor window, `X.0` = family major window). Give each commit
+  the type that matches the change. A feature PR waiting for a window stays
+  open and is kept current by merging `main` into it — never by rebase or
+  force-push; re-run the check when the window opens.
+
+The complete policy, including the frozen contracts and the check rules, lives
+in [`API-STABILITY.md`](API-STABILITY.md).
 
 ## Pull request checklist
 
