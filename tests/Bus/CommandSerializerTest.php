@@ -164,6 +164,97 @@ final class CommandSerializerTest extends TestCase
         self::assertSame('command.bus', $busNameStamps[0]->getBusName());
     }
 
+    public function testEncodeWritesBothTheAliasAndTheLegacyFqcnKey(): void
+    {
+        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
+            new BusNameStamp('command.bus'),
+        ]));
+
+        self::assertSame(
+            $encoded['headers']['X-Message-Stamp-bus-name'],
+            $encoded['headers']['X-Message-Stamp-' . BusNameStamp::class],
+            'dual-write: both keys carry the same payload',
+        );
+    }
+
+    public function testDecodeReadsStampsFromTheAliasKeyAlone(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-redelivery' => '[{"retryCount":2,"redeliveredAt":"2026-01-15T10:30:00+00:00"}]',
+                'X-Message-Stamp-bus-name' => '[{"busName":"command.bus"}]',
+                'X-Message-Stamp-transport-names' => '[{"transportNames":["async"]}]',
+                'X-Message-Stamp-user-context' => '[{"userId":42}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        self::assertSame(2, $decoded->last(RedeliveryStamp::class)?->getRetryCount());
+        self::assertSame('command.bus', $decoded->last(BusNameStamp::class)?->getBusName());
+        self::assertSame(['async'], $decoded->last(TransportNamesStamp::class)?->getTransportNames());
+        self::assertSame(42, $decoded->last(UserContextStamp::class)?->getUserId());
+    }
+
+    public function testDecodeStillReadsLegacyFqcnKeysAlone(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-' . RedeliveryStamp::class => '[{"retryCount":3,"redeliveredAt":"2026-01-15T10:30:00+00:00"}]',
+                'X-Message-Stamp-' . BusNameStamp::class => '[{"busName":"legacy.bus"}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        self::assertSame(3, $decoded->last(RedeliveryStamp::class)?->getRetryCount());
+        self::assertSame('legacy.bus', $decoded->last(BusNameStamp::class)?->getBusName());
+    }
+
+    public function testDecodeDoesNotDoubleStampsWrittenUnderBothKeys(): void
+    {
+        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
+            new BusNameStamp('command.bus'),
+            new TransportNamesStamp(['async']),
+        ]));
+
+        $decoded = $this->serializer->decode($encoded);
+
+        self::assertCount(1, $decoded->all(BusNameStamp::class));
+        self::assertCount(1, $decoded->all(TransportNamesStamp::class));
+    }
+
+    public function testDecodePrefersTheAliasKeyOverADivergentLegacyKey(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-bus-name' => '[{"busName":"alias.bus"}]',
+                'X-Message-Stamp-' . BusNameStamp::class => '[{"busName":"legacy.bus"}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        $busNameStamps = $decoded->all(BusNameStamp::class);
+
+        self::assertCount(1, $busNameStamps);
+        self::assertSame('alias.bus', $busNameStamps[0]->getBusName());
+    }
+
+    public function testDecodeIgnoresAnUnknownStampKey(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-delay' => '[{"delay":5000}]',
+                'X-Message-Stamp-' . DelayStamp::class => '[{"delay":5000}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        self::assertCount(0, $decoded->all(DelayStamp::class));
+    }
+
     public function testEncodeDiscardsNonWhitelistedStampsSilently(): void
     {
         $envelope = new Envelope(new RecordCommand('payload-x'), [
