@@ -13,14 +13,18 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Bus;
 
 use DateTimeImmutable;
+use JsonException;
 use Middag\Framework\Bus\Command\CommandSerializer;
 use Middag\Framework\Bus\Context\UserContextStamp;
 use Middag\Framework\Exception\MiddagInfrastructureException;
+use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Tests\Bus\Fixture\RecordCommand;
+use Middag\Framework\Tests\Bus\Fixture\StrictPayloadCommand;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Messenger\Stamp\RedeliveryStamp;
@@ -54,14 +58,14 @@ final class CommandSerializerTest extends TestCase
 
     public function testDecodeRejectsInvalidEnvelope(): void
     {
-        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectException(MessageDecodingFailedException::class);
 
         $this->serializer->decode(['headers' => ['type' => 'NotACommand'], 'body' => '{}']);
     }
 
     public function testDecodeRejectsNonStringBody(): void
     {
-        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectException(MessageDecodingFailedException::class);
 
         // Valid command type, but the body is not a string.
         $this->serializer->decode(['headers' => ['type' => RecordCommand::class], 'body' => 42]);
@@ -69,11 +73,59 @@ final class CommandSerializerTest extends TestCase
 
     public function testDecodeRejectsNonArrayPayload(): void
     {
-        $this->expectException(MiddagInfrastructureException::class);
+        $this->expectException(MessageDecodingFailedException::class);
         $this->expectExceptionMessage('non-array command payload');
 
         // Valid JSON, but it decodes to a scalar rather than a payload map.
         $this->serializer->decode(['headers' => ['type' => RecordCommand::class], 'body' => '"just a string"']);
+    }
+
+    public function testDecodeWrapsMalformedJsonBody(): void
+    {
+        try {
+            $this->serializer->decode(['headers' => ['type' => RecordCommand::class], 'body' => '{"value": ']);
+            self::fail('A truncated JSON body must not decode.');
+        } catch (MessageDecodingFailedException $messageDecodingFailedException) {
+            self::assertStringContainsString('as JSON', $messageDecodingFailedException->getMessage());
+            self::assertInstanceOf(JsonException::class, $messageDecodingFailedException->getPrevious());
+        }
+    }
+
+    public function testDecodeWrapsMalformedStampHeaderJson(): void
+    {
+        $this->expectException(MessageDecodingFailedException::class);
+        $this->expectExceptionMessage('stamp headers');
+
+        $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-' . RedeliveryStamp::class => '[{"retryCount": ',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+    }
+
+    public function testDecodeWrapsWhateverFromPayloadThrows(): void
+    {
+        try {
+            $this->serializer->decode(['headers' => ['type' => StrictPayloadCommand::class], 'body' => '{"other":1}']);
+            self::fail('A payload the command refuses must not decode.');
+        } catch (MessageDecodingFailedException $messageDecodingFailedException) {
+            self::assertStringContainsString(StrictPayloadCommand::class, $messageDecodingFailedException->getMessage());
+            self::assertInstanceOf(MiddagValidationException::class, $messageDecodingFailedException->getPrevious());
+        }
+    }
+
+    public function testDecodeFailureSaysWhatCouldNotBeRead(): void
+    {
+        try {
+            $this->serializer->decode(['headers' => ['type' => 'NotACommand'], 'body' => '{}']);
+            self::fail('An unresolvable type must not decode.');
+        } catch (MessageDecodingFailedException $messageDecodingFailedException) {
+            // The raw row is not attached: the exception's 4th constructor argument
+            // only exists from symfony/messenger 8.1 and this package allows ^7.0.
+            self::assertStringContainsString('missing or invalid type/body', $messageDecodingFailedException->getMessage());
+        }
     }
 
     public function testEncodeRejectsNonCommandMessage(): void
@@ -110,6 +162,97 @@ final class CommandSerializerTest extends TestCase
         $busNameStamps = $decoded->all(BusNameStamp::class);
         self::assertCount(1, $busNameStamps);
         self::assertSame('command.bus', $busNameStamps[0]->getBusName());
+    }
+
+    public function testEncodeWritesBothTheAliasAndTheLegacyFqcnKey(): void
+    {
+        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
+            new BusNameStamp('command.bus'),
+        ]));
+
+        self::assertSame(
+            $encoded['headers']['X-Message-Stamp-bus-name'],
+            $encoded['headers']['X-Message-Stamp-' . BusNameStamp::class],
+            'dual-write: both keys carry the same payload',
+        );
+    }
+
+    public function testDecodeReadsStampsFromTheAliasKeyAlone(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-redelivery' => '[{"retryCount":2,"redeliveredAt":"2026-01-15T10:30:00+00:00"}]',
+                'X-Message-Stamp-bus-name' => '[{"busName":"command.bus"}]',
+                'X-Message-Stamp-transport-names' => '[{"transportNames":["async"]}]',
+                'X-Message-Stamp-user-context' => '[{"userId":42}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        self::assertSame(2, $decoded->last(RedeliveryStamp::class)?->getRetryCount());
+        self::assertSame('command.bus', $decoded->last(BusNameStamp::class)?->getBusName());
+        self::assertSame(['async'], $decoded->last(TransportNamesStamp::class)?->getTransportNames());
+        self::assertSame(42, $decoded->last(UserContextStamp::class)?->getUserId());
+    }
+
+    public function testDecodeStillReadsLegacyFqcnKeysAlone(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-' . RedeliveryStamp::class => '[{"retryCount":3,"redeliveredAt":"2026-01-15T10:30:00+00:00"}]',
+                'X-Message-Stamp-' . BusNameStamp::class => '[{"busName":"legacy.bus"}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        self::assertSame(3, $decoded->last(RedeliveryStamp::class)?->getRetryCount());
+        self::assertSame('legacy.bus', $decoded->last(BusNameStamp::class)?->getBusName());
+    }
+
+    public function testDecodeDoesNotDoubleStampsWrittenUnderBothKeys(): void
+    {
+        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
+            new BusNameStamp('command.bus'),
+            new TransportNamesStamp(['async']),
+        ]));
+
+        $decoded = $this->serializer->decode($encoded);
+
+        self::assertCount(1, $decoded->all(BusNameStamp::class));
+        self::assertCount(1, $decoded->all(TransportNamesStamp::class));
+    }
+
+    public function testDecodePrefersTheAliasKeyOverADivergentLegacyKey(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-bus-name' => '[{"busName":"alias.bus"}]',
+                'X-Message-Stamp-' . BusNameStamp::class => '[{"busName":"legacy.bus"}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        $busNameStamps = $decoded->all(BusNameStamp::class);
+
+        self::assertCount(1, $busNameStamps);
+        self::assertSame('alias.bus', $busNameStamps[0]->getBusName());
+    }
+
+    public function testDecodeIgnoresAnUnknownStampKey(): void
+    {
+        $decoded = $this->serializer->decode([
+            'headers' => [
+                'type' => RecordCommand::class,
+                'X-Message-Stamp-delay' => '[{"delay":5000}]',
+                'X-Message-Stamp-' . DelayStamp::class => '[{"delay":5000}]',
+            ],
+            'body' => '{"value":"payload-x"}',
+        ]);
+
+        self::assertCount(0, $decoded->all(DelayStamp::class));
     }
 
     public function testEncodeDiscardsNonWhitelistedStampsSilently(): void

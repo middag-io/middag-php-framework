@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Shared\ValueObject;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Shared\ValueObject\Uuid;
@@ -248,5 +249,118 @@ final class UuidTest extends TestCase
         self::assertInstanceOf(JsonSerializable::class, $uuid);
         self::assertSame(self::V4, $uuid->jsonSerialize());
         self::assertSame('"' . self::V4 . '"', json_encode($uuid));
+    }
+
+    public function testVisualIdIsTheFinalGroupOfAV4Value(): void
+    {
+        self::assertSame('5337d64b0460', (new Uuid(self::V4))->visualId());
+    }
+
+    public function testVisualIdIsALiteralSubstringOfTheValue(): void
+    {
+        $uuid = Uuid::v7();
+
+        self::assertStringEndsWith('-' . $uuid->visualId(), $uuid->value, 'the LIKE %-<id> lookup depends on this');
+    }
+
+    public function testVisualIdComesFromTheRandomTailSoV7ValuesOfTheSameMillisecondDiffer(): void
+    {
+        $visualIds = [];
+
+        for ($i = 0; $i < self::MONOTONIC_SAMPLE; ++$i) {
+            $visualIds[] = Uuid::v7()->visualId();
+        }
+
+        // The shared timestamp prefix is exactly what a head slice would print.
+        self::assertGreaterThan(1, count(array_unique($visualIds)));
+    }
+
+    public function testVisualIdHonoursAShorterLength(): void
+    {
+        self::assertSame('0460', (new Uuid(self::V4))->visualId(4));
+    }
+
+    public function testVisualIdIsLowercaseLikeTheValue(): void
+    {
+        self::assertSame('5337d64b0460', (new Uuid(strtoupper(self::V4)))->visualId());
+    }
+
+    #[DataProvider('refusedVisualIdLengths')]
+    public function testVisualIdRefusesALengthItCannotSliceCleanly(int $length): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new Uuid(self::V4))->visualId($length);
+    }
+
+    /**
+     * @return iterable<string, array{int}>
+     */
+    public static function refusedVisualIdLengths(): iterable
+    {
+        yield 'zero' => [0];
+
+        yield 'negative' => [-1];
+
+        yield 'past the final group, would include the separator' => [13];
+    }
+
+    public function testTryVisualIdMatchesVisualIdOnACanonicalUuid(): void
+    {
+        self::assertSame((new Uuid(self::V4))->visualId(), Uuid::tryVisualId(self::V4));
+    }
+
+    public function testTryVisualIdNormalisesCaseLikeTheValueObject(): void
+    {
+        self::assertSame('5337d64b0460', Uuid::tryVisualId(strtoupper(self::V4)));
+    }
+
+    public function testTryVisualIdTakesTheTailOfAGuidThatIsNotAUuid(): void
+    {
+        // What ItemsReplayGuard stores: 32 hex characters of a sha256, no hyphens.
+        $sha256 = str_repeat('ab', 16);
+
+        self::assertSame('abababababab', Uuid::tryVisualId($sha256));
+    }
+
+    public function testTryVisualIdReturnsAShortGuidWhole(): void
+    {
+        self::assertSame('x7', Uuid::tryVisualId('x7'));
+    }
+
+    public function testTryVisualIdTrimsSurroundingWhitespace(): void
+    {
+        self::assertSame('5337d64b0460', Uuid::tryVisualId('  ' . self::V4 . "\n"));
+    }
+
+    #[DataProvider('blankGuids')]
+    public function testTryVisualIdYieldsNullForAMissingGuid(?string $guid): void
+    {
+        self::assertNull(Uuid::tryVisualId($guid));
+    }
+
+    /**
+     * @return iterable<string, array{null|string}>
+     */
+    public static function blankGuids(): iterable
+    {
+        yield 'null' => [null];
+
+        yield 'empty' => [''];
+
+        yield 'whitespace only' => ["  \n"];
+    }
+
+    public function testTryVisualIdNeverRefusesTheValueItself(): void
+    {
+        // The nil UUID is refused by the constructor; as a raw guid it is still shown.
+        self::assertSame('000000000000', Uuid::tryVisualId('00000000-0000-0000-0000-000000000000'));
+    }
+
+    public function testTryVisualIdStillRefusesALengthItCannotSliceCleanly(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Uuid::tryVisualId(self::V4, 13);
     }
 }
