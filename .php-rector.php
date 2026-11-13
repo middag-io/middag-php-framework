@@ -19,16 +19,9 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\DeadCode\Rector\Property\RemoveUnusedPrivatePropertyRector;
 use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
-use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
-use Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector;
-use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
-use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
-use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector;
-use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
 use Rector\Php55\Rector\FuncCall\GetCalledClassToStaticClassRector;
 use Rector\Php73\Rector\FuncCall\RegexDashEscapeRector;
 use Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector;
-use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 
@@ -55,7 +48,9 @@ return RectorConfig::configure()
         SetList::CODE_QUALITY,
         SetList::CODING_STYLE,
         SetList::DEAD_CODE,
-        SetList::NAMING,
+        // SetList::NAMING is not listed: rector 2.8 ships it as an empty rule set
+        // (config/set/naming.php => rules([])), so it registers nothing and every
+        // Naming rule this project used to skip is now unregistered or deprecated.
         SetList::PRIVATIZATION,
         SetList::TYPE_DECLARATION,
         SetList::EARLY_RETURN,
@@ -71,7 +66,6 @@ return RectorConfig::configure()
         FunctionFirstClassCallableRector::class,
         GetCalledClassToStaticClassRector::class,
         NewlineAfterStatementRector::class,
-        NullToStrictStringFuncCallArgRector::class,
         RecastingRemovalRector::class,
         RegexDashEscapeRector::class,
         RemoveEmptyClassMethodRector::class,
@@ -85,11 +79,5 @@ return RectorConfig::configure()
         RemoveUselessParamTagRector::class,
         RemoveUselessReturnTagRector::class,
         RemoveUselessVarTagRector::class,
-        RenameForeachValueVariableToMatchExprVariableRector::class,
-        RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class,
-        RenameParamToMatchTypeRector::class,
-        RenamePropertyToMatchTypeRector::class,
-        RenameVariableToMatchMethodCallReturnTypeRector::class,
-        RenameVariableToMatchNewTypeRector::class,
         VariableConstFetchToClassConstFetchRector::class,
     ]);
