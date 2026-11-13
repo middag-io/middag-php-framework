@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Shared\ValueObject;
 
+use InvalidArgumentException;
 use JsonSerializable;
 use Middag\Framework\Exception\MiddagValidationException;
 use Stringable;
@@ -48,6 +49,17 @@ use Symfony\Component\Uid\Uuid as SymfonyUuid;
  */
 final readonly class Uuid implements JsonSerializable, Stringable
 {
+    /**
+     * Length of a visual id, in hex characters — the default and the ceiling, both
+     * for the same reason.
+     *
+     * Twelve is the whole final group of the canonical form: 48 random bits in v4
+     * and in v7 alike (see {@see self::visualId()}), and the point past which a tail
+     * slice would swallow the `-` separator and stop being a literal substring of
+     * the value.
+     */
+    public const VISUAL_ID_LENGTH = 12;
+
     /**
      * Canonical RFC 4122 form, matched case-insensitively.
      *
@@ -139,6 +151,85 @@ final readonly class Uuid implements JsonSerializable, Stringable
     }
 
     /**
+     * A short id to show a human: the last `$length` hex characters of the value.
+     *
+     * **Why the tail.** A v7 UUID is timestamp-prefixed, so two ids minted in the
+     * same millisecond share everything up to the random part — a head slice would
+     * print the same string for different rows. The last 12 characters are the
+     * whole final group, 48 random bits in v4 and in v7 alike, so the helper reads
+     * the same way whichever version the column stores.
+     *
+     * **It stays a literal substring** of the canonical value (hence the 12-character
+     * ceiling, which is where the final group ends). A support agent can take what
+     * the screen shows and find the row with `LIKE '%-<visual id>'`, or grep a log for
+     * it, with no reverse mapping and no second column to keep in sync.
+     *
+     * **Collisions are expected, not prevented.** 48 bits over 10^4 rows is ~1.8e-7,
+     * over 10^6 rows ~0.18%: fine for reading an id aloud or quoting it in a ticket,
+     * which is what this is for. A screen that *searches* by visual id must therefore
+     * accept more than one hit. Past ~10^5 rows, index an explicit tail column instead
+     * of scanning with a leading-wildcard LIKE.
+     *
+     * **Not an identifier.** The value is the identifier; this is a display helper.
+     * Never store it as a key, and never use it where a business-facing counter
+     * belongs (an order, a ticket, a certificate — the number a person quotes back
+     * gets its own per-type sequence). Technical reference — support, logs, audit,
+     * licensing — is what this serves.
+     *
+     * @param int $length 1 to 12 hex characters
+     *
+     * @throws InvalidArgumentException when $length is outside 1-12 (a programming
+     *                                  error: the argument is code's, never the user's)
+     */
+    public function visualId(int $length = self::VISUAL_ID_LENGTH): string
+    {
+        self::assertVisualIdLength($length);
+
+        return substr($this->value, -$length);
+    }
+
+    /**
+     * The same display helper for a column that is *not* guaranteed to hold a UUID.
+     *
+     * Some `guid` columns carry a hash, a foreign key from a third party, or nothing
+     * at all. This never refuses the value: a canonical UUID is lowercased and sliced
+     * like {@see self::visualId()}, anything else has its last `$length` characters
+     * taken as they are, and a null or blank value yields `null` so a template can
+     * print it without a guard. Surrounding whitespace is trimmed first, so a stored
+     * trailing newline does not become part of what is shown.
+     *
+     * The promise about UUIDs does not carry over to an arbitrary string: the tail of
+     * a sequential or structured id can repeat across rows. Treat the result as a
+     * label, and keep the `LIKE '%-<visual id>'` lookup for columns that really do
+     * hold UUIDs.
+     *
+     * @param int $length 1 to 12 characters
+     *
+     * @throws InvalidArgumentException when $length is outside 1-12 (the argument is
+     *                                  code's; the *value* never makes this throw)
+     */
+    public static function tryVisualId(?string $guid, int $length = self::VISUAL_ID_LENGTH): ?string
+    {
+        self::assertVisualIdLength($length);
+
+        if ($guid === null) {
+            return null;
+        }
+
+        $guid = trim($guid);
+
+        if ($guid === '') {
+            return null;
+        }
+
+        if (preg_match(self::PATTERN, $guid) === 1) {
+            return substr(strtolower($guid), -$length);
+        }
+
+        return mb_substr($guid, -$length);
+    }
+
+    /**
      * The RFC 4122 version encoded in the value: 1, 4 and 7 in practice, 1-8 by contract.
      */
     public function version(): int
@@ -152,6 +243,20 @@ final readonly class Uuid implements JsonSerializable, Stringable
     public function jsonSerialize(): string
     {
         return $this->value;
+    }
+
+    /**
+     * @throws InvalidArgumentException when $length cannot produce a visual id
+     */
+    private static function assertVisualIdLength(int $length): void
+    {
+        if ($length < 1 || $length > self::VISUAL_ID_LENGTH) {
+            throw new InvalidArgumentException(sprintf(
+                'A visual id is 1 to %d characters, got %d.',
+                self::VISUAL_ID_LENGTH,
+                $length,
+            ));
+        }
     }
 
     /**
