@@ -13,16 +13,19 @@ declare(strict_types=1);
 namespace Middag\Framework\Bus\Command;
 
 use DateTimeImmutable;
+use JsonException;
 use Middag\Framework\Bus\Context\UserContextStamp;
 use Middag\Framework\Bus\Contract\CommandInterface;
 use Middag\Framework\Exception\MiddagInfrastructureException;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\RedeliveryStamp;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 use Symfony\Component\Messenger\Stamp\TransportNamesStamp;
 use Symfony\Component\Messenger\Transport\Serialization\Serializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
+use Throwable;
 
 /**
  * Transport serializer that round-trips commands through their own
@@ -34,6 +37,15 @@ use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
  * Symfony's own {@see Serializer}).
  * Any stamp outside the whitelist is dropped silently — this is a deliberate
  * allowlist, not a generic stamp serializer.
+ *
+ * **Every** `decode()` failure is a {@see MessageDecodingFailedException}: an
+ * unreadable row is a poison message, and that is the one exception type the
+ * transport layer and {@see CommandWorker} treat as non-retryable and route
+ * straight to dead-letter. Throwing anything else — an infrastructure error, a
+ * `JsonException`, or whatever a command's own `fromPayload()` raises — escapes
+ * the worker loop and kills the process, which then meets the same row again on
+ * the next claim and dies again (framework#108). The original error is always
+ * kept as `previous`, so a store writing `last_error` keeps the real cause.
  *
  * @api
  */
@@ -53,6 +65,9 @@ final class CommandSerializer implements SerializerInterface
 
     /**
      * @param array<string, mixed> $encodedEnvelope
+     *
+     * @throws MessageDecodingFailedException on every failure, so the row is
+     *                                        treated as a poison message instead of killing the worker
      */
     public function decode(array $encodedEnvelope): Envelope
     {
@@ -60,13 +75,17 @@ final class CommandSerializer implements SerializerInterface
         $body = $encodedEnvelope['body'] ?? null;
 
         if (!is_string($type) || !is_subclass_of($type, CommandInterface::class) || !is_string($body)) {
-            throw new MiddagInfrastructureException('CommandSerializer cannot decode the envelope: missing or invalid type/body.');
+            throw $this->undecodable('CommandSerializer cannot decode the envelope: missing or invalid type/body.');
         }
 
-        $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        try {
+            $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $jsonException) {
+            throw $this->undecodable('CommandSerializer could not parse the envelope body as JSON.', $jsonException);
+        }
 
         if (!is_array($decoded)) {
-            throw new MiddagInfrastructureException('CommandSerializer decoded a non-array command payload.');
+            throw $this->undecodable('CommandSerializer decoded a non-array command payload.');
         }
 
         $payload = [];
@@ -75,9 +94,23 @@ final class CommandSerializer implements SerializerInterface
         }
 
         $headers = $encodedEnvelope['headers'] ?? [];
-        $stamps = is_array($headers) ? $this->decodeStamps($headers) : [];
 
-        return new Envelope($type::fromPayload($payload), $stamps);
+        try {
+            $stamps = is_array($headers) ? $this->decodeStamps($headers) : [];
+        } catch (Throwable $throwable) {
+            throw $this->undecodable('CommandSerializer could not decode the envelope stamp headers.', $throwable);
+        }
+
+        // fromPayload() is the command's own contract: a row written by an older
+        // release, or by a command whose payload shape has since changed, fails
+        // here. That is still an unreadable row, not a transient failure.
+        try {
+            $command = $type::fromPayload($payload);
+        } catch (Throwable $throwable) {
+            throw $this->undecodable(sprintf('CommandSerializer could not rebuild %s from its payload.', $type), $throwable);
+        }
+
+        return new Envelope($command, $stamps);
     }
 
     /**
@@ -212,5 +245,19 @@ final class CommandSerializer implements SerializerInterface
                 $stampClass,
             )),
         };
+    }
+
+    /**
+     * The single exit for a failed decode.
+     *
+     * The raw row is deliberately not passed on: the exception's
+     * `encodedEnvelope` argument only exists from symfony/messenger 8.1, and
+     * this package supports `^7.0 || ^8.0`, where the class takes the plain
+     * three-argument shape. The message plus `previous` carry the cause, and a
+     * stored payload stays out of whatever logs the exception.
+     */
+    private function undecodable(string $message, ?Throwable $previous = null): MessageDecodingFailedException
+    {
+        return new MessageDecodingFailedException($message, 0, $previous);
     }
 }

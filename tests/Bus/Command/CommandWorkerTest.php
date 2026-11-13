@@ -14,12 +14,14 @@ namespace Middag\Framework\Tests\Bus\Command;
 
 use Closure;
 use InvalidArgumentException;
+use Middag\Framework\Bus\Command\CommandSerializer;
 use Middag\Framework\Bus\Command\CommandWorker;
 use Middag\Framework\Bus\Command\WorkerLimits;
 use Middag\Framework\Bus\Contract\MessageBusInterface;
 use Middag\Framework\Bus\Retry\AttemptStamp;
 use Middag\Framework\Bus\Transport\InMemoryTransport;
 use Middag\Framework\Bus\Transport\TransportLocator;
+use Middag\Framework\Tests\Bus\Command\Fixture\EncodedRowTransport;
 use Middag\Framework\Tests\Bus\Command\Fixture\FixedRetryPolicy;
 use Middag\Framework\Tests\Bus\Command\Fixture\RecordingHeartbeat;
 use Middag\Framework\Tests\Bus\Command\Fixture\RecordingLogger;
@@ -238,6 +240,33 @@ final class CommandWorkerTest extends TestCase
         self::assertSame(1, $processed, 'the good message before the poison one still counts');
         self::assertSame(['first'], $handled);
         self::assertCount(1, $transport->acked);
+        self::assertNotEmpty($logger->messagesAtLevel('error'));
+    }
+
+    /**
+     * framework#108: the DB lane claims a row, then decodes it. Before the
+     * serializer wrapped its failures, an undecodable row left the worker loop
+     * as a MiddagInfrastructureException and killed the process, which met the
+     * same row again after the orphan timeout and died again, forever.
+     */
+    #[Test]
+    public function aPoisonRowOnAnEncodedTransportDoesNotKillTheWorker(): void
+    {
+        $good = (new CommandSerializer())->encode(new Envelope(new RecordCommand('good')));
+        $transport = new EncodedRowTransport([
+            $good,
+            ['headers' => ['type' => 'Vendor\Gone\RenamedCommand'], 'body' => '{"value":"poison"}'],
+            $good,
+        ]);
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), logger: $logger);
+
+        $processed = $worker->drain();
+
+        self::assertSame(1, $processed, 'the row claimed before the poison one still counts');
+        self::assertSame(['good'], $handled);
         self::assertNotEmpty($logger->messagesAtLevel('error'));
     }
 
