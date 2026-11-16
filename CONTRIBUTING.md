@@ -91,8 +91,7 @@ Longer body when the "why" isn't obvious.
   comma-separated multi-scope subjects.
 - Do **not** mark a breaking change with `!` or a `BREAKING CHANGE:` footer
   outside a family major window: the hook accepts both, but the family window
-  check refuses them (see [Versioning](#versioning-release-please)). On `1.x`,
-  describe a break and its migration in the commit body instead.
+  check refuses them (see [Versioning](#versioning-release-please)).
 - **Never** add `Co-Authored-By` trailers.
 - The branch base is **`main`**.
 
@@ -110,12 +109,9 @@ when the product owner decides the cut:
 | `feat:` | MINOR | waits for a family MINOR window |
 | `!` or `BREAKING CHANGE:` | not allowed | only in a family MAJOR window, after a deprecation in an earlier MINOR |
 
-- **Breaking changes on `1.x`.** Until 2026-11-30, under a recorded exception
-  that is not renewed, a break may ship in a minor as a `feat:` commit (so it
-  cuts a minor, never a patch) whose body describes the break and the
-  migration; never as `fix:`, `refactor:` or `chore:`. From 2026-12-01 no break
-  lands on `1.x` until the family `2.0.0`. A breaking change never ships in a
-  patch.
+- **Breaking changes on `1.x`.** A break ships in a minor as a `feat:` commit
+  (so it cuts a minor, never a patch); never as `fix:`, `refactor:` or
+  `chore:`. A breaking change never ships in a patch. The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
 - **From `2.0.0`.** Every library of the family shares MAJOR.MINOR. A patch
   carries fixes only. A family minor or major is a coordinated `Release-As`
   in every library, decided by the product owner.

@@ -18,7 +18,7 @@
 
 > Your domain should not know, or care, where it runs.
 
-Status: `1.x` — until 2026-11-30 a minor release may carry a breaking change described in its commit; from `2.0.0` the framework is part of the `middag-php-*` version family, where a minor never breaks (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
+Status: `1.x`. The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut. From `2.0.0` the framework is part of the `middag-php-*` version family, where a minor never breaks (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
 
 ## Why middag-io/framework?
 

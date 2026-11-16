@@ -2,22 +2,10 @@
 
 ## Supported Versions
 
-`middag-io/framework` is released on the `1.x` line. Only the most recent
-tagged release receives security fixes, and upgrading to the latest release is
-the supported remediation path.
-
-| Version               | Supported          |
-| --------------------- | ------------------ |
-| Latest `1.x` release  | :white_check_mark: |
-| Older releases        | :x:                |
-
-When the MIDDAG PHP library family ships `2.0.0`, the last `1.x` minor
-receives security fixes only, for 6 months after `2.0.0`. From then on, the
-last minor of the previous family major gets the same 6 months.
+The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
 
 The versioning policy (including how breaking changes ship during `1.x`) is
-documented in [`API-STABILITY.md`](API-STABILITY.md). We recommend tracking
-the latest release so you receive security and bug fixes promptly.
+documented in [`API-STABILITY.md`](API-STABILITY.md).
 
 ## Reporting a Vulnerability
 

@@ -55,16 +55,12 @@ the framework reaches `2.0.0` only with the whole family.
 - **Minor** (`1.Y.0`) — cut by release-please from a `feat:` commit: additive
   `@api` changes (new contracts, new optional parameters, promoting an
   `@internal` symbol to `@api`).
-- **Breaking `@api` change** — **until 2026-11-30** only, a minor may carry
-  one, under a recorded exception that ends on 2026-11-30 and is not renewed.
-  It ships as a `feat:` commit, so it cuts a minor and never a patch, and the
-  commit body describes the break and the migration. It never ships as `fix:`,
-  `refactor:` or `chore:`. It is **never** marked with
+- **Breaking `@api` change** — ships as a `feat:` commit, so it cuts a minor
+  and never a patch. It never ships as `fix:`, `refactor:` or `chore:`. It is **never** marked with
   `!` or a `BREAKING CHANGE:` footer: release-please would cut `2.0.0` in this
   library alone, and the [family window check](#the-family-window-check)
   refuses both markers outside a family major window.
-- **From 2026-12-01** the exception ends and is not renewed. If the family has
-  not reached `2.0.0` by then, no breaking change lands on `1.x` until the cut.
+- The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
 - **Frozen contracts** (below) are exempt: they do not change in a breaking
   way in **any** `1.x` release.
 
@@ -91,8 +87,6 @@ the framework reaches `2.0.0` only with the whole family.
   product owner decides every family major.
 - **Compatibility.** Each family major publishes a compatibility matrix
   (Symfony, PHP, Moodle and WordPress ranges). Its home is still to be decided.
-- **Previous major.** The last minor of a family major receives security fixes
-  only, for 6 months after the next major ships.
 
 ## The family window check
 
@@ -179,8 +173,8 @@ signature altered. Breaking one of these requires the family `2.0.0`.
 - Depend only on `@api` types. If you need behaviour exposed only by an
   `@internal` symbol, open an issue to have it promoted rather than reaching in.
 - **On `1.x`:** pin a caret range (`^1.0`) and read the CHANGELOG before
-  crossing a minor — until 2026-11-30 a `1.x` minor may carry a breaking `@api`
-  change to a non-frozen contract, described in the body of its commit.
+  crossing a minor — a `1.x` minor may carry a breaking `@api` change to a
+  non-frozen contract.
 - **Zero-surprise upgrades on `1.x`:** pin a tilde patch range (for example
   `~1.0.3`) to receive only patches, and move across minors deliberately.
 - **From `2.0.0`:** declare one `^2.N` range, with the same `N`, for every

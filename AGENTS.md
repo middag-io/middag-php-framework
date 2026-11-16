@@ -129,9 +129,8 @@ vocabulary live downstream:
   [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Commits:** Conventional Commits; **NEVER** `Co-Authored-By`. One scope per commit (the commit-msg
   hook rejects comma multi-scope). On the `1.x` line: fix → patch, feat → minor; never `!` or a
-  `BREAKING CHANGE:` footer (release-please would cut `2.0.0` in this lib alone) — until 2026-11-30 a
-  break ships as `feat:` (a minor, never `fix:`) with the break described in the body, and from 2026-12-01 no break
-  lands on `1.x`. From `2.0.0` (version family, ADR-032 of `docs-middag-ops`): `feat:` waits for a
+  `BREAKING CHANGE:` footer (release-please would cut `2.0.0` in this lib alone) — a break ships as
+  `feat:` (a minor, never `fix:`). From `2.0.0` (version family, ADR-032 of `docs-middag-ops`): `feat:` waits for a
   family MINOR window, `!`/`BREAKING CHANGE:` for a family MAJOR window. The PR check
   `php-version-family-check / check` enforces this against the org variable `PHP_LIBS_OPEN_RELEASE`;
   a waiting feature PR is kept current by merging `main` (never rebase/force-push). A window counts
@@ -144,8 +143,8 @@ vocabulary live downstream:
 
 ## State
 
-The framework is **public on the `1.x` line** (Apache-2.0). Until 2026-11-30 a minor may carry a
-breaking change described in its commit body; from 2026-12-01 `1.x` takes no break. It crosses
+The framework is **public on the `1.x` line** (Apache-2.0).
+The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut. It crosses
 `2.0.0` with the whole `middag-php-*` version family (shared MAJOR.MINOR, fix-only PATCH), on a cut
 the product owner decides — the policy is [`API-STABILITY.md`](API-STABILITY.md). Technical documentation lives in **`docs/`**
 (`architecture.md`, …) and is published at **docs.middag.dev**.
