@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.20.2](https://github.com/middag-io/middag-php-framework/compare/v1.20.1...v1.20.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **bus:** count a row rejected by get() and fetch once more ([303623f](https://github.com/middag-io/middag-php-framework/commit/303623fc077ae114584ba3fe3a1ae39020d51630))
+* **bus:** log decode failures without the queued payload ([ac94999](https://github.com/middag-io/middag-php-framework/commit/ac94999fff232322dd98f6ba58e85520ad71d619))
+
+
+### Documentation
+
+* add help and status to the README ([25d5c8d](https://github.com/middag-io/middag-php-framework/commit/25d5c8d263f00dca69aaaacd6cd0f799efd07d75))
+* link the changelog from the README ([5dbd105](https://github.com/middag-io/middag-php-framework/commit/5dbd105ceb3d17338efac9c979b46da5700034cc))
+* point SECURITY and AGENTS at the family support rules ([60dca79](https://github.com/middag-io/middag-php-framework/commit/60dca792fc5e35cf50c1097f8fb46c9238426da1))
+* rewrite API-STABILITY.md for the 2.x support policy ([489492e](https://github.com/middag-io/middag-php-framework/commit/489492e62dac8a9ca63edfd304ccf6a2e1adc7ea))
+
 ## [1.20.1](https://github.com/middag-io/middag-php-framework/compare/v1.20.0...v1.20.1) (2026-11-16)
 
 
