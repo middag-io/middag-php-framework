@@ -13,11 +13,13 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Bus\Command;
 
 use Closure;
+use Generator;
 use InvalidArgumentException;
 use Middag\Framework\Bus\Command\CommandSerializer;
 use Middag\Framework\Bus\Command\CommandWorker;
 use Middag\Framework\Bus\Command\WorkerLimits;
 use Middag\Framework\Bus\Contract\MessageBusInterface;
+use Middag\Framework\Bus\Contract\TransportInterface;
 use Middag\Framework\Bus\Retry\AttemptStamp;
 use Middag\Framework\Bus\Transport\InMemoryTransport;
 use Middag\Framework\Bus\Transport\TransportLocator;
@@ -242,6 +244,51 @@ final class CommandWorkerTest extends TestCase
         self::assertSame(2, $processed, 'the good message and the poison one both count: the queue was not empty');
         self::assertSame(['first'], $handled);
         self::assertCount(1, $transport->acked);
+        self::assertNotEmpty($logger->messagesAtLevel('error'));
+    }
+
+    #[Test]
+    public function aQueueHoldingOnlyAnUnreadableMessageIsNeverReportedEmpty(): void
+    {
+        $transport = new class implements TransportInterface {
+            /** @var list<string> */
+            public array $rows = ['poison'];
+
+            public function send(Envelope $envelope): Envelope
+            {
+                return $envelope;
+            }
+
+            public function get(): iterable
+            {
+                return $this->decode();
+            }
+
+            public function ack(Envelope $envelope): void {}
+
+            public function reject(Envelope $envelope): void {}
+
+            /**
+             * @return Generator<int, Envelope>
+             */
+            private function decode(): Generator
+            {
+                foreach ($this->rows as $row) {
+                    if ('poison' === $row) {
+                        throw new MessageDecodingFailedException('poison payload');
+                    }
+
+                    yield new Envelope(new RecordCommand($row));
+                }
+            }
+        };
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), logger: $logger);
+
+        self::assertSame(1, $worker->drain(), 'the unreadable message counts: the queue was not empty');
+        self::assertSame([], $handled);
         self::assertNotEmpty($logger->messagesAtLevel('error'));
     }
 

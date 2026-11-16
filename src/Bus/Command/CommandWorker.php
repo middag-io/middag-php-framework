@@ -154,7 +154,10 @@ final class CommandWorker
      *             counts wherever it surfaces (from get(), while iterating or
      *             while advancing an iterator): a queue that held only an
      *             unreadable message is never reported as 0, which a
-     *             supervising loop would read as an empty queue.
+     *             supervising loop would read as an empty queue. A decode
+     *             failure met while advancing past the last message a limit
+     *             allows still counts, so the result can exceed the message
+     *             limit by one discarded message; no extra message is handled.
      */
     public function drain(): int
     {
