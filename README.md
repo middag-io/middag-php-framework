@@ -141,6 +141,7 @@ Git hooks are wired automatically on install; the `commit-msg` hook enforces [Co
 - **Status:** the 1.x line is pre-stable and unsupported; support starts at 2.0.0. See https://docs.middag.dev/libraries/reference/versioning-and-compatibility
 - **Questions and bugs:** https://github.com/middag-io/middag-php-framework/issues
 - **Security reports:** see [`SECURITY.md`](SECURITY.md) (do not open a public issue).
+- **Changes:** every release is listed in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Contributing
 
