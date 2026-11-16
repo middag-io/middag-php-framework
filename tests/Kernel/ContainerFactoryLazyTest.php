@@ -69,8 +69,8 @@ final class ContainerFactoryLazyTest extends TestCase
 
     private function bootstrap(bool $lazy): BootstrapInterface
     {
-        return new class($lazy) implements BootstrapInterface {
-            public function __construct(private readonly bool $lazy) {}
+        return new readonly class($lazy) implements BootstrapInterface {
+            public function __construct(private bool $lazy) {}
 
             public function configure(ContainerBuilder $builder): void
             {

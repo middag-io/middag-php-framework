@@ -25,19 +25,19 @@ use InvalidArgumentException;
  */
 final readonly class RelationRef
 {
-    public const CARDINALITY_ONE_TO_ONE = 'one-to-one';
+    public const string CARDINALITY_ONE_TO_ONE = 'one-to-one';
 
-    public const CARDINALITY_ONE_TO_MANY = 'one-to-many';
+    public const string CARDINALITY_ONE_TO_MANY = 'one-to-many';
 
-    public const CARDINALITY_MANY_TO_ONE = 'many-to-one';
+    public const string CARDINALITY_MANY_TO_ONE = 'many-to-one';
 
-    public const CARDINALITY_MANY_TO_MANY = 'many-to-many';
+    public const string CARDINALITY_MANY_TO_MANY = 'many-to-many';
 
-    public const HOST_POLICY_AGNOSTIC = 'agnostic';
+    public const string HOST_POLICY_AGNOSTIC = 'agnostic';
 
-    public const HOST_POLICY_HOST_TABLE = 'host-table';
+    public const string HOST_POLICY_HOST_TABLE = 'host-table';
 
-    public const HOST_POLICY_SCOPE_TABLE = 'scope-table';
+    public const string HOST_POLICY_SCOPE_TABLE = 'scope-table';
 
     /**
      * @param array<int, string> $additionalPredicates extra ON predicates, already expressed against the builder aliases

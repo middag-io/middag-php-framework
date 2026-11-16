@@ -78,10 +78,10 @@ final class StandaloneKernelTest extends TestCase
 
     private function succeedingInner(int $status, string $body): HttpKernelInterface
     {
-        return new class($status, $body) implements HttpKernelInterface {
+        return new readonly class($status, $body) implements HttpKernelInterface {
             public function __construct(
-                private readonly int $status,
-                private readonly string $body,
+                private int $status,
+                private string $body,
             ) {}
 
             public function handle(ServerRequestInterface $request): ResponseInterface
@@ -93,8 +93,8 @@ final class StandaloneKernelTest extends TestCase
 
     private function throwingInner(string $message): HttpKernelInterface
     {
-        return new class($message) implements HttpKernelInterface {
-            public function __construct(private readonly string $message) {}
+        return new readonly class($message) implements HttpKernelInterface {
+            public function __construct(private string $message) {}
 
             public function handle(ServerRequestInterface $request): ResponseInterface
             {

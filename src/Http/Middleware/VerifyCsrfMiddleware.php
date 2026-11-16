@@ -34,10 +34,10 @@ use Psr\Http\Server\RequestHandlerInterface;
 final readonly class VerifyCsrfMiddleware implements MiddlewareInterface
 {
     /** HTTP status for a missing/invalid CSRF token (Laravel's de-facto "page expired"). */
-    private const TOKEN_MISMATCH = 419;
+    private const int TOKEN_MISMATCH = 419;
 
     /** @var list<string> */
-    private const UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+    private const array UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
     public function __construct(
         private CsrfTokenManager $csrf,

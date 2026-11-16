@@ -25,7 +25,7 @@ use Monolog\Formatter\LineFormatter;
  */
 final class MiddagLineFormatter extends LineFormatter
 {
-    public const MIDDAG_FORMAT = "[%datetime%] [%extra.origin%] [%extra.actor%] %level_name%: %message%%context%\n";
+    public const string MIDDAG_FORMAT = "[%datetime%] [%extra.origin%] [%extra.actor%] %level_name%: %message%%context%\n";
 
     public function __construct()
     {

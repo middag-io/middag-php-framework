@@ -61,7 +61,7 @@ use Throwable;
  */
 final class CommandSerializer implements SerializerInterface
 {
-    private const STAMP_HEADER_PREFIX = 'X-Message-Stamp-';
+    private const string STAMP_HEADER_PREFIX = 'X-Message-Stamp-';
 
     /**
      * The whitelist, keyed by stamp class, with the stable alias each one is
@@ -70,7 +70,7 @@ final class CommandSerializer implements SerializerInterface
      *
      * @var array<class-string<StampInterface>, string>
      */
-    private const STAMP_ALIASES = [
+    private const array STAMP_ALIASES = [
         RedeliveryStamp::class => 'redelivery',
         TransportNamesStamp::class => 'transport-names',
         BusNameStamp::class => 'bus-name',

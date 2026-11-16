@@ -33,9 +33,9 @@ use Middag\Framework\Http\Middleware\ShareFlashMiddleware;
  */
 final readonly class FlashBag
 {
-    private const FLASH_KEY = '_middag_flash';
+    private const string FLASH_KEY = '_middag_flash';
 
-    private const ERRORS_KEY = '_middag_errors';
+    private const string ERRORS_KEY = '_middag_errors';
 
     public function __construct(
         private SessionInterface $session,

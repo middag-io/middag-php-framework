@@ -33,7 +33,7 @@ use ReflectionEnum;
 #[CoversNothing]
 final class EnumCasePascalCaseTest extends TestCase
 {
-    private const PASCAL_CASE = '/^[A-Z][A-Za-z0-9]*$/';
+    private const string PASCAL_CASE = '/^[A-Z][A-Za-z0-9]*$/';
 
     #[Test]
     #[DataProvider('enumProvider')]

@@ -92,9 +92,9 @@ final class FormRequestResolverTest extends TestCase
     /** @param array<string, object> $services */
     private function container(array $services): ContainerInterface
     {
-        return new class($services) implements ContainerInterface {
+        return new readonly class($services) implements ContainerInterface {
             /** @param array<string, object> $services */
-            public function __construct(private readonly array $services) {}
+            public function __construct(private array $services) {}
 
             public function get(string $id): object
             {

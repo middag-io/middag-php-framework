@@ -52,8 +52,8 @@ final class BootIsolateFailurePolicyTest extends TestCase
 
     private function fakeModule(string $name): ModuleInterface
     {
-        return new class($name) implements ModuleInterface {
-            public function __construct(private readonly string $name) {}
+        return new readonly class($name) implements ModuleInterface {
+            public function __construct(private string $name) {}
 
             public function getName(): string
             {

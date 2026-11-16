@@ -63,10 +63,10 @@ use Middag\Framework\Http\HttpKernel;
 final readonly class RouteMiddlewareStack
 {
     /** Route default carrying the middleware ids declared for the route. */
-    public const MIDDLEWARE_DEFAULT = '_middleware';
+    public const string MIDDLEWARE_DEFAULT = '_middleware';
 
     /** Route default carrying the middleware ids excluded from the route's chain. */
-    public const WITHOUT_MIDDLEWARE_DEFAULT = '_without_middleware';
+    public const string WITHOUT_MIDDLEWARE_DEFAULT = '_without_middleware';
 
     /**
      * @param string       $routeName the matched route's name, for error messages

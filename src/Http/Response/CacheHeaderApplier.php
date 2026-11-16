@@ -38,7 +38,7 @@ use Symfony\Component\HttpKernel\Attribute\Cache;
 final class CacheHeaderApplier
 {
     /** Statuses Symfony's listener also treats as cacheable. */
-    private const CACHEABLE_STATUSES = [200, 203, 300, 301, 302, 304, 404, 410];
+    private const array CACHEABLE_STATUSES = [200, 203, 300, 301, 302, 304, 404, 410];
 
     public static function apply(object $controller, string $method, Response $response): void
     {

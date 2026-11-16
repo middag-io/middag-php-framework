@@ -28,7 +28,7 @@ use Middag\Framework\Http\Middleware\VerifyCsrfMiddleware;
  */
 final readonly class CsrfTokenManager
 {
-    private const SESSION_KEY = '_middag_csrf';
+    private const string SESSION_KEY = '_middag_csrf';
 
     public function __construct(
         private SessionInterface $session,

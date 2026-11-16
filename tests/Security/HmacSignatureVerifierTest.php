@@ -29,7 +29,7 @@ use Symfony\Component\Clock\MockClock;
 #[CoversClass(HmacSignatureVerifier::class)]
 final class HmacSignatureVerifierTest extends TestCase
 {
-    private const SECRET = 'whsec_test';
+    private const string SECRET = 'whsec_test';
 
     #[Test]
     public function computesTheKnownHexHmacVector(): void

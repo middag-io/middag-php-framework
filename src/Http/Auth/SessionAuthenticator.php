@@ -31,7 +31,7 @@ final readonly class SessionAuthenticator implements AuthenticatorInterface
     /**
      * Reserved session key holding the `['id' => int, 'attributes' => array]` record.
      */
-    private const SESSION_KEY = '_middag_auth';
+    private const string SESSION_KEY = '_middag_auth';
 
     public function __construct(
         private SessionInterface $session,

@@ -32,7 +32,7 @@ use Symfony\Component\DependencyInjection\Reference;
 #[CoversClass(ServiceProvider::class)]
 final class ServiceProviderDiscoveryTest extends TestCase
 {
-    private const NS = 'Middag\Framework\Tests\Fixture\Discovery\src';
+    private const string NS = 'Middag\Framework\Tests\Fixture\Discovery\src';
 
     public function testRegistersAndAliasesConventionServices(): void
     {

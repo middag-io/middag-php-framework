@@ -468,8 +468,8 @@ final class CommandWorkerTest extends TestCase
 
     private function bus(Closure $onDispatch): MessageBusInterface
     {
-        return new class($onDispatch) implements MessageBusInterface {
-            public function __construct(private readonly Closure $onDispatch) {}
+        return new readonly class($onDispatch) implements MessageBusInterface {
+            public function __construct(private Closure $onDispatch) {}
 
             public function dispatch(object $message, array $stamps = []): Envelope
             {
