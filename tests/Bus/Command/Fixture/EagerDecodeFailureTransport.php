@@ -42,6 +42,7 @@ final class EagerDecodeFailureTransport implements TransportInterface
     public function __construct(
         private readonly int $failures = PHP_INT_MAX,
         private array $queued = [],
+        private readonly ?MessageDecodingFailedException $failure = null,
     ) {}
 
     public function send(Envelope $envelope): Envelope
@@ -54,7 +55,7 @@ final class EagerDecodeFailureTransport implements TransportInterface
         ++$this->getCalls;
 
         if ($this->getCalls <= $this->failures) {
-            throw new MessageDecodingFailedException('poison row rejected by the receiver');
+            throw $this->failure ?? new MessageDecodingFailedException('poison row rejected by the receiver');
         }
 
         $queued = $this->queued;

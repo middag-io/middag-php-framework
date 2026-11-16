@@ -204,10 +204,10 @@ final class CommandWorker
             try {
                 $iterator = self::toIterator($transport->get());
             } catch (MessageDecodingFailedException $messageDecodingFailedException) {
-                $this->logger->error('Discarding a queued message: the transport could not decode it while fetching.', [
-                    'transport' => $transportName,
-                    'exception' => $messageDecodingFailedException,
-                ]);
+                $this->logger->error(
+                    'Discarding a queued message: the transport could not decode it while fetching.',
+                    $this->decodingFailureContext($transportName, $messageDecodingFailedException),
+                );
                 ++$rejected;
 
                 continue;
@@ -243,10 +243,10 @@ final class CommandWorker
 
                 $envelope = $iterator->current();
             } catch (MessageDecodingFailedException $e) {
-                $this->logger->error('Discarding a queued message: the transport could not decode it while iterating.', [
-                    'transport' => $transportName,
-                    'exception' => $e,
-                ]);
+                $this->logger->error(
+                    'Discarding a queued message: the transport could not decode it while iterating.',
+                    $this->decodingFailureContext($transportName, $e),
+                );
 
                 break;
             }
@@ -257,10 +257,10 @@ final class CommandWorker
             try {
                 $iterator->next();
             } catch (MessageDecodingFailedException $e) {
-                $this->logger->error('Discarding a queued message: the transport could not decode the next item while advancing.', [
-                    'transport' => $transportName,
-                    'exception' => $e,
-                ]);
+                $this->logger->error(
+                    'Discarding a queued message: the transport could not decode the next item while advancing.',
+                    $this->decodingFailureContext($transportName, $e),
+                );
 
                 break;
             }
@@ -313,13 +313,46 @@ final class CommandWorker
         ?AttemptStamp $stamp,
         MessageDecodingFailedException $e,
     ): void {
-        $this->logger->error('Discarding a message that failed to decode.', ['transport' => $transportName, 'exception' => $e]);
+        $this->logger->error('Discarding a message that failed to decode.', $this->decodingFailureContext($transportName, $e));
 
         if ($this->attemptStore instanceof AttemptStoreInterface && $stamp instanceof StampInterface) {
             $this->attemptStore->markDead($stamp->getId(), $e);
         }
 
         $transport->reject($envelope);
+    }
+
+    /**
+     * Log context for a decode failure. From symfony/messenger 8.1 the
+     * exception carries the raw queued payload in its public encodedEnvelope,
+     * and a log sink that dumps the exception would write that payload to the
+     * log. The context holds a copy with the message, the code and the
+     * previous exception, under the original class name, never the payload.
+     *
+     * @return array{transport: string, exception: MessageDecodingFailedException, exception_class: class-string}
+     */
+    private function decodingFailureContext(string $transportName, MessageDecodingFailedException $e): array
+    {
+        return [
+            'transport' => $transportName,
+            'exception' => self::withoutPayload($e),
+            'exception_class' => $e::class,
+        ];
+    }
+
+    /**
+     * A previous exception that is itself a decode failure can carry a
+     * payload too, so the chain is copied the same way.
+     */
+    private static function withoutPayload(MessageDecodingFailedException $e): MessageDecodingFailedException
+    {
+        $previous = $e->getPrevious();
+
+        if ($previous instanceof MessageDecodingFailedException) {
+            $previous = self::withoutPayload($previous);
+        }
+
+        return new MessageDecodingFailedException($e->getMessage(), (int) $e->getCode(), $previous);
     }
 
     private function handleFailure(string $transportName, TransportInterface $transport, Envelope $envelope, ?AttemptStamp $stamp, Throwable $e): void
