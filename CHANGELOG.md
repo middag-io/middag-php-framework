@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/middag-io/middag-php-framework/compare/v1.20.0...v1.20.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **http:** read a Retry-After HTTP-date as GMT ([90361d0](https://github.com/middag-io/middag-php-framework/commit/90361d0b9e8147512425cc7a0a470935ab176258))
+
 ## [1.20.0](https://github.com/middag-io/middag-php-framework/compare/v1.19.0...v1.20.0) (2026-11-16)
 
 
