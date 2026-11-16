@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.3](https://github.com/middag-io/middag-php-framework/compare/v1.20.2...v1.20.3) (2026-11-16)
+
+
+### Bug Fixes
+
+* count decode failures that end an iteration in drain() ([c0daae2](https://github.com/middag-io/middag-php-framework/commit/c0daae2f764822b085eae38f424fcdf4f7f90da0))
+
+
+### Documentation
+
+* list the whole `@api` surface in API-STABILITY.md ([b80ec3f](https://github.com/middag-io/middag-php-framework/commit/b80ec3f28cd0e22383addb8718a2f102f8f249d3))
+
 ## [1.20.2](https://github.com/middag-io/middag-php-framework/compare/v1.20.1...v1.20.2) (2026-11-16)
 
 
