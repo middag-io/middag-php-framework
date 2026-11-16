@@ -116,7 +116,7 @@ An adapter is a thin layer that implements the bridge contracts (`BootstrapInter
 
 The framework, the Moodle and WordPress adapters, and `middag-io/ui` are open source under Apache-2.0: the generic plumbing, free, forever.
 
-The governed domain infrastructure that is genuinely hard to get right — reliable event delivery, async jobs with retry and audit, an EAV query engine, multi-tenancy, and licensing — is MIDDAG's proprietary product. It is built on top of this OSS and is opt-in, for when a domain outgrows the basics. The framework never imports the proprietary layer; the dependency only ever points downward.
+The governed domain infrastructure that is genuinely hard to get right — reliable event delivery, async jobs with retry and audit, an EAV query engine and multi-tenancy — is MIDDAG's proprietary product. It is built on top of this OSS and is opt-in, for when a domain outgrows the basics. The framework never imports the proprietary layer; the dependency only ever points downward.
 
 ## Professional services
 
