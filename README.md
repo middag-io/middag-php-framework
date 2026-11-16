@@ -35,7 +35,7 @@ We did not reinvent the wheel. Under the hood it is Symfony (dependency injectio
 
 ## Installation
 
-Requires PHP `^8.3` and the `curl`, `intl`, `json`, `mbstring` and `pdo` extensions. Runs standalone or behind a host adapter.
+Requires PHP `^8.3` (8.3, 8.4 and 8.5) and the `intl`, `json`, `mbstring` and `pdo` extensions; `curl` is recommended for the HTTP client. Every Symfony component it depends on is required as `^7.4 || ^8.1`: PHP 8.3 resolves Symfony 7.4, PHP 8.4 and 8.5 can resolve 8.x. Runs standalone or behind a host adapter.
 
 ```bash
 composer require middag-io/framework
@@ -89,12 +89,12 @@ Generic plumbing, organised by concern (each concern owns its own `Contract/`):
 | Concern | What it does |
 |---|---|
 | **Kernel** | Symfony DI container booted from a `BootstrapInterface`, service auto-discovery, `AbstractModule`, `AbstractFacade`, and a per-instance WordPress-style `HookManager`. |
-| **Http** | PSR-15 `HttpKernel`, `StandaloneKernel`, attribute routing (`#[Route]`), declarative auth (`#[Auth]` with rich `CapabilityRequirement` support), per-route middleware (`#[Middleware]`), `AbstractController` / `AbstractApiController`, and `AbstractFormRequest`. |
+| **Http** | A PSR-15 HTTP kernel built by `HttpKernelFactory`, `StandaloneKernel`, attribute routing (`#[Route]`), declarative auth (`#[Auth]` with rich `CapabilityRequirement` support), per-route middleware (`#[Middleware]`), `AbstractController` / `AbstractApiController`, and `AbstractFormRequest`. |
 | **Inertia** | Full Inertia v3 protocol: lazy (`optional`), deferred (`defer`), merge (`merge` / `deepMerge`), partial reloads and asset versioning. |
-| **Form** | `AbstractForm`, `FormValidator`, a set of field types (text, select, date, file, and more), and an Inertia renderer. |
+| **Form** | `AbstractForm` over the `FormValidatorInterface` contract, a set of field types (text, select, date, file, and more), and an Inertia renderer. |
 | **Persistence** | An immutable `QueryBuilder`, an active-record `Model`, `AbstractRepository` / `AbstractMapper`, and `Page` pagination. |
 | **Database** | `ConnectionAdapterInterface` with a default `PdoConnectionAdapter`, a SQL dialect layer, and a schema builder with migrations. |
-| **Bus** | A command bus over Symfony Messenger (sync, plus async by transport routing), an `InMemoryTransport`, and a `CommandWorker`. |
+| **Bus** | A command bus over Symfony Messenger (sync, plus async by transport routing), an `InMemoryTransport`, a Doctrine transport, and a `CommandWorker` that discards an undecodable message instead of dying on it. |
 | **Logging** | A Monolog-backed `LoggerFactory` per channel, with a `RotatingStreamHandler`. |
 | **Mail** | A `MailerInterface` port with `Mail` / `Address` / `Attachment` value objects (inline `cid:` embeds included). The OSS default `NullMailer` discards; adapters map a `Mail` onto `email_to_user()` / `wp_mail()`. |
 | **Observability** | An `ErrorReporterInterface` port (`NullErrorReporter` default, `SentryErrorReporter` behind a composer `suggest`) plus a `ProfileCollectorInterface` sink that gives bus, hook and query events a single profiling timeline. |
@@ -106,7 +106,7 @@ Full API reference, guides and examples live at **[docs.middag.dev](https://docs
 
 | Target | How |
 |---|---|
-| **Standalone** | Implement `Middag\Framework\Kernel\Contract\BootstrapInterface`, build the container with `ContainerFactory::build()`, and serve through `StandaloneKernel`. |
+| **Standalone** | Implement `Middag\Framework\Kernel\Contract\BootstrapInterface`, build the container with `ContainerFactory::build()`, build the HTTP kernel with `HttpKernelFactory`, and serve through `StandaloneKernel`. |
 | **Moodle** | The OSS [`middag-io/moodle`](https://github.com/middag-io) adapter (`MoodleBootstrap` plus the bridge contracts). |
 | **WordPress** | The OSS [`middag-io/wordpress`](https://github.com/middag-io) adapter (in build-out). |
 
@@ -128,7 +128,10 @@ Adopting the framework, building a custom adapter, or migrating a legacy plugin 
 composer test    # PHPUnit
 composer check   # PHPStan (level 6) + PHP-CS-Fixer + Rector, all dry-run
 composer fix     # auto-fix style and Rector (composer fix:all re-settles formatting afterwards)
+composer lint:php83   # parse every file on a real PHP 8.3 (Docker)
 ```
+
+CI runs the static checks on PHP 8.3, the floor, and the tests on 8.3, 8.4 and 8.5 with the platform pinned to 8.3.0. A `highest` job removes the pin, resolves the highest versions on 8.4 and 8.5 and fails unless Symfony resolved to 8.x.
 
 Git hooks are wired automatically on install; the `commit-msg` hook enforces [Conventional Commits](https://www.conventionalcommits.org/), and releases are cut by [release-please](https://github.com/googleapis/release-please).
 

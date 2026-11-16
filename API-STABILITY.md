@@ -86,7 +86,8 @@ the framework reaches `2.0.0` only with the whole family.
   a feature, a deprecation or a new range; a new Symfony minor to absorb. The
   product owner decides every family major.
 - **Compatibility.** Each family major publishes a compatibility matrix
-  (Symfony, PHP, Moodle and WordPress ranges). Its home is still to be decided.
+  (Symfony, PHP, Moodle and WordPress ranges) on
+  [Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
 
 ## The family window check
 

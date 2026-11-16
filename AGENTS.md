@@ -6,7 +6,7 @@ Claude Code and Codex read this file; there is no `CLAUDE.md` in this repository
 > **Not a file index** (an index breaks on every move). To locate symbols, use Glob/Grep.
 > **The codebase is the source of truth.** Live structure/counts come from `src/`, not from here.
 > For the full technical architecture (pillars, bridge contracts, Eloquent parity, decisions) see
-> [`docs/architecture.md`](docs/architecture.md).
+> the [Architecture](https://docs.middag.dev/framework/explanation/architecture) page on docs.middag.dev.
 
 ## Mental model in 30s
 
@@ -58,7 +58,7 @@ Inside each `src/<Concern>/`, **3 tiers** (a boundary-based rule, expected in ev
 
 **Golden rule:** a subfolder marks *where you extend*, not "a place with ≥2 files". A one-file seam
 is intentional. Each concern owns its own `Contract/` — there is **no** global `Contract/`.
-(Full rule + examples: [`docs/architecture.md`](docs/architecture.md) §3.)
+(Full rule + examples: [Module layout convention](https://docs.middag.dev/framework/reference/module-layout-convention).)
 
 ### Concern purpose map (durable — no file names)
 
@@ -89,8 +89,8 @@ are orthogonal to the 3-tier and compose with it. Decide per-lib when the first 
 ## Bridge contracts and locked decisions
 
 The bridge contracts adapters implement (with their OSS defaults) live in
-[`docs/architecture.md`](docs/architecture.md) §5; §8 indexes the original D-handles against the
-decision records. In short: the framework defines interfaces and adapters implement them; the
+[Bridge contracts](https://docs.middag.dev/framework/reference/bridge-contracts); the locked decisions are indexed on the
+[Architecture](https://docs.middag.dev/framework/explanation/architecture) page. In short: the framework defines interfaces and adapters implement them; the
 QueryBuilder is immutable (execution is the adapter's, via `ConnectionAdapterInterface`); there is one
 sync bus + async via Messenger.
 
@@ -146,5 +146,6 @@ vocabulary live downstream:
 The framework is **public on the `1.x` line** (Apache-2.0).
 The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut. It crosses
 `2.0.0` with the whole `middag-php-*` version family (shared MAJOR.MINOR, fix-only PATCH), on a cut
-the product owner decides — the policy is [`API-STABILITY.md`](API-STABILITY.md). Technical documentation lives in **`docs/`**
-(`architecture.md`, …) and is published at **docs.middag.dev**.
+the product owner decides — the policy is [`API-STABILITY.md`](API-STABILITY.md). Technical documentation lives on
+**docs.middag.dev** (`docs-middag-dev`, `docs/framework/`); this repository keeps only the README,
+`API-STABILITY.md` and `docs/decisions/`, and every other file under `docs/` is a one-line pointer.

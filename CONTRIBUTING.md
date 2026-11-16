@@ -157,8 +157,8 @@ default implementation in-tree, so the framework runs with no adapter at all
 
 The full technical reference — the concern map, the 3-tier layout rule, the
 bridge contracts, the Active-Record / Eloquent compatibility matrix, and the
-known OSS boundaries — lives in [`docs/architecture.md`](https://github.com/middag-io/middag-php-framework/blob/main/docs/architecture.md)
-and is published at [docs.middag.dev](https://docs.middag.dev).
+known OSS boundaries — lives on [docs.middag.dev](https://docs.middag.dev/framework/explanation/architecture).
+This repository keeps no second copy of it.
 
 ## Code of conduct
 
