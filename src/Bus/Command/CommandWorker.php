@@ -40,8 +40,8 @@ use Throwable;
  * Call drain() from a long-lived process (systemd/supervisor) or a periodic
  * OS/host cron invocation; symfony/console (suggested) wraps it as a
  * `messenger:consume`-style CLI worker. Each call makes exactly one pass over
- * every transport's transport — draining it until empty, a stop condition trips,
- * or a decode failure forces that transport to stop early — then returns. A
+ * every transport — draining it until empty, a stop condition trips, or a
+ * decode failure forces that transport to stop early — then returns. A
  * long-lived caller simply calls drain() again in its own loop; that is also
  * what makes drain() safe to call from a one-shot cron tick.
  *
@@ -65,7 +65,11 @@ use Throwable;
  * from the transport's own `get()`: from the call itself, when a receiver
  * decodes eagerly and rethrows (symfony/messenger 7.4 Doctrine and Redis),
  * and from its iterator, which can throw *while advancing to the next item*
- * rather than only from the handler.
+ * rather than only from the handler. A failure from the get() call means the
+ * receiver already rejected that row: the worker counts it in drain()'s
+ * result and calls get() once more on that transport within the same pass,
+ * so one poison row neither hides the readable rows behind it nor makes a
+ * busy transport read as empty.
  * Iterating a `foreach` gives no chance to catch that: the exception surfaces
  * between loop bodies, not inside one. `drain()` therefore walks each transport's
  * iterator by hand (`valid()`/`current()`/`next()`) so a poison message can
@@ -78,6 +82,12 @@ use Throwable;
  */
 final class CommandWorker
 {
+    /**
+     * get() calls per transport and pass: the first one, plus one retry after
+     * a fetch-time decode failure.
+     */
+    private const int FETCH_ATTEMPTS_PER_PASS = 2;
+
     /** @var array<string, TransportInterface> transport name => transport, insertion order */
     private readonly array $transports;
 
@@ -126,7 +136,11 @@ final class CommandWorker
     /**
      * Drain every configured transport once: process each transport's currently
      * available messages until it is exhausted, a stop condition trips, or a
-     * decode failure forces that transport to stop early for this pass.
+     * decode failure forces that transport to stop early for this pass. When
+     * get() itself throws a decode failure, the transport has already
+     * rejected that row: it counts as processed, and get() is called once more
+     * on that transport (unless a stop condition trips first); a second
+     * failure stops that transport for this pass.
      *
      * Once a SIGTERM/SIGINT has been observed, {@see self::isStopRequested()}
      * stays true for the rest of this worker's lifetime — drain() does NOT
@@ -134,8 +148,13 @@ final class CommandWorker
      * drain() after a stop request reliably gets 0 back instead of resuming
      * work a shutdown signal already asked it to stop.
      *
-     * @return int number of messages this call processed (handled or failed),
-     *             across every transport — not just the ones successfully acked
+     * @return int number of messages this call processed (handled, failed, or
+     *             rejected by the transport while fetching), across every
+     *             transport — not just the ones successfully acked. A row
+     *             rejected at fetch time is never reported as 0, which a
+     *             supervising loop would read as an empty queue.
+     *             A decode failure while iterating or advancing an iterator
+     *             is not counted: no row is known to have been consumed.
      */
     public function drain(): int
     {
@@ -166,24 +185,47 @@ final class CommandWorker
     }
 
     /**
-     * @return int messages processed on this transport during this pass
+     * @return int messages processed on this transport during this pass,
+     *             counting each row the transport rejected while fetching
      */
     private function drainTransport(string $transportName, TransportInterface $transport, int $processedSoFar, float $startedAt): int
     {
-        // A receiver that decodes eagerly (symfony/messenger 7.4 Doctrine and
-        // Redis) rejects the unreadable row and rethrows from get() itself,
-        // before any iterator exists.
-        try {
-            $iterator = self::toIterator($transport->get());
-        } catch (MessageDecodingFailedException $messageDecodingFailedException) {
-            $this->logger->error('Discarding a queued message: the transport could not decode it while fetching.', [
-                'transport' => $transportName,
-                'exception' => $messageDecodingFailedException,
-            ]);
+        $rejected = 0;
 
-            return 0;
+        for ($attempt = 1; $attempt <= self::FETCH_ATTEMPTS_PER_PASS; ++$attempt) {
+            if ($attempt > 1 && $this->shouldStop($processedSoFar + $rejected, $startedAt)) {
+                break;
+            }
+
+            // A receiver that decodes eagerly (symfony/messenger 7.4 Doctrine
+            // and Redis) rejects the unreadable row and rethrows from get()
+            // itself, before any iterator exists. That row was consumed, so
+            // it counts, and the next get() can still find readable rows.
+            try {
+                $iterator = self::toIterator($transport->get());
+            } catch (MessageDecodingFailedException $messageDecodingFailedException) {
+                $this->logger->error('Discarding a queued message: the transport could not decode it while fetching.', [
+                    'transport' => $transportName,
+                    'exception' => $messageDecodingFailedException,
+                ]);
+                ++$rejected;
+
+                continue;
+            }
+
+            return $rejected + $this->drainIterator($transportName, $transport, $iterator, $processedSoFar + $rejected, $startedAt);
         }
 
+        return $rejected;
+    }
+
+    /**
+     * @param Iterator<int, Envelope> $iterator
+     *
+     * @return int messages processed from this iterator
+     */
+    private function drainIterator(string $transportName, TransportInterface $transport, Iterator $iterator, int $processedSoFar, float $startedAt): int
+    {
         $processed = 0;
 
         while (true) {

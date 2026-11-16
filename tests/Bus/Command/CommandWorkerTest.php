@@ -296,10 +296,50 @@ final class CommandWorkerTest extends TestCase
 
         $processed = $worker->drain();
 
-        self::assertSame(1, $processed);
-        self::assertSame(1, $poisoned->getCalls);
+        self::assertSame(3, $processed, 'both rejected rows count, then the healthy transport drains');
+        self::assertSame(2, $poisoned->getCalls, 'one retry within the pass, then the transport stops');
         self::assertSame(['after'], $handled);
-        self::assertNotEmpty($logger->messagesAtLevel('error'));
+        self::assertCount(2, $logger->messagesAtLevel('error'));
+    }
+
+    /**
+     * A row rejected at fetch time was consumed by the receiver: reporting 0
+     * would let a supervising loop read a busy transport as empty, and
+     * stopping the transport would leave the readable rows behind it for the
+     * next pass.
+     */
+    #[Test]
+    public function aDecodingFailureFromGetCountsTheRejectedRowAndRetriesGetOnce(): void
+    {
+        $transport = new EagerDecodeFailureTransport(failures: 1, queued: [
+            new Envelope(new RecordCommand('first')),
+            new Envelope(new RecordCommand('second')),
+        ]);
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), logger: $logger);
+
+        $processed = $worker->drain();
+
+        self::assertSame(3, $processed, 'the rejected row plus the two read on the retry');
+        self::assertSame(2, $transport->getCalls);
+        self::assertSame(['first', 'second'], $handled);
+        self::assertCount(2, $transport->acked);
+        self::assertCount(1, $logger->messagesAtLevel('error'));
+    }
+
+    #[Test]
+    public function theRejectedRowCountsTowardTheMessageLimitBeforeAnyRetry(): void
+    {
+        $transport = new EagerDecodeFailureTransport(failures: 1, queued: [new Envelope(new RecordCommand('first'))]);
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), limits: new WorkerLimits(messageLimit: 1));
+
+        self::assertSame(1, $worker->drain());
+        self::assertSame(1, $transport->getCalls, 'the limit tripped, so get() is not called again');
+        self::assertSame([], $handled);
     }
 
     /**
