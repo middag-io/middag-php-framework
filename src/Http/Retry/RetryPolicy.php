@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Http\Retry;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use InvalidArgumentException;
 use Middag\Framework\Http\Contract\RetryPolicyInterface;
 use Psr\Clock\ClockInterface;
@@ -35,6 +36,9 @@ use Symfony\Component\Clock\NativeClock;
  */
 final readonly class RetryPolicy implements RetryPolicyInterface
 {
+    /** The IMF-fixdate form of an RFC 9110 HTTP-date, always in GMT. */
+    private const string HTTP_DATE_FORMAT = 'D, d M Y H:i:s \G\M\T';
+
     private ClockInterface $clock;
 
     /**
@@ -112,7 +116,9 @@ final readonly class RetryPolicy implements RetryPolicyInterface
             return (int) $trimmed * 1000;
         }
 
-        $date = DateTimeImmutable::createFromFormat(DateTimeImmutable::RFC7231, $trimmed);
+        // An HTTP-date is always GMT. The literal "GMT" in the format sets no
+        // timezone, so the parse is pinned to UTC instead of the PHP default.
+        $date = DateTimeImmutable::createFromFormat(self::HTTP_DATE_FORMAT, $trimmed, new DateTimeZone('UTC'));
         if ($date === false) {
             return null;
         }

@@ -110,6 +110,23 @@ final class RetryPolicyTest extends TestCase
     }
 
     #[Test]
+    public function retryAfterAsHttpDateIsReadAsGmtWhateverTheDefaultTimezone(): void
+    {
+        $now = 1_700_000_000;
+        $policy = new RetryPolicy(clock: new MockClock('@' . $now));
+        $future = gmdate('D, d M Y H:i:s \G\M\T', $now + 30);
+        $timezone = date_default_timezone_get();
+
+        try {
+            date_default_timezone_set('America/Sao_Paulo');
+
+            self::assertSame(30_000, $policy->nextDelayMs(1, 503, $future));
+        } finally {
+            date_default_timezone_set($timezone);
+        }
+    }
+
+    #[Test]
     public function retryAfterInThePastClampsToZero(): void
     {
         $now = 1_700_000_000;
