@@ -57,11 +57,15 @@ use Throwable;
  * constructing a plain ack/reject/log worker with no retry bookkeeping.
  *
  * A {@see MessageDecodingFailedException} — an unreadable payload — is
- * handled wherever it actually surfaces: from the handler (via
- * {@see MessageBusInterface::dispatch()}, where it is always treated as
- * non-retryable and sent straight to dead-letter when a store+id are
- * available) and from the transport's own `get()` iterator, which can throw
- * *while advancing to the next item* rather than only from the handler.
+ * handled wherever it actually surfaces, and is never retried: from the
+ * handler (via {@see MessageBusInterface::dispatch()}); as the message of a
+ * received Envelope, the form a symfony/messenger 8.1 receiver yields for an
+ * unreadable row (never dispatched); in both cases sent straight to
+ * dead-letter when a store+id are available, then rejected. It also surfaces
+ * from the transport's own `get()`: from the call itself, when a receiver
+ * decodes eagerly and rethrows (symfony/messenger 7.4 Doctrine and Redis),
+ * and from its iterator, which can throw *while advancing to the next item*
+ * rather than only from the handler.
  * Iterating a `foreach` gives no chance to catch that: the exception surfaces
  * between loop bodies, not inside one. `drain()` therefore walks each transport's
  * iterator by hand (`valid()`/`current()`/`next()`) so a poison message can
@@ -166,7 +170,20 @@ final class CommandWorker
      */
     private function drainTransport(string $transportName, TransportInterface $transport, int $processedSoFar, float $startedAt): int
     {
-        $iterator = self::toIterator($transport->get());
+        // A receiver that decodes eagerly (symfony/messenger 7.4 Doctrine and
+        // Redis) rejects the unreadable row and rethrows from get() itself,
+        // before any iterator exists.
+        try {
+            $iterator = self::toIterator($transport->get());
+        } catch (MessageDecodingFailedException $messageDecodingFailedException) {
+            $this->logger->error('Discarding a queued message: the transport could not decode it while fetching.', [
+                'transport' => $transportName,
+                'exception' => $messageDecodingFailedException,
+            ]);
+
+            return 0;
+        }
+
         $processed = 0;
 
         while (true) {
@@ -213,17 +230,21 @@ final class CommandWorker
     private function processEnvelope(string $transportName, TransportInterface $transport, Envelope $envelope): void
     {
         $stamp = $envelope->last(AttemptStamp::class);
+        $message = $envelope->getMessage();
+
+        // From symfony/messenger 8.1 a receiver yields an unreadable row as an
+        // Envelope whose message is the decoding failure itself. It is never a
+        // command: dispatching it would treat it as an ordinary handler failure.
+        if ($message instanceof MessageDecodingFailedException) {
+            $this->discardUndecodable($transportName, $transport, $envelope, $stamp, $message);
+
+            return;
+        }
 
         try {
             $this->bus->dispatch($envelope->with(new ReceivedStamp($transportName)));
         } catch (MessageDecodingFailedException $e) {
-            $this->logger->error('Discarding a message that failed to decode.', ['transport' => $transportName, 'exception' => $e]);
-
-            if ($this->attemptStore instanceof AttemptStoreInterface && $stamp instanceof StampInterface) {
-                $this->attemptStore->markDead($stamp->getId(), $e);
-            }
-
-            $transport->reject($envelope);
+            $this->discardUndecodable($transportName, $transport, $envelope, $stamp, $e);
 
             return;
         } catch (Throwable $e) {
@@ -237,6 +258,26 @@ final class CommandWorker
         }
 
         $transport->ack($envelope);
+    }
+
+    /**
+     * An unreadable payload is never retried: the row is marked dead when there
+     * is one to update, and the envelope is rejected.
+     */
+    private function discardUndecodable(
+        string $transportName,
+        TransportInterface $transport,
+        Envelope $envelope,
+        ?AttemptStamp $stamp,
+        MessageDecodingFailedException $e,
+    ): void {
+        $this->logger->error('Discarding a message that failed to decode.', ['transport' => $transportName, 'exception' => $e]);
+
+        if ($this->attemptStore instanceof AttemptStoreInterface && $stamp instanceof StampInterface) {
+            $this->attemptStore->markDead($stamp->getId(), $e);
+        }
+
+        $transport->reject($envelope);
     }
 
     private function handleFailure(string $transportName, TransportInterface $transport, Envelope $envelope, ?AttemptStamp $stamp, Throwable $e): void
