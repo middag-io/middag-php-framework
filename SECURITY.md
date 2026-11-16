@@ -4,8 +4,10 @@
 
 The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
 
-The versioning policy (including how breaking changes ship during `1.x`) is
-documented in [`API-STABILITY.md`](API-STABILITY.md).
+Support starts at `2.0.0`, the first supported release. The support rules of
+the library family are on
+[Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility);
+the public surface is listed in [`API-STABILITY.md`](API-STABILITY.md).
 
 ## Reporting a Vulnerability
 
