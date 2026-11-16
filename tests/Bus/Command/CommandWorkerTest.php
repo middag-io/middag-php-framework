@@ -21,6 +21,7 @@ use Middag\Framework\Bus\Contract\MessageBusInterface;
 use Middag\Framework\Bus\Retry\AttemptStamp;
 use Middag\Framework\Bus\Transport\InMemoryTransport;
 use Middag\Framework\Bus\Transport\TransportLocator;
+use Middag\Framework\Tests\Bus\Command\Fixture\EagerDecodeFailureTransport;
 use Middag\Framework\Tests\Bus\Command\Fixture\EncodedRowTransport;
 use Middag\Framework\Tests\Bus\Command\Fixture\FixedRetryPolicy;
 use Middag\Framework\Tests\Bus\Command\Fixture\RecordingHeartbeat;
@@ -270,6 +271,73 @@ final class CommandWorkerTest extends TestCase
         self::assertNotEmpty($logger->messagesAtLevel('error'));
     }
 
+    /**
+     * framework#108: the symfony/messenger 7.4 Doctrine and Redis receivers
+     * decode eagerly inside get() and rethrow after rejecting the row, so the
+     * failure surfaces from the get() call itself, before any iterator exists.
+     */
+    #[Test]
+    public function aDecodingFailureThrownByTheGetCallItselfIsCaughtAndTheNextTransportStillDrains(): void
+    {
+        $poisoned = new EagerDecodeFailureTransport();
+        $healthy = new InMemoryTransport();
+        $healthy->send(new Envelope(new RecordCommand('after')));
+
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker(
+            $poisoned,
+            $this->recordingBus($handled),
+            logger: $logger,
+            transportLocator: new TransportLocator(['reports' => $healthy]),
+            additionalTransportNames: ['reports'],
+        );
+
+        $processed = $worker->drain();
+
+        self::assertSame(1, $processed);
+        self::assertSame(1, $poisoned->getCalls);
+        self::assertSame(['after'], $handled);
+        self::assertNotEmpty($logger->messagesAtLevel('error'));
+    }
+
+    /**
+     * framework#108: from symfony/messenger 8.1 the same receivers no longer
+     * throw; they yield an Envelope whose message is the
+     * MessageDecodingFailedException itself. Dispatching it would run it
+     * through the handler resolution as an ordinary message and retry it.
+     */
+    #[Test]
+    public function aWrappedDecodingFailureIsNeverDispatchedAndItsRowIsMarkedDead(): void
+    {
+        $transport = new InMemoryTransport();
+        $item = new FakeAttemptable(attempts: 1, maxAttempts: 3);
+        $transport->send((new Envelope(new MessageDecodingFailedException('poison row')))->with(new AttemptStamp(11, $item)));
+        $transport->send(new Envelope(new RecordCommand('after')));
+
+        $store = new InMemoryAttemptStore();
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker(
+            $transport,
+            $this->recordingBus($handled),
+            retryPolicy: new FixedRetryPolicy(retryable: true),
+            attemptStore: $store,
+            logger: $logger,
+        );
+
+        $processed = $worker->drain();
+
+        self::assertSame(2, $processed);
+        self::assertSame(['after'], $handled, 'the wrapped failure never reaches the bus');
+        self::assertSame([11], $store->dead);
+        self::assertSame([], $store->failures, 'never goes through the retry policy');
+        self::assertSame([], iterator_to_array($transport->get()), 'rejected, not left in the queue');
+        self::assertNotEmpty($logger->messagesAtLevel('error'));
+    }
+
     #[Test]
     public function messageLimitStopsDrainingAfterTheConfiguredCount(): void
     {
@@ -468,8 +536,8 @@ final class CommandWorkerTest extends TestCase
 
     private function bus(Closure $onDispatch): MessageBusInterface
     {
-        return new class($onDispatch) implements MessageBusInterface {
-            public function __construct(private readonly Closure $onDispatch) {}
+        return new readonly class($onDispatch) implements MessageBusInterface {
+            public function __construct(private Closure $onDispatch) {}
 
             public function dispatch(object $message, array $stamps = []): Envelope
             {

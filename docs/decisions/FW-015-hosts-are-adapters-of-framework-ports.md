@@ -12,7 +12,7 @@ supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [docs/architecture.md, docs/bootstrap.md]
+  docs: [docs-middag-dev:docs/framework/reference/bridge-contracts.md, docs-middag-dev:docs/framework/reference/bootstrap-contracts.md]
 ---
 
 # FW-015: Hosts are ADAPTERS of framework ports
@@ -49,8 +49,8 @@ Every host capability the framework needs is a port: an interface the framework 
 | Decision clause | Verification | State |
 |---|---|---|
 | No adapter directory and no host namespace in `src/` | test `tests/Architecture/NoHostAdapterDirectoryTest.php`; deptrac `Host` layer in `composer check:portability` | coded |
-| Every port has an OSS default; port-by-host matrix | doc `docs/architecture.md` §5; doc `docs-middag-dev:docs/framework/reference/bridge-contracts.md` | coded |
-| Bootstrap contracts an adapter implements | doc `docs/bootstrap.md`; doc `docs-middag-dev:docs/framework/reference/bootstrap-contracts.md` | coded |
+| Every port has an OSS default; port-by-host matrix | doc `docs-middag-dev:docs/framework/reference/bridge-contracts.md` | coded |
+| Bootstrap contracts an adapter implements | doc `docs-middag-dev:docs/framework/reference/bootstrap-contracts.md` | coded |
 | The framework runs standalone | tests `tests/Runtime/StandaloneKernelTest.php`, `tests/Http/StandaloneKernelTest.php` | coded |
 | Standalone runtime reference | doc `docs-middag-dev:docs/framework/reference/standalone-runtime.md` | planned |
 | Logging and observability ports | doc `docs-middag-dev:docs/framework/reference/logging-and-observability.md` | planned |

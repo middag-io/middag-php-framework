@@ -34,12 +34,12 @@ final class UuidTest extends TestCase
     /**
      * A canonical v4 literal, used wherever the concrete value is irrelevant.
      */
-    private const V4 = '9fe30b4e-7058-4eba-bff9-5337d64b0460';
+    private const string V4 = '9fe30b4e-7058-4eba-bff9-5337d64b0460';
 
     /**
      * How many v7 values the monotonicity test generates in a row.
      */
-    private const MONOTONIC_SAMPLE = 50;
+    private const int MONOTONIC_SAMPLE = 50;
 
     public function testV4MintsAParsableVersion4Uuid(): void
     {

@@ -12,7 +12,7 @@ supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [docs/architecture.md]
+  docs: [docs-middag-dev:docs/framework/explanation/architecture.md]
 ---
 
 # FW-011: Why a separate FRAMEWORK package exists
@@ -64,5 +64,5 @@ their real floor.
 | No host namespace or host global in `src/` | deptrac `Host` layer and `bin/portability-scan.php`, run by `composer check:portability` | coded |
 | No proprietary or unknown dependency | deptrac `--fail-on-uncovered` in `composer check:portability` | coded |
 | Zero violations, no allowlist | `composer check:portability` in CI (`composer check`) | coded |
-| Dependency direction across the ecosystem | doc `docs/architecture.md` §1 | coded |
+| Dependency direction across the ecosystem | doc `docs-middag-dev:docs/framework/explanation/architecture.md` (The four pillars) | coded |
 | Historical portability audit | doc `docs-middag-dev:docs/framework/reference/portability-audit-historical.md` | coded |

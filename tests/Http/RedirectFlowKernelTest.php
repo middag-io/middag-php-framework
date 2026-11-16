@@ -240,10 +240,10 @@ final class RedirectFlowKernelTest extends TestCase
 
     private function container(?FlashBag $flash, ?TranslatorInterface $translator = null): ContainerInterface
     {
-        return new class($flash, $translator) implements ContainerInterface {
+        return new readonly class($flash, $translator) implements ContainerInterface {
             public function __construct(
-                private readonly ?FlashBag $flash,
-                private readonly ?TranslatorInterface $translator,
+                private ?FlashBag $flash,
+                private ?TranslatorInterface $translator,
             ) {}
 
             public function get(string $id): mixed

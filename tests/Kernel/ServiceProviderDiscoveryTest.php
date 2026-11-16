@@ -12,9 +12,11 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Kernel;
 
+use Middag\Framework\Form\Contract\FormValidatorInterface;
 use Middag\Framework\Form\FormValidator;
 use Middag\Framework\Kernel\ServiceProvider;
 use Middag\Framework\Tests\Fixture\Discovery\DiscoveryServiceProvider;
+use Middag\Framework\Tests\Kernel\Fixture\HostFormValidator;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\FallbackTranslator;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -32,7 +34,7 @@ use Symfony\Component\DependencyInjection\Reference;
 #[CoversClass(ServiceProvider::class)]
 final class ServiceProviderDiscoveryTest extends TestCase
 {
-    private const NS = 'Middag\Framework\Tests\Fixture\Discovery\src';
+    private const string NS = 'Middag\Framework\Tests\Fixture\Discovery\src';
 
     public function testRegistersAndAliasesConventionServices(): void
     {
@@ -86,6 +88,25 @@ final class ServiceProviderDiscoveryTest extends TestCase
         $arguments = $container->getDefinition(FormValidator::class)->getArguments();
         self::assertCount(2, $arguments);
         self::assertEquals(new Reference(TranslatorInterface::class), $arguments[1]);
+    }
+
+    public function testFormValidatorInterfaceResolvesToTheDefaultValidator(): void
+    {
+        $container = $this->discover();
+
+        self::assertTrue($container->hasAlias(FormValidatorInterface::class));
+        self::assertSame(FormValidator::class, (string) $container->getAlias(FormValidatorInterface::class));
+    }
+
+    public function testAFormValidatorInterfaceBoundByTheHostIsKept(): void
+    {
+        $container = new ContainerBuilder();
+        $container->register(FormValidatorInterface::class, HostFormValidator::class)->setPublic(true);
+
+        DiscoveryServiceProvider::register($container, __DIR__ . '/../Fixture/Discovery');
+
+        self::assertFalse($container->hasAlias(FormValidatorInterface::class));
+        self::assertSame(HostFormValidator::class, $container->getDefinition(FormValidatorInterface::class)->getClass());
     }
 
     private function discover(): ContainerBuilder

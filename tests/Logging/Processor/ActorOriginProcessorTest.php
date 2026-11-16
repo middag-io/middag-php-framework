@@ -76,8 +76,8 @@ final class ActorOriginProcessorTest extends TestCase
 
     private function actorResolver(string $value): ActorResolverInterface
     {
-        return new class($value) implements ActorResolverInterface {
-            public function __construct(private readonly string $value) {}
+        return new readonly class($value) implements ActorResolverInterface {
+            public function __construct(private string $value) {}
 
             public function resolve(): string
             {
@@ -88,8 +88,8 @@ final class ActorOriginProcessorTest extends TestCase
 
     private function originResolver(string $value): OriginResolverInterface
     {
-        return new class($value) implements OriginResolverInterface {
-            public function __construct(private readonly string $value) {}
+        return new readonly class($value) implements OriginResolverInterface {
+            public function __construct(private string $value) {}
 
             public function resolve(): string
             {

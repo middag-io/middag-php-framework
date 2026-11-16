@@ -12,7 +12,7 @@ supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [docs/architecture.md]
+  docs: [docs-middag-dev:docs/framework/explanation/architecture.md]
 ---
 
 # FW-016: Static state as a bounded exception
@@ -52,5 +52,5 @@ Every static slot has a seam to reset or override it. A consumer whose host runs
 |---|---|---|
 | The host-identity registry is a boot-time slot that can be read safely when unset | test `tests/Kernel/HostContextTest.php` | coded |
 | The hook registry is per instance | test `tests/Kernel/Manager/HookManagerTest.php` (`testInstancesDoNotShareState`) | coded |
-| The list of static slots and their reset or override seams | doc `docs/architecture.md` §9 (Bounded statics) | coded |
+| The list of static slots and their reset or override seams | doc `docs-middag-dev:docs/framework/explanation/architecture.md` (Bounded statics) | coded |
 | No facade use inside domain code | static-analysis rule | planned |

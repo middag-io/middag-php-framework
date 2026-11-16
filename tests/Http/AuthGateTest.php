@@ -140,8 +140,8 @@ final class AuthGateTest extends TestCase
 
     private function container(?AuthenticatorInterface $authenticator): ContainerInterface
     {
-        return new class($authenticator) implements ContainerInterface {
-            public function __construct(private readonly ?AuthenticatorInterface $authenticator) {}
+        return new readonly class($authenticator) implements ContainerInterface {
+            public function __construct(private ?AuthenticatorInterface $authenticator) {}
 
             public function get(string $id): mixed
             {

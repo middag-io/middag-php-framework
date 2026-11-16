@@ -31,7 +31,7 @@ require_once __DIR__ . '/Fixture/fatal_error_handler_functions.php';
 final class FatalErrorHandlerTest extends TestCase
 {
     /** @var array{type: int, message: string, file: string, line: int} */
-    private const ERROR = [
+    private const array ERROR = [
         'type' => E_ERROR,
         'message' => 'Allowed memory size exhausted',
         'file' => '/app/Foo.php',

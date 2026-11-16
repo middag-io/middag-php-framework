@@ -19,7 +19,7 @@ workflow, coding standards, and quality pipeline the project expects.
   PHP-CS-Fixer (`.php-cs-fixer.dist.php`). `camelCase` for methods and
   properties, `PascalCase` for classes.
 - **PSR-4**: the namespace mirrors the path — `Middag\Framework\<Concern>\...`.
-- Explicit types on every signature (parameters and return). Target PHP `^8.2`;
+- Explicit types on every signature (parameters and return). Target PHP `^8.3`;
   use enums, `readonly`, and `final` where they fit.
 - Symbols are imported with `use` (the fixer's `global_namespace_import` is on);
   avoid inline FQCN when a `use` already exists.
@@ -157,8 +157,8 @@ default implementation in-tree, so the framework runs with no adapter at all
 
 The full technical reference — the concern map, the 3-tier layout rule, the
 bridge contracts, the Active-Record / Eloquent compatibility matrix, and the
-known OSS boundaries — lives in [`docs/architecture.md`](https://github.com/middag-io/middag-php-framework/blob/main/docs/architecture.md)
-and is published at [docs.middag.dev](https://docs.middag.dev).
+known OSS boundaries — lives on [docs.middag.dev](https://docs.middag.dev/framework/explanation/architecture).
+This repository keeps no second copy of it.
 
 ## Code of conduct
 

@@ -423,9 +423,9 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
      */
     private function fetchingConnection(?array $row): ConnectionInterface
     {
-        return new class($row) implements ConnectionInterface {
+        return new readonly class($row) implements ConnectionInterface {
             /** @param null|array<string, mixed> $row */
-            public function __construct(private readonly ?array $row) {}
+            public function __construct(private ?array $row) {}
 
             public function execute(string $sql, array $params = []): int
             {

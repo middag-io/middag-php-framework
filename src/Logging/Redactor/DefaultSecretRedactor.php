@@ -28,14 +28,14 @@ use Middag\Framework\Logging\Contract\SecretRedactorInterface;
  */
 final readonly class DefaultSecretRedactor implements SecretRedactorInterface
 {
-    public const REDACTED = '[REDACTED]';
+    public const string REDACTED = '[REDACTED]';
 
     /**
      * Built-in sensitive key fragments (lower-case, matched as substrings).
      *
      * @var list<string>
      */
-    private const DEFAULT_KEYS = [
+    private const array DEFAULT_KEYS = [
         'password',
         'passwd',
         'pwd',

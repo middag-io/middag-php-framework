@@ -23,6 +23,7 @@ use Middag\Framework\Bus\Schedule\ScheduleRunner;
 use Middag\Framework\Bus\Transport\InMemoryTransport;
 use Middag\Framework\Bus\Transport\TransportLocator;
 use Middag\Framework\Form\ConditionEvaluator;
+use Middag\Framework\Form\Contract\FormValidatorInterface;
 use Middag\Framework\Form\FormValidator;
 use Middag\Framework\Form\Renderer\InertiaFieldMapper;
 use Middag\Framework\Form\Renderer\InertiaRenderer;
@@ -200,6 +201,13 @@ class ServiceProvider
 
             $container->register(FormValidator::class, FormValidator::class)
                 ->setArguments($arguments)
+                ->setPublic(true);
+        }
+
+        // The @api contract every AbstractForm constructor takes; a host that
+        // bound its own validator before discovery keeps it.
+        if (!$container->has(FormValidatorInterface::class)) {
+            $container->setAlias(FormValidatorInterface::class, FormValidator::class)
                 ->setPublic(true);
         }
 

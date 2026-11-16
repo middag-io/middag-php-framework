@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Form;
 
 use Middag\Framework\Form\AbstractForm;
 use Middag\Framework\Form\ConditionEvaluator;
+use Middag\Framework\Form\Contract\FormValidatorInterface;
 use Middag\Framework\Form\FieldFactory;
 use Middag\Framework\Form\FormValidator;
 use Middag\Ui\Form\Contract\FieldInterface;
@@ -84,6 +85,35 @@ final class AbstractFormTest extends TestCase
         self::assertSame([], $form->errors());
         self::assertTrue($form->isSubmittedAndValid());
         self::assertSame(['title' => 'A valid title'], $form->validated());
+    }
+
+    public function testValidateDelegatesToAnyFormValidatorInterfaceImplementation(): void
+    {
+        $validator = new class implements FormValidatorInterface {
+            /** @var list<array<string, mixed>> */
+            public array $seen = [];
+
+            public function validate(array $schema, array $values): array
+            {
+                $this->seen[] = $values;
+
+                return ['title' => 'rejected by the host validator'];
+            }
+        };
+
+        $form = new class($validator) extends AbstractForm {
+            public function schema(): array
+            {
+                return [FieldFactory::text('title')];
+            }
+        };
+
+        $form->hydrate(['title' => 'anything']);
+        $form->validate();
+
+        self::assertSame([['title' => 'anything']], $validator->seen);
+        self::assertSame(['title' => 'rejected by the host validator'], $form->errors());
+        self::assertFalse($form->isSubmittedAndValid());
     }
 
     private function form(): FormInterface

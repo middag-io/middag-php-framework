@@ -92,9 +92,9 @@ final class EntitySourceRegistryTest extends TestCase
      */
     private function source(array $rows): EntitySourceInterface
     {
-        return new class($rows) implements EntitySourceInterface {
+        return new readonly class($rows) implements EntitySourceInterface {
             /** @param array<int, array{value: mixed, label: string}> $rows */
-            public function __construct(private readonly array $rows) {}
+            public function __construct(private array $rows) {}
 
             public function resolve(string $search = '', int $limit = 20): array
             {

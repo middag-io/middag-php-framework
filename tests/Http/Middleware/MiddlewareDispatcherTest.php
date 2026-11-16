@@ -83,8 +83,8 @@ final class MiddlewareDispatcherTest extends TestCase
 
     private function tag(string $label): MiddlewareInterface
     {
-        return new class($label) implements MiddlewareInterface {
-            public function __construct(private readonly string $label) {}
+        return new readonly class($label) implements MiddlewareInterface {
+            public function __construct(private string $label) {}
 
             public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
             {
@@ -98,8 +98,8 @@ final class MiddlewareDispatcherTest extends TestCase
 
     private function kernel(string $body): RequestHandlerInterface
     {
-        return new class($body) implements RequestHandlerInterface {
-            public function __construct(private readonly string $body) {}
+        return new readonly class($body) implements RequestHandlerInterface {
+            public function __construct(private string $body) {}
 
             public function handle(ServerRequestInterface $request): ResponseInterface
             {

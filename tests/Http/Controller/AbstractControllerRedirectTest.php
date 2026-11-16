@@ -116,10 +116,10 @@ final class AbstractControllerRedirectTest extends TestCase
 
     private function container(?UrlGeneratorInterface $urlGenerator = null, ?FlashBag $flash = null): ContainerInterface
     {
-        return new class($urlGenerator, $flash) implements ContainerInterface {
+        return new readonly class($urlGenerator, $flash) implements ContainerInterface {
             public function __construct(
-                private readonly ?UrlGeneratorInterface $urlGenerator,
-                private readonly ?FlashBag $flash,
+                private ?UrlGeneratorInterface $urlGenerator,
+                private ?FlashBag $flash,
             ) {}
 
             public function get(string $id): mixed

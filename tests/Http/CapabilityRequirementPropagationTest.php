@@ -85,8 +85,8 @@ final class CapabilityRequirementPropagationTest extends TestCase
 
     private function container(string $controllerClass): ContainerInterface
     {
-        return new class($controllerClass) implements ContainerInterface {
-            public function __construct(private readonly string $controllerClass) {}
+        return new readonly class($controllerClass) implements ContainerInterface {
+            public function __construct(private string $controllerClass) {}
 
             public function get(string $id): mixed
             {

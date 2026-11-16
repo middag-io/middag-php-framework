@@ -84,14 +84,14 @@ use Throwable;
 final readonly class DoctrineTransportFactory
 {
     /** Transport alias this factory answers to. */
-    public const ALIAS = 'doctrine';
+    public const string ALIAS = 'doctrine';
 
     /** Bridge's own default; named here so a host can show it. */
-    public const DEFAULT_TABLE = 'messenger_messages';
+    public const string DEFAULT_TABLE = 'messenger_messages';
 
-    public const PACKAGE = 'symfony/doctrine-messenger';
+    public const string PACKAGE = 'symfony/doctrine-messenger';
 
-    public const DBAL_PACKAGE = 'doctrine/dbal';
+    public const string DBAL_PACKAGE = 'doctrine/dbal';
 
     public function __construct(private SerializerInterface $serializer = new CommandSerializer()) {}
 

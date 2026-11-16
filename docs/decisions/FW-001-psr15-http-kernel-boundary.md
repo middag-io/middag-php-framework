@@ -12,7 +12,7 @@ supersedes: []
 superseded_by: null
 enforced_by:
   mdgstan: []
-  docs: [docs/architecture.md]
+  docs: [docs-middag-dev:docs/framework/explanation/architecture.md]
 ---
 
 # FW-001: Build on Symfony and PSR; public contracts are PSR or framework-owned
@@ -46,4 +46,4 @@ Symfony, PSR and Monolog are implementation details of the framework. The public
 | The public kernel contract extends the PSR-15 request handler | test `tests/Kernel/HttpKernelTest.php` | coded |
 | The framework depends only on ui, Symfony, PSR, Monolog and a fixed set of vendors | deptrac `deptrac.yaml` with `--fail-on-uncovered`, run by `composer check:portability` | coded |
 | Shadow types, the PSR-7/HttpFoundation bridge and the middleware catalog | doc `docs-middag-dev:docs/framework/reference/psr15-bridge-and-middleware.md` | coded |
-| Vendor dependency set and its rationale | doc `docs/architecture.md` §2 | coded |
+| Vendor dependency set and its rationale | doc `docs-middag-dev:docs/framework/explanation/architecture.md` (What Pillar 1 actually depends on) | coded |

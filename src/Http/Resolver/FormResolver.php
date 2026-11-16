@@ -64,7 +64,7 @@ final readonly class FormResolver implements MethodArgumentResolverInterface
         $type = $parameter->getType();
         $fqcn = $type->getName();
 
-        // Forms require FormValidator via constructor, so they are always resolved
+        // Forms require a FormValidatorInterface via constructor, so they are always resolved
         // through the container (autowired). There is no manual-instantiation fallback
         // unlike FormRequestResolver, because the dependency graph is non-trivial.
         /** @var FormInterface $instance */

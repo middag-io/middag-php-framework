@@ -34,7 +34,7 @@ use Symfony\Component\Routing\RouteCollection;
 #[CoversClass(RouteLoader::class)]
 final class RouteLoaderDiscoveryTest extends TestCase
 {
-    private const DISCOVERY_DIR = __DIR__ . '/../Fixture/Discovery';
+    private const string DISCOVERY_DIR = __DIR__ . '/../Fixture/Discovery';
 
     #[Test]
     public function discoversRoutesFromControllersWithoutAManualList(): void

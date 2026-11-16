@@ -32,7 +32,7 @@ use Middag\Framework\Database\Contract\VersionTrackerInterface;
  */
 final readonly class MysqlVersionTracker implements VersionTrackerInterface
 {
-    private const TABLE = '_middag_schema_versions';
+    private const string TABLE = '_middag_schema_versions';
 
     public function __construct(
         private ConnectionInterface $connection,

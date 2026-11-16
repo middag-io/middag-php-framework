@@ -13,16 +13,41 @@ concurrency:
 
 jobs:
   # Released php-library-check component of middag-io/actions, called by its
-  # major tag. One job per PHP version: the static
-  # checks (composer validate, strict PSR-4, PHPStan, PHP-CS-Fixer, Rector and
-  # the portability gate) run on 8.2, the audit and PHPUnit on every version.
-  # Every dependency resolves from public Packagist; no credentials.
+  # major tag. One job per PHP version, with the platform pin (8.3.0) kept:
+  # the static checks (composer validate, strict PSR-4, the PHP 8.3 parse
+  # lint, PHPStan, PHP-CS-Fixer, Rector and the portability gate) run on 8.3,
+  # the floor; the audit and PHPUnit on every version. The tool caches live
+  # in .cache. Every dependency resolves from public Packagist; no
+  # credentials.
   php-library-check:
     uses: middag-io/actions/.github/workflows/php-library-check.yml@php-library-check-v1
     permissions:
       contents: read
     with:
-      php-versions: '["8.2", "8.3", "8.4"]'
+      php-versions: '["8.3", "8.4", "8.5"]'
       php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
       composer-scripts: check:portability
+      tool-cache-paths: .cache
+      audit-blocking-severities: critical, high
+
+  # Second call of the same component: removes the platform pin and resolves
+  # the highest dependency versions on the PHP of each job, then runs the
+  # tests. expect-majors fails the job unless the Symfony components resolved
+  # to 8.x, so a green run proves the top of the ^7.4 || ^8.1 range. The
+  # static checks already run in the locked job.
+  php-library-check-highest:
+    uses: middag-io/actions/.github/workflows/php-library-check.yml@php-library-check-v1
+    permissions:
+      contents: read
+    with:
+      php-versions: '["8.4", "8.5"]'
+      php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
+      dependency-versions: highest
+      unset-platform-php: true
+      expect-majors: symfony/dependency-injection:8, symfony/http-kernel:8
+      composer-validate: false
+      strict-psr: false
+      phpstan-script: ""
+      cs-fixer-script: ""
+      rector-script: ""
       audit-blocking-severities: critical, high

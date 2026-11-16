@@ -58,7 +58,7 @@ final readonly class Uuid implements JsonSerializable, Stringable
      * slice would swallow the `-` separator and stop being a literal substring of
      * the value.
      */
-    public const VISUAL_ID_LENGTH = 12;
+    public const int VISUAL_ID_LENGTH = 12;
 
     /**
      * Canonical RFC 4122 form, matched case-insensitively.
@@ -73,12 +73,12 @@ final readonly class Uuid implements JsonSerializable, Stringable
      * final newline, so `"<valid uuid>\n"` would be accepted and then stored with the
      * newline still attached.
      */
-    private const PATTERN = '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/Di';
+    private const string PATTERN = '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/Di';
 
     /**
      * Offset of the version nibble in the canonical form.
      */
-    private const VERSION_OFFSET = 14;
+    private const int VERSION_OFFSET = 14;
 
     /**
      * How much of a refused value is echoed back in the exception message.
@@ -87,7 +87,7 @@ final readonly class Uuid implements JsonSerializable, Stringable
      * keeps an oversized or accidental payload (a whole request body, a secret pasted
      * into the wrong field) out of logs and error trackers.
      */
-    private const MAX_ECHOED_LENGTH = 48;
+    private const int MAX_ECHOED_LENGTH = 48;
 
     /**
      * The canonical lowercase UUID string.

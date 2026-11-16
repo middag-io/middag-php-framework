@@ -129,10 +129,10 @@ final class MethodParameterResolverTest extends TestCase
 
     private function resolverFor(string $parameterName, mixed $value): MethodArgumentResolverInterface
     {
-        return new class($parameterName, $value) implements MethodArgumentResolverInterface {
+        return new readonly class($parameterName, $value) implements MethodArgumentResolverInterface {
             public function __construct(
-                private readonly string $parameterName,
-                private readonly mixed $value,
+                private string $parameterName,
+                private mixed $value,
             ) {}
 
             public function supports(ReflectionParameter $parameter): bool

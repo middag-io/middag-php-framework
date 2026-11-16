@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Form;
 
+use Middag\Framework\Form\Contract\FormValidatorInterface;
 use Middag\Framework\Http\Controller\AbstractController;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Form\Contract\FieldInterface;
@@ -26,8 +27,10 @@ use Middag\Ui\Form\FormState;
  *
  * Public override point: hosts (Moodle/WP adapters and standalone apps alike)
  * subclass this to declare a form — same role as the other Abstract* bases
- * ({@see AbstractController}, etc.). The
- * `FormValidator` collaborator is injected by the container.
+ * ({@see AbstractController}, etc.). The {@see FormValidatorInterface}
+ * collaborator is injected by the container, which binds it to the default
+ * validator; a subclass that declares its own constructor takes the contract
+ * and passes it on.
  *
  * @api
  */
@@ -35,7 +38,7 @@ abstract class AbstractForm implements FormInterface
 {
     private FormState $state;
 
-    public function __construct(protected readonly FormValidator $validator)
+    public function __construct(protected readonly FormValidatorInterface $validator)
     {
         $this->state = new FormState();
     }

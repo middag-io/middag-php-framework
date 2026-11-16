@@ -41,7 +41,7 @@ use Middag\Framework\Shared\Enum\Operator;
  */
 class QueryBuilder implements QueryBuilderInterface
 {
-    private const COMPARISON_OPERATORS = [
+    private const array COMPARISON_OPERATORS = [
         Operator::Eq->value => true,
         Operator::Neq->value => true,
         Operator::Gt->value => true,
