@@ -12,6 +12,11 @@ parameters:
     # already gitignored here.
     tmpDir: %currentWorkingDirectory%/.cache/phpstan
     level: 6
+    # The platform floor (composer require: php ^8.3). The Rector and PHPStan
+    # targets equal the floor. PHPStan does not catch newer-only *syntax* (e.g.
+    # `new X()->m()` is parsed leniently); parse-level 8.3 compatibility is
+    # enforced by `composer lint:php83` and the PHP 8.3 CI job, not here.
+    phpVersion: 80300
     paths:
         - src
     reportUnmatchedIgnoredErrors: false

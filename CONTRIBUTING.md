@@ -19,7 +19,7 @@ workflow, coding standards, and quality pipeline the project expects.
   PHP-CS-Fixer (`.php-cs-fixer.dist.php`). `camelCase` for methods and
   properties, `PascalCase` for classes.
 - **PSR-4**: the namespace mirrors the path — `Middag\Framework\<Concern>\...`.
-- Explicit types on every signature (parameters and return). Target PHP `^8.2`;
+- Explicit types on every signature (parameters and return). Target PHP `^8.3`;
   use enums, `readonly`, and `final` where they fit.
 - Symbols are imported with `use` (the fixer's `global_namespace_import` is on);
   avoid inline FQCN when a `use` already exists.

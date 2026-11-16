@@ -6,7 +6,7 @@
 
 [Documentation](https://docs.middag.dev) · [Where it runs](#where-it-runs) · [Professional services](#professional-services) · [GitHub](https://github.com/middag-io/middag-php-framework)
 
-[![CI](https://github.com/middag-io/middag-php-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/middag-io/middag-php-framework/actions/workflows/ci.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PHP](https://img.shields.io/badge/php-%5E8.2-777BB4.svg)](https://www.php.net/) [![PHPStan](https://img.shields.io/badge/PHPStan-level%206-brightgreen.svg)](https://phpstan.org/)
+[![CI](https://github.com/middag-io/middag-php-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/middag-io/middag-php-framework/actions/workflows/ci.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![PHP](https://img.shields.io/badge/php-%5E8.3-777BB4.svg)](https://www.php.net/) [![PHPStan](https://img.shields.io/badge/PHPStan-level%206-brightgreen.svg)](https://phpstan.org/)
 
 [![Packagist Version](https://img.shields.io/packagist/v/middag-io/framework.svg)](https://packagist.org/packages/middag-io/framework) [![Packagist Downloads](https://img.shields.io/packagist/dt/middag-io/framework.svg)](https://packagist.org/packages/middag-io/framework)
 
@@ -35,7 +35,7 @@ We did not reinvent the wheel. Under the hood it is Symfony (dependency injectio
 
 ## Installation
 
-Requires PHP `^8.2` and the `curl`, `intl`, `json`, `mbstring` and `pdo` extensions. Runs standalone or behind a host adapter.
+Requires PHP `^8.3` and the `curl`, `intl`, `json`, `mbstring` and `pdo` extensions. Runs standalone or behind a host adapter.
 
 ```bash
 composer require middag-io/framework

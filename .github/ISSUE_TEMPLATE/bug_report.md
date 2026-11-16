@@ -27,7 +27,7 @@ A clear and concise description of what actually happened, including any error m
 ## Environment
 
 - Framework version (`middag-io/framework`):
-- PHP version (`^8.2`):
+- PHP version (`^8.3`):
 - Host: Moodle adapter / WordPress adapter / standalone
 
 ## Relevant `composer check` / `composer test` output
