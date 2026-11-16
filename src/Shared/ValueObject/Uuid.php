@@ -173,8 +173,8 @@ final readonly class Uuid implements JsonSerializable, Stringable
      * **Not an identifier.** The value is the identifier; this is a display helper.
      * Never store it as a key, and never use it where a business-facing counter
      * belongs (an order, a ticket, a certificate — the number a person quotes back
-     * gets its own per-type sequence). Technical reference — support, logs, audit,
-     * licensing — is what this serves.
+     * gets its own per-type sequence). Technical reference — support, logs and
+     * audit — is what this serves.
      *
      * @param int $length 1 to 12 hex characters
      *

@@ -113,33 +113,279 @@ force-push. When the window opens, re-run the check.
   opened before the cut must merge `main` into it so that the check reads the
   new version.
 
-## Public surface consumed downstream
+## The public surface
 
-The following eleven symbols were promoted from `@internal` to `@api` because
-`middag-io/core` consumes them structurally (implements / extends / instantiates
-/ throws) or by type-reference. They are part of the supported public API and
-evolve under the versioning rules above.
+Every type tagged `@api` in `src/`, by concern. `tests/Tooling/ApiStabilityListTest.php` fails when this list and the tags in `src/` differ.
 
-Structural coupling (implemented, extended, instantiated, or thrown):
+### Bus
 
-- `Middag\Framework\Kernel\Contract\ServiceLoaderInterface`
-- `Middag\Framework\Kernel\Contract\LoaderInterface`
-- `Middag\Framework\Kernel\Contract\ModuleLoaderInterface`
-- `Middag\Framework\Kernel\Contract\LoaderFailurePolicyInterface`
-- `Middag\Framework\Kernel\Contract\FailedModuleRegistryInterface`
-- `Middag\Framework\Kernel\Manager\HookManager`
+- `Middag\Framework\Bus\Attribute\AsCommandHandler`
+- `Middag\Framework\Bus\Attribute\Schedule`
+- `Middag\Framework\Bus\Command\AbstractCommand`
+- `Middag\Framework\Bus\Command\AttributeHandlersLocator`
+- `Middag\Framework\Bus\Command\CommandSerializer`
+- `Middag\Framework\Bus\Command\CommandWorker`
+- `Middag\Framework\Bus\Command\ConventionHandlersLocator`
+- `Middag\Framework\Bus\Command\WorkerHeartbeatInterface`
+- `Middag\Framework\Bus\Command\WorkerLimits`
+- `Middag\Framework\Bus\Context\UserContextStamp`
+- `Middag\Framework\Bus\Contract\CommandInterface`
+- `Middag\Framework\Bus\Contract\MessageBusInterface`
+- `Middag\Framework\Bus\Contract\ScheduleReaderInterface`
+- `Middag\Framework\Bus\Contract\SignalDispatcherInterface`
+- `Middag\Framework\Bus\Contract\TransportInterface`
+- `Middag\Framework\Bus\Contract\UserContextResolverInterface`
+- `Middag\Framework\Bus\MessageBusFactory`
+- `Middag\Framework\Bus\Middleware\ProfilingMiddleware`
+- `Middag\Framework\Bus\NullUserContextResolver`
+- `Middag\Framework\Bus\Retry\AttemptStamp`
+- `Middag\Framework\Bus\Retry\AttemptStoreInterface`
+- `Middag\Framework\Bus\Retry\AttemptableInterface`
+- `Middag\Framework\Bus\Retry\MultiplierRetryPolicy`
+- `Middag\Framework\Bus\Retry\RetryPolicyInterface`
+- `Middag\Framework\Bus\Schedule\CronFieldMatcher`
+- `Middag\Framework\Bus\Schedule\ScheduleReader`
+- `Middag\Framework\Bus\Schedule\ScheduleRunner`
+- `Middag\Framework\Bus\Transport\DoctrineTransportFactory`
+- `Middag\Framework\Bus\Transport\InMemoryTransport`
+- `Middag\Framework\Bus\Transport\MiddagDoctrineTransport`
+- `Middag\Framework\Bus\Transport\TransportLocator`
 
-Type-reference coupling (imported / type-hinted):
+### Database
 
-- `Middag\Framework\Shared\Util\Typing`
-- `Middag\Framework\Logging\Enum\LogLevel`
-- `Middag\Framework\Kernel\Contract\KernelInterface`
+- `Middag\Framework\Database\Attribute\Column`
+- `Middag\Framework\Database\Attribute\Index`
+- `Middag\Framework\Database\Attribute\Key`
+- `Middag\Framework\Database\Attribute\Table`
+- `Middag\Framework\Database\Contract\ConnectionAdapterInterface`
+- `Middag\Framework\Database\Contract\ConnectionInterface`
+- `Middag\Framework\Database\Contract\RecordConnectionInterface`
+- `Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface`
+- `Middag\Framework\Database\Contract\SqlDialectInterface`
+- `Middag\Framework\Database\Contract\TransactionManagerInterface`
+- `Middag\Framework\Database\Contract\VersionTrackerInterface`
+- `Middag\Framework\Database\Enum\Capability`
+- `Middag\Framework\Database\MysqlSqlDialect`
+- `Middag\Framework\Database\PdoConnectionAdapter`
+- `Middag\Framework\Database\PrefixingSqlDialect`
+- `Middag\Framework\Database\Schema\DbalSchemaBuilderAdapter`
+- `Middag\Framework\Database\Schema\MigrationRunner`
+- `Middag\Framework\Database\Schema\MysqlMigrationRunner`
+- `Middag\Framework\Database\Schema\MysqlSchemaBuilderAdapter`
+- `Middag\Framework\Database\Schema\MysqlVersionTracker`
+- `Middag\Framework\Database\Schema\SchemaAttributeReader`
+- `Middag\Framework\Database\Schema\SchemaBuilder`
+- `Middag\Framework\Database\Schema\SqliteSchemaBuilderAdapter`
+- `Middag\Framework\Database\StandardSqlDialect`
+
+### Exception
+
+- `Middag\Framework\Exception\MiddagAuthenticationException`
+- `Middag\Framework\Exception\MiddagAuthorizationException`
+- `Middag\Framework\Exception\MiddagDomainException`
+- `Middag\Framework\Exception\MiddagException`
+- `Middag\Framework\Exception\MiddagInfrastructureException`
+- `Middag\Framework\Exception\MiddagNotFoundException`
+- `Middag\Framework\Exception\MiddagPersistenceException`
+- `Middag\Framework\Exception\MiddagValidationException`
+
+### Filesystem
+
+- `Middag\Framework\Filesystem\Contract\FilesystemInterface`
+- `Middag\Framework\Filesystem\FlysystemFilesystem`
+- `Middag\Framework\Filesystem\LocalFilesystem`
+
+### Form
+
+- `Middag\Framework\Form\AbstractForm`
+- `Middag\Framework\Form\Attribute\Field`
+- `Middag\Framework\Form\Contract\EntitySourceInterface`
+- `Middag\Framework\Form\Contract\FormValidatorInterface`
+- `Middag\Framework\Form\EntitySourceRegistry`
+- `Middag\Framework\Form\FieldFactory`
+- `Middag\Framework\Form\Renderer\RendererRegistry`
+- `Middag\Framework\Form\Schema\FieldSchemaReader`
+
+### Http
+
+- `Middag\Framework\Http\Attribute\Auth`
+- `Middag\Framework\Http\Attribute\Cors`
+- `Middag\Framework\Http\Attribute\Middleware`
+- `Middag\Framework\Http\Attribute\ValidatedDto`
+- `Middag\Framework\Http\Auth\CapabilityReference`
+- `Middag\Framework\Http\Auth\CapabilityRequirement`
+- `Middag\Framework\Http\Auth\SessionAuthenticator`
+- `Middag\Framework\Http\Auth\SessionUserContextResolver`
+- `Middag\Framework\Http\Contract\AuthenticatorInterface`
+- `Middag\Framework\Http\Contract\AuthorizationAwareInterface`
+- `Middag\Framework\Http\Contract\CapabilityDefinitionInterface`
+- `Middag\Framework\Http\Contract\CapabilityRequirementAwareInterface`
+- `Middag\Framework\Http\Contract\ContainerAwareInterface`
+- `Middag\Framework\Http\Contract\ControllerInterface`
+- `Middag\Framework\Http\Contract\ExceptionRendererInterface`
+- `Middag\Framework\Http\Contract\FormRequestInterface`
+- `Middag\Framework\Http\Contract\HttpKernelInterface`
+- `Middag\Framework\Http\Contract\PublicRouteAwareInterface`
+- `Middag\Framework\Http\Contract\RequestHandlingInterface`
+- `Middag\Framework\Http\Contract\RetryPolicyInterface`
+- `Middag\Framework\Http\Contract\RouteMiddlewareInterface`
+- `Middag\Framework\Http\Contract\SessionInterface`
+- `Middag\Framework\Http\Controller\AbstractApiController`
+- `Middag\Framework\Http\Controller\AbstractController`
+- `Middag\Framework\Http\DefaultExceptionRenderer`
+- `Middag\Framework\Http\FatalErrorHandler`
+- `Middag\Framework\Http\HttpClientFactory`
+- `Middag\Framework\Http\HttpKernelFactory`
+- `Middag\Framework\Http\Inertia\InertiaAdapter`
+- `Middag\Framework\Http\Inertia\InertiaFactory`
+- `Middag\Framework\Http\Inertia\InertiaManager`
+- `Middag\Framework\Http\Inertia\InertiaVersionManager`
+- `Middag\Framework\Http\Middleware\CorsMiddleware`
+- `Middag\Framework\Http\Middleware\MiddlewareDispatcher`
+- `Middag\Framework\Http\Middleware\ShareFlashMiddleware`
+- `Middag\Framework\Http\Middleware\StartSessionMiddleware`
+- `Middag\Framework\Http\Middleware\VerifyCsrfMiddleware`
+- `Middag\Framework\Http\Request\AbstractFormRequest`
+- `Middag\Framework\Http\Retry\RetryPolicy`
+- `Middag\Framework\Http\Routing\RouteMiddlewareStack`
+- `Middag\Framework\Http\Security\CsrfTokenManager`
+- `Middag\Framework\Http\Session\ArraySession`
+- `Middag\Framework\Http\Session\FlashBag`
+- `Middag\Framework\Http\Session\NativeSession`
+- `Middag\Framework\Http\StandaloneKernel`
+
+### Kernel
+
+- `Middag\Framework\Kernel\Attribute\Lazy`
+- `Middag\Framework\Kernel\Bootstrap\BootIsolateFailurePolicy`
+- `Middag\Framework\Kernel\Bootstrap\EnvConfigResolver`
+- `Middag\Framework\Kernel\Bootstrap\NullMaintenanceGate`
+- `Middag\Framework\Kernel\ContainerFactory`
+- `Middag\Framework\Kernel\Contract\BootFailurePolicyInterface`
+- `Middag\Framework\Kernel\Contract\BootstrapInterface`
+- `Middag\Framework\Kernel\Contract\ComponentNameResolverInterface`
+- `Middag\Framework\Kernel\Contract\ConfigResolverInterface`
+- `Middag\Framework\Kernel\Contract\FacadeInterface`
 - `Middag\Framework\Kernel\Contract\FacadeLoaderInterface`
+- `Middag\Framework\Kernel\Contract\FailedModuleRegistryInterface`
+- `Middag\Framework\Kernel\Contract\HookManagerInterface`
 - `Middag\Framework\Kernel\Contract\HookRegisterInterface`
+- `Middag\Framework\Kernel\Contract\HookfileLoaderInterface`
+- `Middag\Framework\Kernel\Contract\HostComponentContextInterface`
+- `Middag\Framework\Kernel\Contract\HostEventBridgeInterface`
+- `Middag\Framework\Kernel\Contract\KernelInterface`
+- `Middag\Framework\Kernel\Contract\LoaderFailurePolicyInterface`
+- `Middag\Framework\Kernel\Contract\LoaderInterface`
+- `Middag\Framework\Kernel\Contract\MaintenanceGateInterface`
+- `Middag\Framework\Kernel\Contract\ModuleInterface`
+- `Middag\Framework\Kernel\Contract\ModuleLoaderInterface`
+- `Middag\Framework\Kernel\Contract\ServiceLoaderInterface`
+- `Middag\Framework\Kernel\Facade\AbstractFacade`
+- `Middag\Framework\Kernel\Facade\HookFacade`
+- `Middag\Framework\Kernel\HostContext`
+- `Middag\Framework\Kernel\Manager\HookManager`
+- `Middag\Framework\Kernel\Module\AbstractModule`
+- `Middag\Framework\Kernel\ServiceProvider`
+- `Middag\Framework\Kernel\ShutdownCleanup`
 
-> `KernelInterface` was previously `@internal` on purpose — it pins the kernel
-> lifecycle spec. It is promoted to `@api` by explicit decision so adapters and
-> consumers can rely on the lifecycle contract.
+### Logging
+
+- `Middag\Framework\Logging\Attribute\LogChannel`
+- `Middag\Framework\Logging\CleanLogsCommand`
+- `Middag\Framework\Logging\Contract\ActorResolverInterface`
+- `Middag\Framework\Logging\Contract\OriginResolverInterface`
+- `Middag\Framework\Logging\Contract\SecretRedactorInterface`
+- `Middag\Framework\Logging\Enum\LogLevel`
+- `Middag\Framework\Logging\ErrorLogFallbackLogger`
+- `Middag\Framework\Logging\Formatter\MiddagLineFormatter`
+- `Middag\Framework\Logging\Handler\RotatingStreamHandler`
+- `Middag\Framework\Logging\LoggerFactory`
+- `Middag\Framework\Logging\NullActorResolver`
+- `Middag\Framework\Logging\NullOriginResolver`
+- `Middag\Framework\Logging\Processor\ActorOriginProcessor`
+- `Middag\Framework\Logging\Processor\RedactionProcessor`
+- `Middag\Framework\Logging\Redactor\DefaultSecretRedactor`
+
+### Mail
+
+- `Middag\Framework\Mail\Address`
+- `Middag\Framework\Mail\Attachment`
+- `Middag\Framework\Mail\Contract\MailerInterface`
+- `Middag\Framework\Mail\Mail`
+- `Middag\Framework\Mail\NullMailer`
+
+### Observability
+
+- `Middag\Framework\Observability\Contract\ErrorReporterInterface`
+- `Middag\Framework\Observability\Contract\ProfileCollectorInterface`
+- `Middag\Framework\Observability\NullErrorReporter`
+- `Middag\Framework\Observability\ProfileCollector`
+- `Middag\Framework\Observability\SentryErrorReporter`
+
+### Persistence
+
+- `Middag\Framework\Persistence\Attribute\EntityType`
+- `Middag\Framework\Persistence\Contract\CastInterface`
+- `Middag\Framework\Persistence\Contract\ConditionCompilerInterface`
+- `Middag\Framework\Persistence\Contract\ConnectionResolverInterface`
+- `Middag\Framework\Persistence\Contract\EntityInterface`
+- `Middag\Framework\Persistence\Contract\EntityTypeInterface`
+- `Middag\Framework\Persistence\Contract\EntityTypeRegistryInterface`
+- `Middag\Framework\Persistence\Contract\MapperInterface`
+- `Middag\Framework\Persistence\Contract\QueryBuilderInterface`
+- `Middag\Framework\Persistence\Contract\RepositoryInterface`
+- `Middag\Framework\Persistence\Contract\ResultInterface`
+- `Middag\Framework\Persistence\Entity\DefaultEntityType`
+- `Middag\Framework\Persistence\Entity\EntityTypeRegistry`
+- `Middag\Framework\Persistence\Loader\EntityTypeRegistrar`
+- `Middag\Framework\Persistence\Mapper\AbstractMapper`
+- `Middag\Framework\Persistence\Model`
+- `Middag\Framework\Persistence\ModelQuery`
+- `Middag\Framework\Persistence\Query\Page`
+- `Middag\Framework\Persistence\Query\QueryBuilder`
+- `Middag\Framework\Persistence\Query\RelationRef`
+- `Middag\Framework\Persistence\Relation\BelongsTo`
+- `Middag\Framework\Persistence\Relation\BelongsToMany`
+- `Middag\Framework\Persistence\Relation\HasMany`
+- `Middag\Framework\Persistence\Relation\HasOne`
+- `Middag\Framework\Persistence\Relation\Relation`
+- `Middag\Framework\Persistence\Repository\AbstractRepository`
+- `Middag\Framework\Persistence\SingleConnectionResolver`
+
+### Runtime
+
+- `Middag\Framework\Runtime\ServiceMap`
+- `Middag\Framework\Runtime\StandaloneKernel`
+
+### Security
+
+- `Middag\Framework\Security\Contract\PasswordHasherInterface`
+- `Middag\Framework\Security\Contract\SignatureVerifierInterface`
+- `Middag\Framework\Security\Enum\SignatureEncoding`
+- `Middag\Framework\Security\HmacSignatureVerifier`
+- `Middag\Framework\Security\NativePasswordHasher`
+
+### Shared
+
+- `Middag\Framework\Shared\Attribute\TrustedOutput`
+- `Middag\Framework\Shared\Contract\DtoInterface`
+- `Middag\Framework\Shared\Dto\AbstractDto`
+- `Middag\Framework\Shared\Dto\SyncResult`
+- `Middag\Framework\Shared\Enum\DebugMode`
+- `Middag\Framework\Shared\Enum\Operator`
+- `Middag\Framework\Shared\Util\Arr`
+- `Middag\Framework\Shared\Util\Debug`
+- `Middag\Framework\Shared\Util\Environment`
+- `Middag\Framework\Shared\Util\Inflector`
+- `Middag\Framework\Shared\Util\Typing`
+- `Middag\Framework\Shared\ValueObject\Uuid`
+
+### Translation
+
+- `Middag\Framework\Translation\Contract\TranslatorInterface`
+- `Middag\Framework\Translation\FallbackTranslator`
+- `Middag\Framework\Translation\Resolver\ViolationKeyMap`
+- `Middag\Framework\Translation\TranslatableMessage`
 
 ## Host-neutral bridge contracts
 
