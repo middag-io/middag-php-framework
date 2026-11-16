@@ -6,14 +6,13 @@
 ### Features
 
 * **bus:** stamp headers carry only the alias key ([e4de3a2](https://github.com/middag-io/middag-php-framework/commit/e4de3a253800609f9e4cd7aa26c7aa70fe6a64c0)), closes [#109](https://github.com/middag-io/middag-php-framework/issues/109)
-* **form:** AbstractForm takes the [@api](https://github.com/api) FormValidatorInterface ([08b5b91](https://github.com/middag-io/middag-php-framework/commit/08b5b91db772573fb3f649362a3d6ff823e6036d))
+* **form:** AbstractForm takes the `@api` FormValidatorInterface ([08b5b91](https://github.com/middag-io/middag-php-framework/commit/08b5b91db772573fb3f649362a3d6ff823e6036d))
 * **http:** HttpKernelFactory, the supported way to build the HTTP kernel ([375b98c](https://github.com/middag-io/middag-php-framework/commit/375b98cc820708873190385352fbc6c7348fdcfb))
-* PHP 8.3 platform, alias-only stamp headers, kernel factory and form validator contract ([f060da2](https://github.com/middag-io/middag-php-framework/commit/f060da209389c5422650ff8b38cbc7bbd48ef041))
 
 
 ### Bug Fixes
 
-* **bus:** keep the worker alive on every decode-failure shape ([a0c1136](https://github.com/middag-io/middag-php-framework/commit/a0c113626deedc095c2663609178d8baccef0b58)), closes [#108](https://github.com/middag-io/middag-php-framework/issues/108)
+* **bus:** keep the worker alive on every decode-failure shape ([a0c1136](https://github.com/middag-io/middag-php-framework/commit/a0c113626deedc095c2663609178d8baccef0b58)), refs [#108](https://github.com/middag-io/middag-php-framework/issues/108)
 
 
 ### Refactoring
