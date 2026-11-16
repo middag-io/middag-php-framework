@@ -109,11 +109,12 @@ when the product owner decides the cut:
 | `feat:` | MINOR | waits for a family MINOR window |
 | `!` or `BREAKING CHANGE:` | not allowed | only in a family MAJOR window, after a deprecation in an earlier MINOR |
 
-- **Breaking changes on `1.x`.** A break ships in a minor as a `feat:` commit
-  (so it cuts a minor, never a patch); never as `fix:`, `refactor:` or
-  `chore:`. A breaking change never ships in a patch. The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
-- **From `2.0.0`.** Every library of the family shares MAJOR.MINOR. A patch
-  carries fixes only. A family minor or major is a coordinated `Release-As`
+- **`1.x` is pre-stable and unsupported.** It carries no compatibility
+  promise, no backports and no security fixes; a break may ship in a minor, as
+  a `feat:` commit, never as `fix:`, `refactor:` or `chore:`. The cut to
+  `2.0.0` is clean, with no upgrade path from `1.x`.
+- **From `2.0.0`.** Every library of the family shares MAJOR.MINOR and is
+  required with the same `^2.N`. A patch carries fixes only. A family minor or major is a coordinated `Release-As`
   in every library, decided by the product owner.
 - **Family window check.** Every PR runs `php-version-family-check / check`
   against the organization variable `PHP_LIBS_OPEN_RELEASE` (empty = closed,
@@ -126,8 +127,9 @@ when the product owner decides the cut:
   `X.Y.0`. After the `2.0.0` cut, a PR opened before it must merge `main` in
   so that the check reads the new version.
 
-The complete policy, including the frozen contracts and the check rules, lives
-in [`API-STABILITY.md`](API-STABILITY.md).
+The public surface and the check rules live in
+[`API-STABILITY.md`](API-STABILITY.md); the family support rules live on
+[Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
 
 ## Pull request checklist
 
