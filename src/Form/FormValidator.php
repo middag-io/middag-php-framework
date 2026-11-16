@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Form;
 
+use Middag\Framework\Form\Contract\FormValidatorInterface;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\SymfonyTranslatorAdapter;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
@@ -42,7 +43,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * @internal
  */
-final readonly class FormValidator
+final readonly class FormValidator implements FormValidatorInterface
 {
     public function __construct(
         private ConditionEvaluator $evaluator,
