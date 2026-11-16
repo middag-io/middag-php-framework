@@ -100,7 +100,7 @@ Generic plumbing, organised by concern (each concern owns its own `Contract/`):
 | **Observability** | An `ErrorReporterInterface` port (`NullErrorReporter` default, `SentryErrorReporter` behind a composer `suggest`) plus a `ProfileCollectorInterface` sink that gives bus, hook and query events a single profiling timeline. |
 | **Shared / Exception** | DTOs, enums and utilities, plus a typed exception hierarchy mapped to HTTP status codes. |
 
-Full API reference, guides and examples live at **[docs.middag.dev](https://docs.middag.dev)**.
+Full API reference, guides and examples live in the hub: **https://docs.middag.dev/framework/explanation/overview**.
 
 ## Where it runs
 
@@ -135,6 +135,12 @@ composer lint:php83   # the same lint on a real PHP 8.3 (Docker); fails without 
 CI runs the static checks, `composer lint` among them, on PHP 8.3, the floor, and the tests on 8.3, 8.4 and 8.5 with the platform pinned to 8.3.0. A `highest` job removes the pin, resolves the highest versions on 8.4 and 8.5 and fails unless Symfony resolved to 8.x.
 
 Git hooks are wired automatically on install; the `commit-msg` hook enforces [Conventional Commits](https://www.conventionalcommits.org/), and releases are cut by [release-please](https://github.com/googleapis/release-please).
+
+## Help and status
+
+- **Status:** the 1.x line is pre-stable and unsupported; support starts at 2.0.0. See https://docs.middag.dev/libraries/reference/versioning-and-compatibility
+- **Questions and bugs:** https://github.com/middag-io/middag-php-framework/issues
+- **Security reports:** see [`SECURITY.md`](SECURITY.md) (do not open a public issue).
 
 ## Contributing
 
