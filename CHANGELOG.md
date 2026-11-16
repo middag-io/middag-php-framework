@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.4](https://github.com/middag-io/middag-php-framework/compare/v1.20.3...v1.20.4) (2026-11-16)
+
+
+### Bug Fixes
+
+* flash validation errors in the ui FormErrors shape ([5296bcc](https://github.com/middag-io/middag-php-framework/commit/5296bcc79809fc58ef829baced21eb1697deaf7a)), closes [#126](https://github.com/middag-io/middag-php-framework/issues/126)
+
 ## [1.20.3](https://github.com/middag-io/middag-php-framework/compare/v1.20.2...v1.20.3) (2026-11-16)
 
 
