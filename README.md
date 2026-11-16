@@ -128,10 +128,11 @@ Adopting the framework, building a custom adapter, or migrating a legacy plugin 
 composer test    # PHPUnit
 composer check   # PHPStan (level 6) + PHP-CS-Fixer + Rector, all dry-run
 composer fix     # auto-fix style and Rector (composer fix:all re-settles formatting afterwards)
-composer lint:php83   # parse every file on a real PHP 8.3 (Docker)
+composer lint         # parse every file on the local PHP (php -l), no Docker
+composer lint:php83   # the same lint on a real PHP 8.3 (Docker); fails without Docker
 ```
 
-CI runs the static checks on PHP 8.3, the floor, and the tests on 8.3, 8.4 and 8.5 with the platform pinned to 8.3.0. A `highest` job removes the pin, resolves the highest versions on 8.4 and 8.5 and fails unless Symfony resolved to 8.x.
+CI runs the static checks, `composer lint` among them, on PHP 8.3, the floor, and the tests on 8.3, 8.4 and 8.5 with the platform pinned to 8.3.0. A `highest` job removes the pin, resolves the highest versions on 8.4 and 8.5 and fails unless Symfony resolved to 8.x.
 
 Git hooks are wired automatically on install; the `commit-msg` hook enforces [Conventional Commits](https://www.conventionalcommits.org/), and releases are cut by [release-please](https://github.com/googleapis/release-please).
 
