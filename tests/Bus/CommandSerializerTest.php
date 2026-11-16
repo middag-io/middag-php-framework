@@ -99,7 +99,7 @@ final class CommandSerializerTest extends TestCase
         $this->serializer->decode([
             'headers' => [
                 'type' => RecordCommand::class,
-                'X-Message-Stamp-' . RedeliveryStamp::class => '[{"retryCount": ',
+                'X-Message-Stamp-redelivery' => '[{"retryCount": ',
             ],
             'body' => '{"value":"payload-x"}',
         ]);
@@ -123,7 +123,7 @@ final class CommandSerializerTest extends TestCase
             self::fail('An unresolvable type must not decode.');
         } catch (MessageDecodingFailedException $messageDecodingFailedException) {
             // The raw row is not attached: the exception's 4th constructor argument
-            // only exists from symfony/messenger 8.1 and this package allows ^7.0.
+            // only exists from symfony/messenger 8.1 and this package allows ^7.4.
             self::assertStringContainsString('missing or invalid type/body', $messageDecodingFailedException->getMessage());
         }
     }
@@ -146,8 +146,8 @@ final class CommandSerializerTest extends TestCase
 
         $encoded = $this->serializer->encode($envelope);
 
-        self::assertArrayHasKey('X-Message-Stamp-' . RedeliveryStamp::class, $encoded['headers']);
-        self::assertArrayHasKey('X-Message-Stamp-' . BusNameStamp::class, $encoded['headers']);
+        self::assertArrayHasKey('X-Message-Stamp-redelivery', $encoded['headers']);
+        self::assertArrayHasKey('X-Message-Stamp-bus-name', $encoded['headers']);
 
         $decoded = $this->serializer->decode($encoded);
 
@@ -164,17 +164,26 @@ final class CommandSerializerTest extends TestCase
         self::assertSame('command.bus', $busNameStamps[0]->getBusName());
     }
 
-    public function testEncodeWritesBothTheAliasAndTheLegacyFqcnKey(): void
+    public function testEncodeWritesOneAliasKeyPerStampClass(): void
     {
         $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
+            new RedeliveryStamp(1),
+            new TransportNamesStamp(['async']),
             new BusNameStamp('command.bus'),
+            new UserContextStamp(7),
         ]));
 
-        self::assertSame(
-            $encoded['headers']['X-Message-Stamp-bus-name'],
-            $encoded['headers']['X-Message-Stamp-' . BusNameStamp::class],
-            'dual-write: both keys carry the same payload',
-        );
+        $stampKeys = array_values(array_filter(
+            array_keys($encoded['headers']),
+            static fn (string $key): bool => str_starts_with($key, 'X-Message-Stamp-'),
+        ));
+
+        self::assertSame([
+            'X-Message-Stamp-redelivery',
+            'X-Message-Stamp-transport-names',
+            'X-Message-Stamp-bus-name',
+            'X-Message-Stamp-user-context',
+        ], $stampKeys);
     }
 
     public function testDecodeReadsStampsFromTheAliasKeyAlone(): void
@@ -196,7 +205,7 @@ final class CommandSerializerTest extends TestCase
         self::assertSame(42, $decoded->last(UserContextStamp::class)?->getUserId());
     }
 
-    public function testDecodeStillReadsLegacyFqcnKeysAlone(): void
+    public function testDecodeIgnoresAFqcnStampKey(): void
     {
         $decoded = $this->serializer->decode([
             'headers' => [
@@ -207,24 +216,12 @@ final class CommandSerializerTest extends TestCase
             'body' => '{"value":"payload-x"}',
         ]);
 
-        self::assertSame(3, $decoded->last(RedeliveryStamp::class)?->getRetryCount());
-        self::assertSame('legacy.bus', $decoded->last(BusNameStamp::class)?->getBusName());
+        self::assertSame('payload-x', $decoded->getMessage()->value);
+        self::assertCount(0, $decoded->all(RedeliveryStamp::class));
+        self::assertCount(0, $decoded->all(BusNameStamp::class));
     }
 
-    public function testDecodeDoesNotDoubleStampsWrittenUnderBothKeys(): void
-    {
-        $encoded = $this->serializer->encode(new Envelope(new RecordCommand('payload-x'), [
-            new BusNameStamp('command.bus'),
-            new TransportNamesStamp(['async']),
-        ]));
-
-        $decoded = $this->serializer->decode($encoded);
-
-        self::assertCount(1, $decoded->all(BusNameStamp::class));
-        self::assertCount(1, $decoded->all(TransportNamesStamp::class));
-    }
-
-    public function testDecodePrefersTheAliasKeyOverADivergentLegacyKey(): void
+    public function testDecodeReadsTheAliasKeyNextToAFqcnKey(): void
     {
         $decoded = $this->serializer->decode([
             'headers' => [
@@ -304,7 +301,7 @@ final class CommandSerializerTest extends TestCase
             new UserContextStamp(42),
         ]));
 
-        self::assertArrayHasKey('X-Message-Stamp-' . UserContextStamp::class, $encoded['headers']);
+        self::assertArrayHasKey('X-Message-Stamp-user-context', $encoded['headers']);
 
         $stamp = $this->serializer->decode($encoded)->last(UserContextStamp::class);
 

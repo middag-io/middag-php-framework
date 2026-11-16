@@ -40,13 +40,9 @@ use Throwable;
  * old FQCN). Any stamp outside the whitelist is dropped silently — this is a
  * deliberate allowlist, not a generic stamp serializer.
  *
- * **Transition (framework#109).** Every stamp is written under BOTH its alias
- * and its FQCN, and read from either, alias first. Dual-write is what makes a
- * rollback safe: a row written here stays readable by the previous release,
- * which only knows the FQCN key, so a downgrade mid-queue does not silently
- * drop the retry count or the bus name. Reading the FQCN key covers the other
- * direction, rows queued before this version. The FQCN half is removable once
- * no deployed release reads it — a 2.0.0 cleanup, not a 1.x one.
+ * The alias key is the only key: a stamp is written under its alias and read
+ * from its alias. A `X-Message-Stamp-<FQCN>` key is an unknown key like any
+ * other and is ignored; the command still decodes, without that stamp.
  *
  * **Every** `decode()` failure is a {@see MessageDecodingFailedException}: an
  * unreadable row is a poison message, and that is the one exception type the
@@ -149,8 +145,7 @@ final class CommandSerializer implements SerializerInterface
     }
 
     /**
-     * Writes each whitelisted stamp twice: once under its stable alias, once
-     * under its FQCN — see the transition note on the class.
+     * Writes each whitelisted stamp under its stable alias.
      *
      * @return array<string, string>
      */
@@ -171,17 +166,14 @@ final class CommandSerializer implements SerializerInterface
             );
 
             $headers[self::STAMP_HEADER_PREFIX . $alias] = $serialized;
-            $headers[self::STAMP_HEADER_PREFIX . $stampClass] = $serialized;
         }
 
         return $headers;
     }
 
     /**
-     * Reads the alias key, and falls back to the legacy FQCN key for rows
-     * written before the aliases existed. A row carrying both — every row this
-     * version writes — yields each stamp once: the alias key wins and the FQCN
-     * key for the same class is ignored, never appended on top.
+     * Reads each whitelisted stamp from its alias key. A key outside the
+     * whitelist, a FQCN key included, is ignored.
      *
      * @param array<string, mixed> $headers
      *
@@ -189,40 +181,14 @@ final class CommandSerializer implements SerializerInterface
      */
     private function decodeStamps(array $headers): array
     {
-        /** @var array<class-string<StampInterface>, string> $byAlias */
-        $byAlias = [];
-
-        /** @var array<class-string<StampInterface>, string> $byClass */
-        $byClass = [];
-
-        foreach ($headers as $name => $value) {
-            if (!str_starts_with($name, self::STAMP_HEADER_PREFIX) || !is_string($value)) {
-                continue;
-            }
-
-            $key = substr($name, strlen(self::STAMP_HEADER_PREFIX));
-            $aliased = array_search($key, self::STAMP_ALIASES, true);
-
-            if ($aliased !== false) {
-                $byAlias[$aliased] = $value;
-
-                continue;
-            }
-
-            /** @var class-string<StampInterface> $key */
-            if (isset(self::STAMP_ALIASES[$key])) {
-                $byClass[$key] = $value;
-            }
-        }
-
         $stamps = [];
 
         // Whitelist order, not header order, so the result does not depend on
         // how a transport happened to store its header map.
-        foreach (array_keys(self::STAMP_ALIASES) as $stampClass) {
-            $value = $byAlias[$stampClass] ?? $byClass[$stampClass] ?? null;
+        foreach (self::STAMP_ALIASES as $stampClass => $alias) {
+            $value = $headers[self::STAMP_HEADER_PREFIX . $alias] ?? null;
 
-            if ($value === null) {
+            if (!is_string($value)) {
                 continue;
             }
 
@@ -300,7 +266,7 @@ final class CommandSerializer implements SerializerInterface
      *
      * The raw row is deliberately not passed on: the exception's
      * `encodedEnvelope` argument only exists from symfony/messenger 8.1, and
-     * this package supports `^7.0 || ^8.0`, where the class takes the plain
+     * this package supports `^7.4 || ^8.1`, where 7.4 takes the plain
      * three-argument shape. The message plus `previous` carry the cause, and a
      * stored payload stays out of whatever logs the exception.
      */
