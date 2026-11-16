@@ -146,6 +146,7 @@ vocabulary live downstream:
 The framework is **public on the `1.x` line** (Apache-2.0).
 The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut. It crosses
 `2.0.0` with the whole `middag-php-*` version family (shared MAJOR.MINOR, fix-only PATCH), on a cut
-the product owner decides — the policy is [`API-STABILITY.md`](API-STABILITY.md). Technical documentation lives on
+the product owner decides — the public surface is in [`API-STABILITY.md`](API-STABILITY.md), the support rules on
+[Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility). Technical documentation lives on
 **docs.middag.dev** (`docs-middag-dev`, `docs/framework/`); this repository keeps only the README,
 `API-STABILITY.md` and `docs/decisions/`, and every other file under `docs/` is a one-line pointer.

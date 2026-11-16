@@ -1,11 +1,15 @@
 # API Stability
 
 This document defines what is public and supported in `middag-io/framework`,
-and how the public surface may evolve on the current **`1.x`** line and in the
-version family from `2.0.0`, so
-downstream packages — the OSS adapters (`middag-io/moodle`,
+so downstream packages — the OSS adapters (`middag-io/moodle`,
 `middag-io/wordpress`), `middag-io/ui`, and proprietary consumers built on
 top — can depend on the framework without guessing.
+
+The support rules of the whole library family (lifecycle, what each release
+may carry, the previous-MAJOR line and the compatibility matrix of each MAJOR)
+live on
+[Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
+This file lists the framework's public surface and points there for the rest.
 
 ## Stability levels
 
@@ -13,81 +17,65 @@ Every type carries a class-level annotation that states its stability:
 
 | Annotation | Meaning |
 |---|---|
-| `@api` | **Public, supported surface.** You may implement, extend, type-hint, instantiate and catch these. Changes follow the versioning policy below. |
+| `@api` | **Public, supported surface.** You may implement, extend, type-hint, instantiate and catch these. Changes follow the versioning rules below. |
 | `@internal` | **Implementation detail.** May change or be removed in any release, including patches. Do not depend on these from outside the framework. |
 
 If a type has neither annotation, treat it as `@internal`.
 
-The public surface is therefore the set of `@api`-annotated types: the
-interfaces under each concern's `Contract/` sub-namespace, plus the exported
-`@api` classes (value objects, OSS default implementations, base classes).
+## What the support covers
 
-## Scope exclusions
+- **Covered:** the classes, interfaces, enums, attributes and functions tagged
+  `@api` — the interfaces under each concern's `Contract/` sub-namespace, plus
+  the exported `@api` classes (value objects, OSS default implementations,
+  base classes).
+- **Not covered:** anything tagged `@internal` or untagged, private and
+  protected members of `@internal` types, test helpers, and the layout of
+  `src/` beyond the `@api` types. These may change in any release.
+- **Not shipped:** MIDDAG domain base classes and utility bags.
+  `Persistence\Contract\EntityInterface` is the generic contract here;
+  `AbstractEntity`, `AbstractValueObject`, MIDDAG formatting helpers and
+  validators belong to `middag-io/core`. Legacy/speculative
+  `abstract_service`, faker helpers and generic validator packages are not
+  supported framework API.
 
-The framework intentionally does not ship MIDDAG domain base classes or utility
-bags. `Persistence\Contract\EntityInterface` is the generic contract here;
-`AbstractEntity`, `AbstractValueObject`, MIDDAG formatting helpers and validators
-belong to `middag-io/core`. Legacy/speculative `abstract_service`, faker helpers
-and generic validator packages are not supported framework API.
+If you need behaviour exposed only by an `@internal` symbol, open an issue to
+have it promoted rather than reaching in. Promoting a symbol to `@api` is an
+additive change for a family MINOR.
+
+## Lifecycle
+
+- **`2.0.0` is the first supported release.** Support starts there.
+- **The `1.x` line is pre-stable and unsupported.** It carries no
+  compatibility promise, no deprecation cycle, no backports and no security
+  fixes. A breaking change may ship in a `1.x` minor.
+- **The cut to `2.0.0` is clean.** There is no upgrade path from `1.x`. The
+  `CHANGELOG` continues across the cut.
+
+## Versioning from `2.0.0`
+
+The framework belongs to the **MIDDAG PHP library version family**. Every
+library of the family shares MAJOR.MINOR; PATCH is free per library.
+
+| Part | May carry |
+|---|---|
+| PATCH | Fixes only, per library. Never a change to the `@api` surface. |
+| MINOR | Additive `@api` changes (new contracts, new optional parameters, promoted symbols), released as a family MINOR in every library. Never a break. |
+| MAJOR | Breaking `@api` changes, released as a family MAJOR. A removal is first deprecated in a MINOR, with a runtime notice. |
+
+### The family rule
+
+From `2.0.0`, **every library of the family is required with the same
+`^2.N`** — the same caret range, with the same `N`, for every `middag-io/*`
+library you depend on. Minor upgrades inside that range do not break.
 
 ## How releases are cut
 
 Releases are cut **exclusively** by
 [release-please](https://github.com/googleapis/release-please) from
 [Conventional Commits](https://www.conventionalcommits.org/). There are no
-manual tags.
-
-The framework belongs to the **MIDDAG PHP library version family**:
-`middag-php-framework`, `middag-php-core`, `middag-php-ui`,
-`middag-php-moodle`, `middag-php-wordpress`, `middag-php-licensing`,
-`middag-php-dev-tools` and `middag-php-demo-standalone`. The family is decided
-in ADR-032 of `docs-middag-ops`, which amends ADR-003 (release strategy) for
-these libraries. The libraries stay on `1.x` until the family crosses `2.0.0`
-together; the product owner decides that cut.
-
-## The `1.x` policy
-
-The `1.x` line cuts only patch and minor releases. There is no `1.x` major:
-the framework reaches `2.0.0` only with the whole family.
-
-- **Patch** (`1.y.Z`) — bug fixes and `@internal`-only changes. Never a
-  breaking `@api` change.
-- **Minor** (`1.Y.0`) — cut by release-please from a `feat:` commit: additive
-  `@api` changes (new contracts, new optional parameters, promoting an
-  `@internal` symbol to `@api`).
-- **Breaking `@api` change** — ships as a `feat:` commit, so it cuts a minor
-  and never a patch. It never ships as `fix:`, `refactor:` or `chore:`. It is **never** marked with
-  `!` or a `BREAKING CHANGE:` footer: release-please would cut `2.0.0` in this
-  library alone, and the [family window check](#the-family-window-check)
-  refuses both markers outside a family major window.
-- The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
-- **Frozen contracts** (below) are exempt: they do not change in a breaking
-  way in **any** `1.x` release.
-
-> Historical note: `1.0.2` shipped a breaking `Mail` change as a patch, before
-> this policy existed. From this document on, a breaking `@api` change never
-> lands in a patch.
-
-## From `2.0.0`: the version family
-
-- **Numbers.** Every library of the family shares MAJOR.MINOR; PATCH is free
-  per library. A family minor or major goes out in every library, changed or
-  not.
-- **Patch** carries fixes only. From the cut, release-please runs with
-  `versioning: always-bump-patch`, so no commit type raises the minor or the
-  major.
-- **Minor** never breaks. A feature waits for the next family minor. A removal
-  is first deprecated in a minor, with a runtime notice, and leaves only in the
-  next family major.
-- **Family minor or major** — a coordinated `Release-As: X.Y.0` commit on
-  `main` of every library of the family.
-- **Who decides.** The product owner decides each family minor, on one of
-  three triggers: a new Moodle version to support; a MIDDAG release that needs
-  a feature, a deprecation or a new range; a new Symfony minor to absorb. The
-  product owner decides every family major.
-- **Compatibility.** Each family major publishes a compatibility matrix
-  (Symfony, PHP, Moodle and WordPress ranges) on
-  [Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
+manual tags. A family MINOR or MAJOR is a coordinated `Release-As: X.Y.0`
+commit on `main` of every library of the family; the product owner decides
+each one.
 
 ## The family window check
 
@@ -107,8 +95,7 @@ owner:
 - `!` before the colon, or a `BREAKING CHANGE:` footer, fails unless a family
   major window is open.
 - `feat` fails unless a window is open, but only once the version in
-  `.release-please-manifest.json` on the base branch is `2.0.0` or later. On
-  `1.x`, `feat` passes.
+  `.release-please-manifest.json` on the base branch is `2.0.0` or later.
 - A `Release-As:` footer fails unless a window is open and the footer names
   `X.Y.0` for that window.
 
@@ -131,7 +118,7 @@ force-push. When the window opens, re-run the check.
 The following eleven symbols were promoted from `@internal` to `@api` because
 `middag-io/core` consumes them structurally (implements / extends / instantiates
 / throws) or by type-reference. They are part of the supported public API and
-evolve under the versioning policy above.
+evolve under the versioning rules above.
 
 Structural coupling (implemented, extended, instantiated, or thrown):
 
@@ -154,13 +141,10 @@ Type-reference coupling (imported / type-hinted):
 > lifecycle spec. It is promoted to `@api` by explicit decision so adapters and
 > consumers can rely on the lifecycle contract.
 
-## Frozen contracts
+## Host-neutral bridge contracts
 
-These four bridge contracts are the host-neutral seams that downstream code
-binds to. They are **frozen for the whole `1.x` line**: their method signatures
-will not change in a breaking way in any `1.x` release. New optional behaviour
-may be added; nothing already present will be renamed, removed, or have its
-signature altered. Breaking one of these requires the family `2.0.0`.
+These `@api` contracts are the host-neutral seams that downstream code binds
+to. They follow the same versioning rules as the rest of the `@api` surface.
 
 | Contract | Role |
 |---|---|
@@ -171,14 +155,9 @@ signature altered. Breaking one of these requires the family `2.0.0`.
 
 ## Depending on the framework safely
 
-- Depend only on `@api` types. If you need behaviour exposed only by an
-  `@internal` symbol, open an issue to have it promoted rather than reaching in.
-- **On `1.x`:** pin a caret range (`^1.0`) and read the CHANGELOG before
-  crossing a minor — a `1.x` minor may carry a breaking `@api` change to a
-  non-frozen contract.
-- **Zero-surprise upgrades on `1.x`:** pin a tilde patch range (for example
-  `~1.0.3`) to receive only patches, and move across minors deliberately.
-- **From `2.0.0`:** declare one `^2.N` range, with the same `N`, for every
-  `middag-php-*` library you depend on. Minor upgrades inside it do not break.
+- Depend only on `@api` types.
+- From `2.0.0`, require the framework and every other `middag-io/*` library
+  of the family with the same `^2.N` range.
 - The dependency direction only ever points downward: the framework never
-  imports the proprietary layer, and OSS adapters never import `Middag\Core\`.
+  imports the proprietary layer, and OSS adapters never import the
+  proprietary core namespace.
