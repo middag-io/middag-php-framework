@@ -498,27 +498,30 @@ class HttpKernel implements HttpKernelInterface
      * Browser/Inertia clients complete the post-redirect-get loop when a
      * {@see FlashBag} is bound: the errors are flashed to the session and the
      * request is redirected back (303) where {@see ShareFlashMiddleware}
-     * re-shares them as the `errors` prop for `useForm().errors`. With no flash
+     * re-shares them as the `errors` prop for `useForm().errors`, in the ui
+     * `FormErrors` shape (field -> message string or list). With no flash
      * store bound the kernel falls back to the 422 — the platform-agnostic
      * contract, valid for stateless API hosts.
      */
     private function createValidationResponse(MiddagValidationException $exception, Request $request, bool $isJson): Response
     {
-        $serialized = (new ValidationErrorSerializer($this->resolveTranslator()))->serialize($exception->errors());
+        $serializer = new ValidationErrorSerializer($this->resolveTranslator());
 
         // Inertia error bags: when the originating request scoped its form to a
         // named bag (X-Inertia-Error-Bag), nest the field map under it so the
         // client's useForm(bag) reads its own errors. Absent the header the
         // shape stays flat (the common single-form / API case).
         $errorBag = $request->headers->get('X-Inertia-Error-Bag');
-        $errors = is_string($errorBag) && $errorBag !== ''
-            ? [$errorBag => $serialized]
-            : $serialized;
+        $inBag = static fn (array $map): array => is_string($errorBag) && $errorBag !== ''
+            ? [$errorBag => $map]
+            : $map;
 
         $flash = $this->container->has(FlashBag::class) ? $this->container->get(FlashBag::class) : null;
 
         if (!$isJson && $flash instanceof FlashBag) {
-            $flash->setErrors($errors);
+            // Flashed errors follow the ui FormErrors wire shape: field -> message
+            // string or list of message strings.
+            $flash->setErrors($inBag($serializer->formErrors($exception->errors())->jsonSerialize()));
             $flash->add('error', $exception->getMessage());
 
             return new RedirectResponse($request->headers->get('referer') ?: '/', Response::HTTP_SEE_OTHER);
@@ -528,7 +531,7 @@ class HttpKernel implements HttpKernelInterface
             'success' => false,
             'error' => 'validation_failed',
             'message' => $exception->getMessage(),
-            'errors' => $errors,
+            'errors' => $inBag($serializer->serialize($exception->errors())),
         ], $exception->getStatusCode());
     }
 

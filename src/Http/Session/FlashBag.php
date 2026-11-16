@@ -54,7 +54,8 @@ final readonly class FlashBag
     /**
      * Queue field-level validation errors for the next request.
      *
-     * Usually a flat field→message map, but may be nested one level under a
+     * Usually a flat field→message map in the ui `FormErrors` shape (each
+     * value one message string or a list of strings), but may be nested one level under a
      * named error bag (`[bag => [field => message]]`) for Inertia error bags.
      *
      * @param array<string, mixed> $errors
