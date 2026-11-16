@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.20.0](https://github.com/middag-io/middag-php-framework/compare/v1.19.0...v1.20.0) (2026-11-16)
+
+
+### Features
+
+* **bus:** stamp headers carry only the alias key ([e4de3a2](https://github.com/middag-io/middag-php-framework/commit/e4de3a253800609f9e4cd7aa26c7aa70fe6a64c0)), closes [#109](https://github.com/middag-io/middag-php-framework/issues/109)
+* **form:** AbstractForm takes the `@api` FormValidatorInterface ([08b5b91](https://github.com/middag-io/middag-php-framework/commit/08b5b91db772573fb3f649362a3d6ff823e6036d))
+* **http:** HttpKernelFactory, the supported way to build the HTTP kernel ([375b98c](https://github.com/middag-io/middag-php-framework/commit/375b98cc820708873190385352fbc6c7348fdcfb))
+
+
+### Bug Fixes
+
+* **bus:** keep the worker alive on every decode-failure shape ([a0c1136](https://github.com/middag-io/middag-php-framework/commit/a0c113626deedc095c2663609178d8baccef0b58)), refs [#108](https://github.com/middag-io/middag-php-framework/issues/108)
+
+
+### Refactoring
+
+* apply the PHP 8.3 Rector set ([38bdd42](https://github.com/middag-io/middag-php-framework/commit/38bdd4264a2e77e38ba3b213e89cb1ad265caa43))
+
+
+### Documentation
+
+* point the architecture copies to the hub and refresh the README ([02600f0](https://github.com/middag-io/middag-php-framework/commit/02600f03f4512e889117ea7c9d8d8edf42d940d0))
+
 ## [1.19.0](https://github.com/middag-io/middag-php-framework/compare/v1.18.1...v1.19.0) (2026-11-16)
 
 
