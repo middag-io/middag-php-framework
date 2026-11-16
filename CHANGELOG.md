@@ -5,7 +5,6 @@
 
 ### Bug Fixes
 
-* **http:** read a Retry-After HTTP-date as GMT ([beb521e](https://github.com/middag-io/middag-php-framework/commit/beb521eed8b48ebbc00b96879ab4b7e4a54daf91))
 * **http:** read a Retry-After HTTP-date as GMT ([90361d0](https://github.com/middag-io/middag-php-framework/commit/90361d0b9e8147512425cc7a0a470935ab176258))
 
 ## [1.20.0](https://github.com/middag-io/middag-php-framework/compare/v1.19.0...v1.20.0) (2026-11-16)
