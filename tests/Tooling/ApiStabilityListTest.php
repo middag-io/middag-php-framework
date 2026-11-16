@@ -49,7 +49,7 @@ final class ApiStabilityListTest extends TestCase
     private function apiTypesInSrc(): array
     {
         $types = [];
-        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__, 2).'/src'));
+        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/src'));
 
         /** @var SplFileInfo $file */
         foreach ($files as $file) {
@@ -65,7 +65,7 @@ final class ApiStabilityListTest extends TestCase
             preg_match_all(self::DECLARATION, $code, $matches, PREG_SET_ORDER);
             foreach ($matches as $match) {
                 if (1 === preg_match('/@api\b/', $match[1])) {
-                    $types[] = $namespace[1].'\\'.$match[2];
+                    $types[] = $namespace[1] . '\\' . $match[2];
                 }
             }
         }
@@ -80,14 +80,14 @@ final class ApiStabilityListTest extends TestCase
      */
     private function listedTypes(): array
     {
-        $document = (string) file_get_contents(dirname(__DIR__, 2).'/API-STABILITY.md');
+        $document = (string) file_get_contents(dirname(__DIR__, 2) . '/API-STABILITY.md');
         $start = strpos($document, "\n## The public surface\n");
         self::assertNotFalse($start, 'API-STABILITY.md has no "## The public surface" section');
 
         $end = strpos($document, "\n## ", $start + 1);
         $section = substr($document, $start, false === $end ? null : $end - $start);
 
-        preg_match_all('/^- `(Middag\\\\Framework\\\\[^`]+)`$/m', $section, $matches);
+        preg_match_all('/^- `(Middag\\\Framework\\\[^`]+)`$/m', $section, $matches);
 
         $types = $matches[1];
         sort($types);
