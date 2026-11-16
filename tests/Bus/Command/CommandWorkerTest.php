@@ -24,6 +24,7 @@ use Middag\Framework\Bus\Transport\TransportLocator;
 use Middag\Framework\Tests\Bus\Command\Fixture\EagerDecodeFailureTransport;
 use Middag\Framework\Tests\Bus\Command\Fixture\EncodedRowTransport;
 use Middag\Framework\Tests\Bus\Command\Fixture\FixedRetryPolicy;
+use Middag\Framework\Tests\Bus\Command\Fixture\PayloadCarryingDecodingFailure;
 use Middag\Framework\Tests\Bus\Command\Fixture\RecordingHeartbeat;
 use Middag\Framework\Tests\Bus\Command\Fixture\RecordingLogger;
 use Middag\Framework\Tests\Bus\Command\Fixture\ThrowingIterationTransport;
@@ -296,10 +297,50 @@ final class CommandWorkerTest extends TestCase
 
         $processed = $worker->drain();
 
-        self::assertSame(1, $processed);
-        self::assertSame(1, $poisoned->getCalls);
+        self::assertSame(3, $processed, 'both rejected rows count, then the healthy transport drains');
+        self::assertSame(2, $poisoned->getCalls, 'one retry within the pass, then the transport stops');
         self::assertSame(['after'], $handled);
-        self::assertNotEmpty($logger->messagesAtLevel('error'));
+        self::assertCount(2, $logger->messagesAtLevel('error'));
+    }
+
+    /**
+     * A row rejected at fetch time was consumed by the receiver: reporting 0
+     * would let a supervising loop read a busy transport as empty, and
+     * stopping the transport would leave the readable rows behind it for the
+     * next pass.
+     */
+    #[Test]
+    public function aDecodingFailureFromGetCountsTheRejectedRowAndRetriesGetOnce(): void
+    {
+        $transport = new EagerDecodeFailureTransport(failures: 1, queued: [
+            new Envelope(new RecordCommand('first')),
+            new Envelope(new RecordCommand('second')),
+        ]);
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), logger: $logger);
+
+        $processed = $worker->drain();
+
+        self::assertSame(3, $processed, 'the rejected row plus the two read on the retry');
+        self::assertSame(2, $transport->getCalls);
+        self::assertSame(['first', 'second'], $handled);
+        self::assertCount(2, $transport->acked);
+        self::assertCount(1, $logger->messagesAtLevel('error'));
+    }
+
+    #[Test]
+    public function theRejectedRowCountsTowardTheMessageLimitBeforeAnyRetry(): void
+    {
+        $transport = new EagerDecodeFailureTransport(failures: 1, queued: [new Envelope(new RecordCommand('first'))]);
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), limits: new WorkerLimits(messageLimit: 1));
+
+        self::assertSame(1, $worker->drain());
+        self::assertSame(1, $transport->getCalls, 'the limit tripped, so get() is not called again');
+        self::assertSame([], $handled);
     }
 
     /**
@@ -336,6 +377,36 @@ final class CommandWorkerTest extends TestCase
         self::assertSame([], $store->failures, 'never goes through the retry policy');
         self::assertSame([], iterator_to_array($transport->get()), 'rejected, not left in the queue');
         self::assertNotEmpty($logger->messagesAtLevel('error'));
+    }
+
+    #[Test]
+    public function aWrappedDecodingFailureIsLoggedWithoutItsPayload(): void
+    {
+        $failure = $this->payloadCarryingFailure();
+        $transport = new InMemoryTransport();
+        $transport->send(new Envelope($failure));
+
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), logger: $logger);
+
+        self::assertSame(1, $worker->drain());
+        $this->assertDecodingFailureLoggedWithoutPayload($logger, $failure);
+    }
+
+    #[Test]
+    public function aDecodingFailureFromGetIsLoggedWithoutItsPayload(): void
+    {
+        $failure = $this->payloadCarryingFailure();
+        $transport = new EagerDecodeFailureTransport(failures: 1, failure: $failure);
+        $logger = new RecordingLogger();
+        $handled = [];
+
+        $worker = new CommandWorker($transport, $this->recordingBus($handled), logger: $logger);
+
+        self::assertSame(1, $worker->drain());
+        $this->assertDecodingFailureLoggedWithoutPayload($logger, $failure);
     }
 
     #[Test]
@@ -520,6 +591,49 @@ final class CommandWorkerTest extends TestCase
     /**
      * @param list<string> $handled
      */
+    private function payloadCarryingFailure(): PayloadCarryingDecodingFailure
+    {
+        return new PayloadCarryingDecodingFailure(
+            'poison row',
+            ['body' => 'outer-secret-payload'],
+            new PayloadCarryingDecodingFailure('inner decode failure', ['body' => 'inner-secret-payload']),
+        );
+    }
+
+    /**
+     * Walks every Throwable in every logged context, previous chain included:
+     * none is a payload-carrying instance or holds a non-empty encodedEnvelope
+     * (the symfony/messenger 8.1 property), and no plain context value holds
+     * the payload. The message, the original class and the previous message
+     * stay in the log.
+     */
+    private function assertDecodingFailureLoggedWithoutPayload(RecordingLogger $logger, PayloadCarryingDecodingFailure $failure): void
+    {
+        $errors = array_values(array_filter($logger->records, static fn (array $record): bool => $record['level'] === 'error'));
+        self::assertCount(1, $errors);
+
+        $context = $errors[0]['context'];
+        self::assertSame(PayloadCarryingDecodingFailure::class, $context['exception_class'] ?? null);
+
+        $logged = $context['exception'] ?? null;
+        self::assertInstanceOf(MessageDecodingFailedException::class, $logged);
+        self::assertSame($failure->getMessage(), $logged->getMessage());
+        self::assertSame('inner decode failure', $logged->getPrevious()?->getMessage());
+
+        foreach ($context as $value) {
+            if (!$value instanceof Throwable) {
+                self::assertStringNotContainsString('secret-payload', var_export($value, true));
+
+                continue;
+            }
+
+            for ($throwable = $value; $throwable instanceof Throwable; $throwable = $throwable->getPrevious()) {
+                self::assertNotInstanceOf(PayloadCarryingDecodingFailure::class, $throwable);
+                self::assertSame([], get_object_vars($throwable)['encodedEnvelope'] ?? []);
+            }
+        }
+    }
+
     private function recordingBus(array &$handled): MessageBusInterface
     {
         return $this->bus(function (object $message) use (&$handled): void {

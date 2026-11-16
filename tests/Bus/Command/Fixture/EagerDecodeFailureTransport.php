@@ -24,11 +24,26 @@ use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
  * reject the unreadable one and rethrow. {@see CommandWorker} must survive it
  * the same way it survives a failure raised while iterating.
  *
+ * The first $failures get() calls throw, each standing for one row the
+ * receiver rejected; later calls return the queued envelopes once.
+ *
  * @internal
  */
 final class EagerDecodeFailureTransport implements TransportInterface
 {
     public int $getCalls = 0;
+
+    /** @var list<Envelope> */
+    public array $acked = [];
+
+    /**
+     * @param list<Envelope> $queued
+     */
+    public function __construct(
+        private readonly int $failures = PHP_INT_MAX,
+        private array $queued = [],
+        private readonly ?MessageDecodingFailedException $failure = null,
+    ) {}
 
     public function send(Envelope $envelope): Envelope
     {
@@ -39,10 +54,20 @@ final class EagerDecodeFailureTransport implements TransportInterface
     {
         ++$this->getCalls;
 
-        throw new MessageDecodingFailedException('poison row rejected by the receiver');
+        if ($this->getCalls <= $this->failures) {
+            throw $this->failure ?? new MessageDecodingFailedException('poison row rejected by the receiver');
+        }
+
+        $queued = $this->queued;
+        $this->queued = [];
+
+        return $queued;
     }
 
-    public function ack(Envelope $envelope): void {}
+    public function ack(Envelope $envelope): void
+    {
+        $this->acked[] = $envelope;
+    }
 
     public function reject(Envelope $envelope): void {}
 }

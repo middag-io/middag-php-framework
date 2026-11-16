@@ -15,7 +15,8 @@ jobs:
   # Released php-library-check component of middag-io/actions, called by its
   # major tag. One job per PHP version, with the platform pin (8.3.0) kept:
   # the static checks (composer validate, strict PSR-4, the PHP 8.3 parse
-  # lint, PHPStan, PHP-CS-Fixer, Rector and the portability gate) run on 8.3,
+  # lint of `composer lint`, PHPStan, PHP-CS-Fixer, Rector and the portability
+  # gate) run on 8.3,
   # the floor; the audit and PHPUnit on every version. The tool caches live
   # in .cache. Every dependency resolves from public Packagist; no
   # credentials.
@@ -26,6 +27,7 @@ jobs:
     with:
       php-versions: '["8.3", "8.4", "8.5"]'
       php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
+      lint-script: lint
       composer-scripts: check:portability
       tool-cache-paths: .cache
       audit-blocking-severities: critical, high
