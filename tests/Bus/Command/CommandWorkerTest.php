@@ -239,7 +239,7 @@ final class CommandWorkerTest extends TestCase
 
         $processed = $worker->drain();
 
-        self::assertSame(1, $processed, 'the good message before the poison one still counts');
+        self::assertSame(2, $processed, 'the good message and the poison one both count: the queue was not empty');
         self::assertSame(['first'], $handled);
         self::assertCount(1, $transport->acked);
         self::assertNotEmpty($logger->messagesAtLevel('error'));
@@ -267,7 +267,7 @@ final class CommandWorkerTest extends TestCase
 
         $processed = $worker->drain();
 
-        self::assertSame(1, $processed, 'the row claimed before the poison one still counts');
+        self::assertSame(2, $processed, 'the good row and the claimed poison row both count');
         self::assertSame(['good'], $handled);
         self::assertNotEmpty($logger->messagesAtLevel('error'));
     }

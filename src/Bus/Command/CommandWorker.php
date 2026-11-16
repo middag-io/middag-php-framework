@@ -73,8 +73,8 @@ use Throwable;
  * Iterating a `foreach` gives no chance to catch that: the exception surfaces
  * between loop bodies, not inside one. `drain()` therefore walks each transport's
  * iterator by hand (`valid()`/`current()`/`next()`) so a poison message can
- * be caught, logged, and the transport cleanly stopped for this pass — without an
- * envelope to reject (decoding failed before one could be produced), that is
+ * be caught, logged, counted in drain()'s result, and the transport cleanly
+ * stopped for this pass — without an envelope to reject (decoding failed before one could be produced), that is
  * the best this worker can do; the row itself staying claimed-but-stuck is a
  * transport/store concern (typically a claim timeout), not the worker's.
  *
@@ -149,12 +149,12 @@ final class CommandWorker
      * work a shutdown signal already asked it to stop.
      *
      * @return int number of messages this call processed (handled, failed, or
-     *             rejected by the transport while fetching), across every
-     *             transport — not just the ones successfully acked. A row
-     *             rejected at fetch time is never reported as 0, which a
+     *             discarded on a decode failure), across every transport —
+     *             not just the ones successfully acked. A decode failure
+     *             counts wherever it surfaces (from get(), while iterating or
+     *             while advancing an iterator): a queue that held only an
+     *             unreadable message is never reported as 0, which a
      *             supervising loop would read as an empty queue.
-     *             A decode failure while iterating or advancing an iterator
-     *             is not counted: no row is known to have been consumed.
      */
     public function drain(): int
     {
@@ -222,7 +222,8 @@ final class CommandWorker
     /**
      * @param Iterator<int, Envelope> $iterator
      *
-     * @return int messages processed from this iterator
+     * @return int messages processed from this iterator, counting a decode
+     *             failure that ends the iteration
      */
     private function drainIterator(string $transportName, TransportInterface $transport, Iterator $iterator, int $processedSoFar, float $startedAt): int
     {
@@ -247,6 +248,7 @@ final class CommandWorker
                     'Discarding a queued message: the transport could not decode it while iterating.',
                     $this->decodingFailureContext($transportName, $e),
                 );
+                ++$processed;
 
                 break;
             }
@@ -261,6 +263,7 @@ final class CommandWorker
                     'Discarding a queued message: the transport could not decode the next item while advancing.',
                     $this->decodingFailureContext($transportName, $e),
                 );
+                ++$processed;
 
                 break;
             }
