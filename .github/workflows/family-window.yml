@@ -4,15 +4,52 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
 
+# Pull request gates of the release flow, as steps of the released
+# middag-io/actions composites called by their major tags, in one job:
+#
+# - Family-window check of the middag-php-* version family. It reads the
+#   pull request title, hence the edited type above.
+# - Release date: release-please walks main newest committer date first and
+#   stops at the commit of the last release, so a commit dated before that
+#   release is never read: it is missing from the changelog and from the next
+#   version. The step fails such a pull request and prints how to recreate the
+#   branch with cherry-pick (never rebase or force-push).
+#
+# The job name keeps the required status check of the ruleset
+# (php-version-family-check / check).
 permissions: {}
 
 jobs:
   php-version-family-check:
+    name: php-version-family-check / check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
-    uses: middag-io/actions/.github/workflows/php-version-family-check.yml@php-version-family-check-v1
-    with:
-      # The family window is the organization variable PHP_LIBS_OPEN_RELEASE
-      # (empty = closed, X.Y = family MINOR window, X.0 = family MAJOR window).
-      window: ${{ vars.PHP_LIBS_OPEN_RELEASE }}
-      family-from: 2.0.0
+    steps:
+      - name: Check out the pull request with its history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check the version family window
+        uses: middag-io/actions/php-version-family-check@php-version-family-check-v1
+        with:
+          # The family window is the organization variable PHP_LIBS_OPEN_RELEASE
+          # (empty = closed, X.Y = family MINOR window, X.0 = family MAJOR window).
+          window: ${{ vars.PHP_LIBS_OPEN_RELEASE }}
+          family-from: 2.0.0
+          title: ${{ github.event.pull_request.title }}
+          base-sha: ${{ github.event.pull_request.base.sha }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
+          base-ref: ${{ github.event.pull_request.base.ref }}
+          window-branch: ${{ github.event.repository.default_branch }}
+
+      - name: Check the commit dates against the last release
+        if: ${{ !cancelled() }}
+        uses: middag-io/actions/github-release-date-check@github-release-date-check-v1
+        with:
+          base-ref: ${{ github.event.pull_request.base.ref }}
+          head-sha: ${{ github.event.pull_request.head.sha }}

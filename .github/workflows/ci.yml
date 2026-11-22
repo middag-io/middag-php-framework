@@ -12,44 +12,68 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Released php-library-check component of middag-io/actions, called by its
-  # major tag. One job per PHP version, with the platform pin (8.3.0) kept:
-  # the static checks (composer validate, strict PSR-4, the PHP 8.3 parse
-  # lint of `composer lint`, PHPStan, PHP-CS-Fixer, Rector and the portability
-  # gate) run on 8.3,
-  # the floor; the audit and PHPUnit on every version. The tool caches live
-  # in .cache. Every dependency resolves from public Packagist; no
-  # credentials.
+  # Released php-library-check composite of middag-io/actions, called by its
+  # major tag as a step. One job per PHP version, with the platform pin
+  # (8.3.0) kept: the static checks (composer validate, strict PSR-4, the
+  # PHP 8.3 parse lint of `composer lint`, PHPStan, PHP-CS-Fixer, Rector and
+  # the portability gate) run on 8.3, the floor; the audit and PHPUnit on
+  # every version. The tool caches live in .cache. Every dependency resolves
+  # from public Packagist; no credentials.
   php-library-check:
-    uses: middag-io/actions/.github/workflows/php-library-check.yml@php-library-check-v1
+    name: check (PHP ${{ matrix.php }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
-    with:
-      php-versions: '["8.3", "8.4", "8.5"]'
-      php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
-      lint-script: lint
-      composer-scripts: check:portability
-      tool-cache-paths: .cache
-      audit-blocking-severities: critical, high
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-  # Second call of the same component: removes the platform pin and resolves
+      - name: Check the library
+        uses: middag-io/actions/php-library-check@php-library-check-v1
+        with:
+          php-version: ${{ matrix.php }}
+          php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
+          static-checks: ${{ matrix.php == '8.3' }}
+          lint-script: lint
+          composer-scripts: check:portability
+          tool-cache-paths: .cache
+          audit-blocking-severities: critical, high
+
+  # Second run of the same composite: removes the platform pin and resolves
   # the highest dependency versions on the PHP of each job, then runs the
   # tests. expect-majors fails the job unless the Symfony components resolved
   # to 8.x, so a green run proves the top of the ^7.4 || ^8.1 range. The
   # static checks already run in the locked job.
   php-library-check-highest:
-    uses: middag-io/actions/.github/workflows/php-library-check.yml@php-library-check-v1
+    name: check (PHP ${{ matrix.php }}, highest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
-    with:
-      php-versions: '["8.4", "8.5"]'
-      php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
-      dependency-versions: highest
-      unset-platform-php: true
-      expect-majors: symfony/dependency-injection:8, symfony/http-kernel:8
-      composer-validate: false
-      strict-psr: false
-      phpstan-script: ""
-      cs-fixer-script: ""
-      rector-script: ""
-      audit-blocking-severities: critical, high
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the library at the highest dependency versions
+        uses: middag-io/actions/php-library-check@php-library-check-v1
+        with:
+          php-version: ${{ matrix.php }}
+          php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
+          static-checks: "false"
+          dependency-versions: highest
+          unset-platform-php: "true"
+          expect-majors: symfony/dependency-injection:8, symfony/http-kernel:8
+          audit-blocking-severities: critical, high
