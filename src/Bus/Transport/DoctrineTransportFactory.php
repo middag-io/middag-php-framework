@@ -27,12 +27,12 @@ use Throwable;
 
 /**
  * A durable, cross-process transport for a **standalone** PHP host, over
- * `symfony/doctrine-messenger` (core#164 F6 6.1).
+ * `symfony/doctrine-messenger` (core#164).
  *
  * Thin plumbing on purpose — the same kind of thin that already justifies
  * {@see InMemoryTransport} living in OSS: it holds no MIDDAG know-how, it just
  * hands the bridge a DBAL connection and a serializer. That is why it is here
- * and not in the proprietary core (decision A2).
+ * and not in the proprietary core.
  *
  * ## Standalone only, and that is a product rule
  *
@@ -44,10 +44,10 @@ use Throwable;
  * `$CFG->prefix` (so two Moodle installs in one schema collide). Enforcing that
  * is the HOST's job, not this class's: the framework is host-agnostic by
  * definition and has no way to know what it is running under. `middag-io/core`
- * refuses the alias on those two hosts (F6 6.2) — the refusal lives where the
+ * refuses the alias on those two hosts — the refusal lives where the
  * host is known.
  *
- * ## `messenger_messages` is a pipe, not a ledger (F6 6.3, G8)
+ * ## `messenger_messages` is a pipe, not a ledger
  *
  * The table is the TRANSPORT: a row exists while a message is in flight and
  * disappears when it is acked. It is not, and must not become, the MIDDAG job
@@ -59,7 +59,7 @@ use Throwable;
  * migration tool, so the transport creating its own table on first use is the
  * only thing that reliably works.
  *
- * ## Polling versus notification (F6 6.4)
+ * ## Polling versus notification
  *
  * On PostgreSQL the bridge uses `LISTEN/NOTIFY` and wakes almost immediately;
  * on every other engine it polls at roughly one second. That is a documented

@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Shape check for {@see AttemptableInterface}
- * (core#164 F1): a plain getter contract, exercised through a fixture since
+ * (core#164): a plain getter contract, exercised through a fixture since
  * the interface itself has no behavior of its own.
  *
  * @internal

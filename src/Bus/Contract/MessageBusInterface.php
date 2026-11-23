@@ -23,9 +23,9 @@ use Symfony\Component\Messenger\MessageBusInterface as SymfonyMessageBusInterfac
  * sent to a transport when the message type is routed). Depending on this
  * framework-scoped contract keeps callers off symfony/messenger directly.
  *
- * Note (D5): this contract and {@see TransportInterface} are the *only* pair
- * sanctioned to `extends` Symfony Messenger directly — async convergence routes
- * through Symfony Messenger by decision D5. Every other bridge contract
+ * Note: this contract and {@see TransportInterface} are the *only* pair
+ * allowed to `extends` Symfony Messenger directly, because async dispatch
+ * routes through Symfony Messenger. Every other bridge contract
  * (e.g. {@see SignalDispatcherInterface}, the Translator) stays a pure MIDDAG
  * contract with no host/library coupling.
  *

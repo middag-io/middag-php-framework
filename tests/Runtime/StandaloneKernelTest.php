@@ -25,7 +25,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The host-free runtime of core#164 F6 6.0 (level 1).
+ * The host-free runtime of core#164.
  *
  * A real PDO (SQLite in memory), a real bus and a real worker — nothing here is
  * a double, because the claim under test is "a MIDDAG product boots and drains

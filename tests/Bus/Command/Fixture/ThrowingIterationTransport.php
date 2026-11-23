@@ -22,7 +22,7 @@ use Traversable;
 /**
  * Transport whose get() yields one good Envelope, then throws
  * {@see MessageDecodingFailedException} *while advancing the generator to the
- * next item* — reproducing the sharp edge core#164 F4 calls out: a `foreach`
+ * next item* — reproducing the sharp edge core#164 calls out: a `foreach`
  * gives {@see CommandWorker} no chance to catch
  * that between loop bodies, only manual iterator stepping does.
  *

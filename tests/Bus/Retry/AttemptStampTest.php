@@ -22,7 +22,7 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\NonSendableStampInterface;
 
 /**
- * Pins the core#164 F4 transport contract: a drainable transport binds an
+ * Pins the core#164 transport contract: a drainable transport binds an
  * Envelope to its retry row by attaching {@see AttemptStamp} in `get()`. The
  * stamp must never survive a send/serialize round trip — exactly like
  * Symfony's own `ReceivedStamp` — which is what
