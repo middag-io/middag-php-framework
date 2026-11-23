@@ -16,6 +16,8 @@ use Middag\Framework\Http\Inertia\InertiaManager;
 use Middag\Framework\Http\Middleware\ShareFlashMiddleware;
 use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
+use Middag\Ui\Form\FormErrors;
+use Middag\Ui\Shared\ValueObject\FlashMessages;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -44,12 +46,37 @@ final class ShareFlashMiddlewareTest extends TestCase
         (new ShareFlashMiddleware($flash))->process(new ServerRequest('GET', '/'), $this->passthrough());
 
         $shared = InertiaManager::getShared();
-        $this->assertSame(['success' => 'Saved.'], $shared['flash']);
-        $this->assertSame(['title' => 'Required'], $shared['errors']);
+        $this->assertInstanceOf(FlashMessages::class, $shared['flash']);
+        $this->assertInstanceOf(FormErrors::class, $shared['errors']);
+        $this->assertSame('{"success":"Saved."}', json_encode($shared['flash'], JSON_THROW_ON_ERROR));
+        $this->assertSame('{"title":"Required"}', json_encode($shared['errors'], JSON_THROW_ON_ERROR));
 
         // One-shot: the bag is emptied by the pull.
         $this->assertFalse($session->has('_middag_flash'));
         $this->assertFalse($session->has('_middag_errors'));
+    }
+
+    #[Test]
+    public function discardsForeignFlashKeysAndNonStringValues(): void
+    {
+        $flash = new FlashBag(new ArraySession());
+        $flash->add('success', 'Saved.');
+        $flash->add('toast', 'nope');
+        $flash->add('error', ['not' => 'a string']);
+
+        (new ShareFlashMiddleware($flash))->process(new ServerRequest('GET', '/'), $this->passthrough());
+
+        $this->assertSame('{"success":"Saved."}', json_encode(InertiaManager::getShared()['flash'], JSON_THROW_ON_ERROR));
+    }
+
+    #[Test]
+    public function emptyBucketsSerializeAsEmptyObjects(): void
+    {
+        (new ShareFlashMiddleware(new FlashBag(new ArraySession())))->process(new ServerRequest('GET', '/'), $this->passthrough());
+
+        $shared = InertiaManager::getShared();
+        $this->assertSame('{}', json_encode($shared['flash'], JSON_THROW_ON_ERROR));
+        $this->assertSame('{}', json_encode($shared['errors'], JSON_THROW_ON_ERROR));
     }
 
     private function passthrough(): RequestHandlerInterface

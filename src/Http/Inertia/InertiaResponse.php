@@ -318,7 +318,16 @@ final class InertiaResponse
                 $this->recordMerge((string) $key, $value);
             }
 
-            $props[$key] = $this->normalize($this->resolveValue($value));
+            $resolved = $this->resolveValue($value);
+
+            // Single null rule: a shared prop whose value (or closure) resolves
+            // to null is discarded, so the wire never carries `key: null` for
+            // an absent shared slot. Local props keep their null.
+            if ($resolved === null && !array_key_exists($key, $this->props)) {
+                continue;
+            }
+
+            $props[$key] = $this->normalize($resolved);
         }
 
         return $props;

@@ -14,6 +14,8 @@ namespace Middag\Framework\Http\Middleware;
 
 use Middag\Framework\Http\Inertia\InertiaManager;
 use Middag\Framework\Http\Session\FlashBag;
+use Middag\Ui\Form\FormErrors;
+use Middag\Ui\Shared\ValueObject\FlashMessages;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -29,6 +31,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  * the kernel, which flashes validation errors before a redirect-back (web
  * half), and with controllers calling `flash()` / `redirectBack()`.
  *
+ * The raw buckets are normalised into the ui value objects: `flash` goes
+ * through {@see FlashMessages::fromArray()} (keys outside
+ * success/error/info/warning and non-string values are discarded) and `errors`
+ * is wrapped in {@see FormErrors}. The `errors` slot carries the flat
+ * field -> message map only; it does not cover the `X-Inertia-Error-Bag`
+ * header, which the kernel handles at its own edge by nesting the map under
+ * the bag name before flashing it.
+ *
  * @api
  */
 final readonly class ShareFlashMiddleware implements MiddlewareInterface
@@ -39,8 +49,8 @@ final readonly class ShareFlashMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        InertiaManager::share('flash', $this->flash->pull());
-        InertiaManager::share('errors', $this->flash->pullErrors());
+        InertiaManager::share('flash', FlashMessages::fromArray($this->flash->pull()));
+        InertiaManager::share('errors', new FormErrors($this->flash->pullErrors()));
 
         return $handler->handle($request);
     }
