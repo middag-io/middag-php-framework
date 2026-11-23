@@ -21,6 +21,10 @@
 * state the 3.0 platform floor intent ([f9ff770](https://github.com/middag-io/middag-php-framework/commit/f9ff7709973e46e2075af2395973c99b991fe0fa))
 * state the version family rule without internal references ([7140688](https://github.com/middag-io/middag-php-framework/commit/7140688b8eba53123def82d9fb21d0cdeb0d6e02))
 
+### Consumer impact
+
+The Inertia renderer now emits `FormSchemaNodeInterface` value objects for `form_panel` schemas; the serialized payload is unchanged. Requires `middag-io/ui` ^1.11.0. The `doctrine/dbal` floor rises to 4.1.
+
 ## [1.20.5](https://github.com/middag-io/middag-php-framework/compare/v1.20.4...v1.20.5) (2026-11-23)
 
 
