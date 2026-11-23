@@ -14,7 +14,7 @@
 #   * ": " then a description of at least 3 chars.
 #
 # Breaking changes: "!" before the colon or a "BREAKING CHANGE:" footer only
-# in a family MAJOR window (version family, ADR-032 of docs-middag-ops); the
+# in a family MAJOR window (the family rule in API-STABILITY.md); the
 # PR check php-version-family-check refuses both otherwise. On 1.x a break
 # ships as feat: (a MINOR, never a PATCH) with the break and the migration
 # described in the body; never fix:, refactor: or chore:. See
