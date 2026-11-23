@@ -7,7 +7,7 @@ lang: en
 domains: [framework, portability]
 deciders: [leadership]
 decision: 'The framework is a separate OSS package with no host and no proprietary code; dependencies only point down.'
-related: [FW-015, FW-012, middag-php-ui:UI-001, docs-middag-ops:ADR-003, docs-middag-ops:ADR-025, docs-middag-ops:ADR-032]
+related: [FW-015, FW-012, middag-php-ui:UI-001]
 supersedes: []
 superseded_by: null
 enforced_by:
