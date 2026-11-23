@@ -16,6 +16,8 @@ use Middag\Framework\Http\Inertia\InertiaManager;
 use Middag\Framework\Http\Middleware\ShareFlashMiddleware;
 use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
+use Middag\Ui\Form\FieldMessage;
+use Middag\Ui\Form\FormErrorBags;
 use Middag\Ui\Form\FormErrors;
 use Middag\Ui\Shared\ValueObject\FlashMessages;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -41,7 +43,7 @@ final class ShareFlashMiddlewareTest extends TestCase
     {
         $flash = new FlashBag($session = new ArraySession());
         $flash->add('success', 'Saved.');
-        $flash->setErrors(['title' => 'Required']);
+        $flash->setErrors(new FormErrors(['title' => 'Required']));
 
         (new ShareFlashMiddleware($flash))->process(new ServerRequest('GET', '/'), $this->passthrough());
 
@@ -54,6 +56,35 @@ final class ShareFlashMiddlewareTest extends TestCase
         // One-shot: the bag is emptied by the pull.
         $this->assertFalse($session->has('_middag_flash'));
         $this->assertFalse($session->has('_middag_errors'));
+    }
+
+    #[Test]
+    public function sharesStructuredMessages(): void
+    {
+        $flash = new FlashBag(new ArraySession());
+        $flash->setErrors(new FormErrors([
+            'email' => new FieldMessage('Invalid email', 'validation.email', 'validators', ['format' => 'email']),
+        ]));
+
+        (new ShareFlashMiddleware($flash))->process(new ServerRequest('GET', '/'), $this->passthrough());
+
+        $this->assertSame(
+            '{"email":{"message":"Invalid email","key":"validation.email","domain":"validators","params":{"format":"email"}}}',
+            json_encode(InertiaManager::getShared()['errors'], JSON_THROW_ON_ERROR),
+        );
+    }
+
+    #[Test]
+    public function sharesErrorBagsWhenTheErrorsWereQueuedUnderABag(): void
+    {
+        $flash = new FlashBag(new ArraySession());
+        $flash->setErrors(new FormErrors(['title' => 'Required']), 'createTask');
+
+        (new ShareFlashMiddleware($flash))->process(new ServerRequest('GET', '/'), $this->passthrough());
+
+        $errors = InertiaManager::getShared()['errors'];
+        $this->assertInstanceOf(FormErrorBags::class, $errors);
+        $this->assertSame('{"createTask":{"title":"Required"}}', json_encode($errors, JSON_THROW_ON_ERROR));
     }
 
     #[Test]

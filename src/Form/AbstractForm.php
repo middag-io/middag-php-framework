@@ -17,6 +17,7 @@ use Middag\Framework\Http\Controller\AbstractController;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Form\Contract\FieldInterface;
 use Middag\Ui\Form\Contract\FormInterface;
+use Middag\Ui\Form\FieldMessage;
 use Middag\Ui\Form\FormState;
 
 /**
@@ -82,7 +83,10 @@ abstract class AbstractForm implements FormInterface
     /**
      * {@inheritdoc}
      *
-     * @return array<string, string|string[]>
+     * Each field maps to one message or a list; a message is a string or a
+     * structured {@see FieldMessage} (or its serialized array).
+     *
+     * @return array<string, array{message: string, key: string, domain: string, params?: array<string, mixed>}|FieldMessage|list<array{message: string, key: string, domain: string, params?: array<string, mixed>}|FieldMessage|string>|string>
      */
     public function errors(): array
     {
