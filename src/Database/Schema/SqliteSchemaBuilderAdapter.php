@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Middag\Framework\Database\Schema;
 
 use Middag\Framework\Database\Contract\ConnectionInterface;
-use Middag\Framework\Database\Contract\IndexIntrospectionInterface;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use Throwable;
@@ -27,7 +26,7 @@ use Throwable;
  *
  * @api
  */
-final readonly class SqliteSchemaBuilderAdapter implements IndexIntrospectionInterface, SchemaBuilderAdapterInterface
+final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterInterface
 {
     public function __construct(private ConnectionInterface $connection) {}
 

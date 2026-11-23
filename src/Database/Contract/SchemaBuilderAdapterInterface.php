@@ -92,4 +92,17 @@ interface SchemaBuilderAdapterInterface
      * @param string $columnName column name to check
      */
     public function columnExists(string $tableName, string $columnName): bool;
+
+    /**
+     * Check whether $tableName has an index (of any name, unique or not)
+     * covering exactly $columns, in that order.
+     *
+     * MigrationRunner::upgrade() relies on this to converge the descriptor
+     * indexes of tables that already exist. Returns false when the table is
+     * absent.
+     *
+     * @param string       $tableName physical table name
+     * @param list<string> $columns   ordered column names
+     */
+    public function indexExistsOnColumns(string $tableName, array $columns): bool;
 }

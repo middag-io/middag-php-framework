@@ -19,7 +19,6 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Middag\Framework\Database\Contract\IndexIntrospectionInterface;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
 
@@ -39,7 +38,7 @@ use Middag\Framework\Exception\MiddagPersistenceException;
  *
  * @api
  */
-final readonly class DbalSchemaBuilderAdapter implements IndexIntrospectionInterface, SchemaBuilderAdapterInterface
+final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInterface
 {
     public function __construct(private Connection $connection) {}
 

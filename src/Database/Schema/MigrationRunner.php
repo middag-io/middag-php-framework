@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Database\Schema;
 
-use Middag\Framework\Database\Contract\IndexIntrospectionInterface;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Database\Contract\VersionTrackerInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
@@ -65,9 +64,8 @@ abstract class MigrationRunner
      * descriptors but are absent from the live schema. It is additive and
      * idempotent: it never drops or alters an existing column or index. An
      * index counts as present when the live table has any index over the same
-     * ordered column set, whatever its name. Indexes are only converged when
-     * the adapter implements {@see IndexIntrospectionInterface}. Subclasses may
-     * override for more complex upgrade logic (e.g. renames).
+     * ordered column set, whatever its name. Subclasses may override for more
+     * complex upgrade logic (e.g. renames).
      *
      * @param int $oldVersion the previously installed version number
      *
@@ -125,16 +123,12 @@ abstract class MigrationRunner
 
     /**
      * Add the descriptor indexes that have no live index over the same ordered
-     * column set. No-op when the adapter cannot introspect indexes.
+     * column set.
      *
      * @param list<array<string, mixed>> $indexes index descriptors of the table
      */
     private function addMissingIndexes(string $table, array $indexes): void
     {
-        if (!$this->adapter instanceof IndexIntrospectionInterface) {
-            return;
-        }
-
         foreach ($indexes as $index) {
             $columns = array_values($index['fields'] ?? $index['columns'] ?? []);
 
