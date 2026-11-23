@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.24.0](https://github.com/middag-io/middag-php-framework/compare/v1.23.0...v1.24.0) (2026-11-23)
+
+
+### Features
+
+* adopt ui 1.14 error contracts ([032b875](https://github.com/middag-io/middag-php-framework/commit/032b87598f99a3bb51f3a29401a280512c2ae59e))
+
+### Consumer impact
+
+- Requires `middag-io/ui ^1.14`. `composer.json` declares `"conflict": {"middag-io/moodle": "<1.23"}`: older Moodle adapters read flashed errors as a raw array.
+- `FlashBag::setErrors(FormErrors $errors, ?string $bag = null)` is the single writer, and `FlashBag::pullErrors(): FormErrors|FormErrorBags` the single reader (a bag name from `X-Inertia-Error-Bag` yields `FormErrorBags`). Code that passed or read plain arrays must use the value objects.
+- Validation errors are no longer flattened to strings. `FormValidator` and `ValidationErrorSerializer::formErrors()` emit ui `FieldMessage` entries (`{message, key, domain, params?}`), and the 422 JSON body uses the same shape, with `params` omitted when empty. Clients must accept the object form of a `FieldError`.
+- An empty error map is flashed and shared as `{}`.
+- PHPDoc of `AbstractForm::errors()` and `FormValidatorInterface::validate()` widens to the ui 1.14 `FieldError`.
+
 ## [1.23.0](https://github.com/middag-io/middag-php-framework/compare/v1.22.0...v1.23.0) (2026-11-23)
 
 
