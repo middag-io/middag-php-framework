@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Database\Schema;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Schema\Index;
 use Middag\Framework\Database\Schema\DbalSchemaBuilderAdapter;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -75,10 +76,67 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         $schemaManager = $this->connection->createSchemaManager();
 
         $this->adapter->addIndex('middag_widget', ['name' => 'idx_widget_active', 'fields' => ['active']]);
-        self::assertTrue($schemaManager->introspectTable('middag_widget')->hasIndex('idx_widget_active'));
+        self::assertTrue($schemaManager->introspectTable('middag_widget')->hasIndex('middag_widget_idx_widget_active'));
 
         $this->adapter->dropIndex('middag_widget', 'idx_widget_active');
-        self::assertFalse($schemaManager->introspectTable('middag_widget')->hasIndex('idx_widget_active'));
+        self::assertFalse($schemaManager->introspectTable('middag_widget')->hasIndex('middag_widget_idx_widget_active'));
+    }
+
+    public function testAddIndexAcceptsTheSameShortNameOnTwoTables(): void
+    {
+        foreach (['orders', 'invoices'] as $table) {
+            $this->adapter->createTable([
+                'name' => $table,
+                'columns' => [
+                    ['name' => 'id', 'type' => 'int', 'sequence' => true],
+                    ['name' => 'status', 'type' => 'int'],
+                ],
+            ]);
+            $this->adapter->addIndex($table, ['name' => 'status', 'fields' => ['status']]);
+        }
+
+        $schemaManager = $this->connection->createSchemaManager();
+        self::assertTrue($schemaManager->introspectTable('orders')->hasIndex('orders_status'));
+        self::assertTrue($schemaManager->introspectTable('invoices')->hasIndex('invoices_status'));
+    }
+
+    public function testCreateTableAndAddIndexGiveTheSameIndexName(): void
+    {
+        $index = ['name' => 'status', 'fields' => ['status']];
+        $columns = [
+            ['name' => 'id', 'type' => 'int', 'sequence' => true],
+            ['name' => 'status', 'type' => 'int'],
+        ];
+
+        // Fresh install: the index comes with the table.
+        $this->adapter->createTable(['name' => 'fresh', 'columns' => $columns, 'indexes' => [$index]]);
+        // Upgrade: the table exists first, the index is added later.
+        $this->adapter->createTable(['name' => 'upgraded', 'columns' => $columns]);
+        $this->adapter->addIndex('upgraded', $index);
+
+        $schemaManager = $this->connection->createSchemaManager();
+        self::assertSame(
+            ['fresh_status'],
+            $this->secondaryIndexNames($schemaManager->introspectTable('fresh')->getIndexes()),
+        );
+        self::assertSame(
+            ['upgraded_status'],
+            $this->secondaryIndexNames($schemaManager->introspectTable('upgraded')->getIndexes()),
+        );
+    }
+
+    public function testDropIndexStillDropsAnIndexThatCarriesTheShortName(): void
+    {
+        // Indexes added by addIndex() before the name was table-qualified
+        // carry the short name; dropIndex() must still find them.
+        $this->adapter->createTable($this->descriptor());
+        $this->connection->executeStatement('CREATE INDEX idx_legacy ON middag_widget (active)');
+
+        $this->adapter->dropIndex('middag_widget', 'idx_legacy');
+
+        self::assertFalse(
+            $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('idx_legacy'),
+        );
     }
 
     public function testIndexExistsOnColumnsMatchesTheOrderedColumnSet(): void
@@ -275,5 +333,25 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
                 ['name' => 'idx_widget_title', 'fields' => ['title']],
             ],
         ];
+    }
+
+    /**
+     * @param array<string, Index> $indexes
+     *
+     * @return list<string>
+     */
+    private function secondaryIndexNames(array $indexes): array
+    {
+        $names = [];
+
+        foreach ($indexes as $index) {
+            if (!$index->isPrimary()) {
+                $names[] = strtolower($index->getName());
+            }
+        }
+
+        sort($names);
+
+        return $names;
     }
 }

@@ -103,8 +103,22 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
     public function dropIndex(string $tableName, string $indexName, array $fields = []): void
     {
         // Identifier-based adapter: SQLite drops by name; $fields is only
-        // consumed by field-set adapters (Moodle xmldb).
-        $this->connection->execute(sprintf('DROP INDEX IF EXISTS %s', $indexName));
+        // consumed by field-set adapters (Moodle xmldb). addIndex() stores the
+        // table-qualified name, so resolve the short name against this table
+        // first. SQLite index names are schema-wide: only an index that
+        // belongs to $tableName is dropped.
+        foreach ([$tableName . '_' . $indexName, $indexName] as $candidate) {
+            $row = $this->connection->fetch(
+                "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?",
+                [$tableName, $candidate],
+            );
+
+            if ($row !== null) {
+                $this->connection->execute(sprintf('DROP INDEX IF EXISTS %s', $candidate));
+
+                return;
+            }
+        }
     }
 
     public function tableExists(string $tableName): bool

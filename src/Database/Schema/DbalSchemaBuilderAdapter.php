@@ -114,7 +114,10 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     {
         $schemaManager = $this->connection->createSchemaManager();
         $current = $schemaManager->introspectTable($tableName);
-        $new = new Index((string) ($index['name'] ?? null) ?: null, $this->indexFields($index), !empty($index['unique']));
+        // Same naming rule as createTable(): a fresh install and an upgrade
+        // must end up with the same index name, and a short name reused by
+        // two tables must not collide on schema-wide index namespaces.
+        $new = new Index($this->qualifiedIndexName($tableName, $index), $this->indexFields($index), !empty($index['unique']));
 
         $schemaManager->alterTable(new TableDiff($current, addedIndexes: [$new]));
     }
@@ -123,14 +126,19 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     {
         // Identifier-based adapter: dbal resolves the index by name; $fields is
         // only consumed by field-set adapters (Moodle xmldb).
+        // The table-qualified name comes first (what createTable() and
+        // addIndex() emit); the short name still matches indexes added before
+        // addIndex() qualified it.
         $schemaManager = $this->connection->createSchemaManager();
         $current = $schemaManager->introspectTable($tableName);
 
-        if (!$current->hasIndex($indexName)) {
-            return;
-        }
+        foreach ([$tableName . '_' . $indexName, $indexName] as $candidate) {
+            if ($current->hasIndex($candidate)) {
+                $schemaManager->alterTable(new TableDiff($current, droppedIndexes: [$current->getIndex($candidate)]));
 
-        $schemaManager->alterTable(new TableDiff($current, droppedIndexes: [$current->getIndex($indexName)]));
+                return;
+            }
+        }
     }
 
     public function tableExists(string $tableName): bool
