@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/middag-io/middag-php-framework/compare/v1.23.0...v1.24.0) (2026-11-23)
+
+
+### Features
+
+* adopt ui 1.14 error contracts ([032b875](https://github.com/middag-io/middag-php-framework/commit/032b87598f99a3bb51f3a29401a280512c2ae59e))
+
 ## [1.23.0](https://github.com/middag-io/middag-php-framework/compare/v1.22.0...v1.23.0) (2026-11-23)
 
 
