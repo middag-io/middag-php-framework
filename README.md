@@ -18,7 +18,7 @@
 
 > Your domain should not know, or care, where it runs.
 
-Status: `1.x`, pre-stable and unsupported; `2.0.0` is the first supported release and the cut to it is clean. From `2.0.0` the framework is part of the `middag-php-*` version family: a minor never breaks, and every library of the family is required with the same `^2.N` (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
+Status: `1.x`, pre-stable and unsupported; `2.0.0` is the first supported release and the cut to it is clean. From `2.0.0` the framework is part of the open-source `middag-php-*` version family, which shares only the MAJOR: a minor never breaks, and each package is required with `^2.0`, or with the MINOR whose features you use (see [`API-STABILITY.md`](API-STABILITY.md)). License: Apache-2.0.
 
 ## Why middag-io/framework?
 
@@ -147,7 +147,7 @@ Git hooks are wired automatically on install; the `commit-msg` hook enforces [Co
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, coding standards and quality pipeline. Please also read the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Found a security issue? Follow [`SECURITY.md`](SECURITY.md).
 
-Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface (what is covered and what is not), the version family from `2.0.0` (shared MAJOR.MINOR, fix-only patches, the same `^2.N` for every library, the family window check on every PR) and links to [Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
+Building on the framework? [`API-STABILITY.md`](API-STABILITY.md) defines the `@api` public surface (what is covered and what is not), the version family from `2.0.0` (shared MAJOR, per-library MINOR and PATCH, siblings required with `^2.N`), the deprecation and support rules, and links to [Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
 
 ## License
 
