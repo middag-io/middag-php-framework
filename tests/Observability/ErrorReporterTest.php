@@ -22,6 +22,7 @@ use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -110,12 +111,10 @@ final class ErrorReporterTest extends TestCase
     {
         // The Client swallows transport failures itself, so the reporter's own
         // guard is only reachable when the hub blows up before capture.
-        $explodingHub = new class extends Hub {
-            public function withScope(callable $callback): void
-            {
-                throw new RuntimeException('sdk exploded');
-            }
-        };
+        // A mock of the interface: Hub is final in the lowest supported SDK.
+        $explodingHub = $this->createMock(HubInterface::class);
+        $explodingHub->method('withScope')
+            ->willThrowException(new RuntimeException('sdk exploded'));
 
         $previousHub = SentrySdk::getCurrentHub();
         SentrySdk::setCurrentHub($explodingHub);
