@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.23.0](https://github.com/middag-io/middag-php-framework/compare/v1.22.0...v1.23.0) (2026-11-23)
+
+
+### Features
+
+* require index introspection on every schema builder adapter ([e17378a](https://github.com/middag-io/middag-php-framework/commit/e17378a9afbe86d7cd64d685cd4412ccece611fe))
+
+
+### Bug Fixes
+
+* add missing descriptor indexes to existing tables on upgrade ([bf3e2fb](https://github.com/middag-io/middag-php-framework/commit/bf3e2fb46c0838d055a3e8ac8333c3a7f81dcc69))
+* keep empty objects as JSON objects in Inertia props ([ee17d0c](https://github.com/middag-io/middag-php-framework/commit/ee17d0cb95ef98f47a35613672bba51db6cf1d47))
+* scope MySQL table and column probes to the current schema ([8b74870](https://github.com/middag-io/middag-php-framework/commit/8b74870fd2bd6bc6ca813e523f450b554d047ba5))
+
+
+### Documentation
+
+* add enum evolution policy to API-STABILITY ([4c57a90](https://github.com/middag-io/middag-php-framework/commit/4c57a90e6948915dd92a96ebde5fcf0e996a908f))
+
 ## [1.22.0](https://github.com/middag-io/middag-php-framework/compare/v1.21.1...v1.22.0) (2026-11-23)
 
 
