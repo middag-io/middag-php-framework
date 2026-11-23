@@ -22,7 +22,7 @@ use RuntimeException;
 
 /**
  * Shape check for {@see AttemptStoreInterface}
- * (core#164 F1), exercised through an in-memory stub — the real
+ * (core#164), exercised through an in-memory stub — the real
  * implementation is a host detail that lives outside this OSS package.
  *
  * @internal

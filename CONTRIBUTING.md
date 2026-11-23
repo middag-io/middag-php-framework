@@ -100,7 +100,7 @@ Longer body when the "why" isn't obvious.
 Releases are cut **exclusively** by `release-please` — never by a manual tag.
 It reads the commit history to compute the next version and the CHANGELOG. The
 framework is on the **`1.x`** line and belongs to the MIDDAG PHP library
-version family (ADR-032 of `docs-middag-ops`), which crosses `2.0.0` together
+version family, which crosses `2.0.0` together
 when the product owner decides the cut:
 
 | Commit | On `1.x` | From `2.0.0` |

@@ -97,7 +97,7 @@ sync bus + async via Messenger.
 ## Decision records
 
 Architecture decisions live in [`docs/decisions/`](docs/decisions/) as `FW-NNN` records in the
-MIDDAG-MADR compact format (`docs-middag-ops` ADR-014): frontmatter, then Context → Considered Options
+MIDDAG-MADR compact format: frontmatter, then Context → Considered Options
 → Decision → Consequences → Enforcement. A record states **why** (the choice, the alternatives, the
 consequences); specification (class lists, catalogs, pipelines, naming tables) lives in the reference
 docs its Enforcement table points to, mostly at docs.middag.dev (`docs-middag-dev`,
@@ -130,7 +130,7 @@ vocabulary live downstream:
 - **Commits:** Conventional Commits; **NEVER** `Co-Authored-By`. One scope per commit (the commit-msg
   hook rejects comma multi-scope). On the `1.x` line: fix → patch, feat → minor; never `!` or a
   `BREAKING CHANGE:` footer (release-please would cut `2.0.0` in this lib alone) — a break ships as
-  `feat:` (a minor, never `fix:`). From `2.0.0` (version family, ADR-032 of `docs-middag-ops`): `feat:` waits for a
+  `feat:` (a minor, never `fix:`). From `2.0.0` (the `middag-php-*` version family moves together): `feat:` waits for a
   family MINOR window, `!`/`BREAKING CHANGE:` for a family MAJOR window. The PR check
   `php-version-family-check / check` enforces this against the org variable `PHP_LIBS_OPEN_RELEASE`;
   a waiting feature PR is kept current by merging `main` (never rebase/force-push). A window counts

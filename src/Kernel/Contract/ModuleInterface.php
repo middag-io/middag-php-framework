@@ -18,8 +18,8 @@ use Psr\Container\ContainerInterface;
  * Minimal contract for framework modules.
  *
  * Platform-specific module interfaces (the Moodle/WordPress adapters) and
- * MIDDAG-flavored module interfaces (in core) extend this. Per D2, adapters
- * know only this OSS contract — the richer extension surface lives downstream.
+ * MIDDAG-flavored module interfaces (in core) extend this. Adapters
+ * know only this OSS contract; the richer extension surface lives downstream.
  *
  * @api
  */

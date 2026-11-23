@@ -18,7 +18,7 @@ use Symfony\Component\Messenger\Bridge\Doctrine\Transport\DoctrineTransport;
 
 /**
  * Symfony's Doctrine transport, satisfying the MIDDAG-scoped
- * {@see TransportInterface} (core#164 F6 6.1).
+ * {@see TransportInterface} (core#164).
  *
  * Interface satisfaction in PHP is nominal, not structural: the bridge
  * implements Symfony's `TransportInterface` only, while every MIDDAG seam

@@ -33,7 +33,7 @@ use Symfony\Component\Messenger\Stamp\TransportNamesStamp;
 use Symfony\Component\Messenger\Transport\SetupableTransportInterface;
 
 /**
- * The `doctrine` transport of core#164 F6 6.1, over a REAL DBAL connection.
+ * The `doctrine` transport of core#164, over a REAL DBAL connection.
  *
  * SQLite in memory, the real `symfony/doctrine-messenger` bridge, the real
  * `messenger_messages` table it creates for itself. Level 1's acceptance
@@ -92,7 +92,7 @@ final class DoctrineTransportFactoryTest extends TestCase
 
     /**
      * `auto_setup` is on because a standalone install has no guaranteed
-     * migration tool (F6 6.3): the table has to appear on first use.
+     * migration tool: the table has to appear on first use.
      */
     #[Test]
     public function autoSetupCreatesTheQueueTableOnFirstUse(): void
@@ -142,7 +142,7 @@ final class DoctrineTransportFactoryTest extends TestCase
     }
 
     /**
-     * F6 acceptance: stamps on {@see CommandSerializer}'s whitelist (F3 3.10)
+     * Acceptance: stamps on {@see CommandSerializer}'s whitelist
      * survive the round trip through the table.
      */
     #[Test]

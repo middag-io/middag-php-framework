@@ -21,8 +21,7 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 /**
- * The framework has no `src/Adapter/` and must never grow one (core#164 F6
- * acceptance, decision G-standalone).
+ * The framework has no `src/Adapter/` and must never grow one (core#164).
  *
  * It is host-agnostic by definition, and that is precisely what makes a
  * host-free {@see StandaloneKernel} belong here while lane naming, the signal
