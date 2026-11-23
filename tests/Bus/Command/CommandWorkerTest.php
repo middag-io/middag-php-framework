@@ -44,7 +44,7 @@ use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Throwable;
 
 /**
- * core#164 F4: {@see CommandWorker} must never let a handler failure or a
+ * core#164: {@see CommandWorker} must never let a handler failure or a
  * decode failure escape drain() and kill the loop, and must apply retry
  * bookkeeping to the queue row (via {@see AttemptStamp}) rather than to
  * envelope stamps.

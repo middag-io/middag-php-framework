@@ -21,7 +21,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Retryable-boundary classification and exponential backoff (core#164 F1).
+ * Retryable-boundary classification and exponential backoff (core#164).
  * Jitter is only asserted as a bounded range — the exact value is random by
  * design — while every backoff-shape assertion pins `jitter: false` so the
  * suite stays deterministic.

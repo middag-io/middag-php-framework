@@ -35,7 +35,7 @@ use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
 
 /**
  * The minimum runtime a MIDDAG product needs on a plain PHP host — no Moodle,
- * no WordPress (core#164 F6 6.0, decision G-standalone level 1).
+ * no WordPress (core#164).
  *
  * Three things, which is the whole list a worker actually needs: a database
  * connection, a {@see MessageBusInterface}, and a {@see CommandWorker} that
@@ -60,7 +60,7 @@ use Symfony\Component\Messenger\Transport\Sender\SendersLocator;
  * queue table and the domain tables are in the same database and the same
  * transaction scope.
  *
- * ## Sync is the default, and that is decision G1h
+ * ## Sync is the default
  *
  * With no transports the bus handles every message inline — Symfony's own
  * behaviour, and the only safe default for a host that may have no worker

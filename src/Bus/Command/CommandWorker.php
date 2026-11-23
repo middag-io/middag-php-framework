@@ -45,7 +45,7 @@ use Throwable;
  * long-lived caller simply calls drain() again in its own loop; that is also
  * what makes drain() safe to call from a one-shot cron tick.
  *
- * Retry bookkeeping (core#164 F4): when a received Envelope carries an
+ * Retry bookkeeping (core#164): when a received Envelope carries an
  * {@see AttemptStamp} — see that class for the transport-side contract — and
  * both a {@see RetryPolicyInterface} and an {@see AttemptStoreInterface} are
  * configured, a handler failure is classified via the policy and recorded on

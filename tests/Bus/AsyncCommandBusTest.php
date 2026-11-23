@@ -120,7 +120,7 @@ final class AsyncCommandBusTest extends TestCase
         $transport->send(new Envelope(new RecordCommand('doomed')));
 
         // A bus that always fails: drain() must reject the envelope and keep
-        // running — never rethrow out of the loop (core#164 F4).
+        // running — never rethrow out of the loop (core#164).
         $bus = new class implements MessageBusInterface {
             public function dispatch(object $message, array $stamps = []): Envelope
             {
