@@ -17,19 +17,26 @@ use Middag\Ui\Block\Section;
 use Middag\Ui\Form\Contract\FieldInterface;
 use Middag\Ui\Form\Contract\FormInterface;
 use Middag\Ui\Form\Contract\FormRendererInterface;
-use Middag\Ui\Form\Group;
+use Middag\Ui\Form\Contract\FormSchemaNodeInterface;
+use Middag\Ui\Form\FormFieldNode;
+use Middag\Ui\Form\FormGroupNode;
+use Middag\Ui\Form\FormSectionNode;
+use Middag\Ui\Shared\Enum\FormComponent;
 use Middag\Ui\Shared\Enum\RenderTarget;
 use Middag\Ui\Shared\ValueObject\RendererOutput;
+use Middag\Ui\Shared\ValueObject\Translatable;
 
 /**
  * Inertia form renderer adapter for the `@middag-io/react` form_panel.
  *
  * Serializes the form schema into the props the lib's FormPanelBlock consumes.
- * Each schema item becomes a typed node: a field (`{kind, key, component, props}`
- * shaped by {@see InertiaFieldMapper}), a section, or a group.
+ * Each schema item becomes a `FormSchemaNodeInterface` value object: a
+ * `FormFieldNode` (props shaped by {@see InertiaFieldMapper}), a
+ * `FormSectionNode`, or a `FormGroupNode`. `props['schema']` holds these objects;
+ * their JSON serialization is the wire the React form_panel consumes.
  *
  * Produces RendererOutput::props() with shape:
- *   { schema: [...], values: {...}, errors: {...}, meta: {} }
+ *   { schema: list<FormSchemaNodeInterface>, values: {...}, errors: {...}, meta: {} }
  * where `values` merges field defaults (so a fresh form renders its defaults)
  * under any submitted/hydrated state.
  *
@@ -66,44 +73,47 @@ final readonly class InertiaRenderer implements FormRendererInterface
     }
 
     /**
-     * Recursively serialize a schema array into serializable nodes.
+     * Recursively build the schema node tree for the form_panel.
      *
      * @param array<int, FieldInterface|LayoutElementInterface> $items
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<FormSchemaNodeInterface>
      */
     private function serializeSchema(array $items): array
     {
         $nodes = [];
         foreach ($items as $item) {
             if ($item instanceof Section) {
-                $nodes[] = [
-                    'kind' => 'section',
-                    'id' => $item->id(),
-                    'label' => $item->labelData(),
-                    'children' => $this->serializeSchema($item->children()),
-                ];
-            } elseif ($item instanceof Group) {
-                $nodes[] = [
-                    'kind' => 'group',
-                    'id' => $item->id(),
-                    'children' => $this->serializeSchema($item->children()),
-                ];
+                $nodes[] = new FormSectionNode(
+                    $item->id(),
+                    $this->sectionLabel($item->labelData()),
+                    $this->serializeSchema($item->children()),
+                );
             } elseif ($item instanceof LayoutElementInterface) {
-                // Unknown layout element — serialize as generic group-like node.
-                $nodes[] = [
-                    'kind' => 'group',
-                    'id' => $item->id(),
-                    'children' => $this->serializeSchema($item->children()),
-                ];
+                // Groups and unknown layout elements serialize as a group node.
+                $nodes[] = new FormGroupNode($item->id(), $this->serializeSchema($item->children()));
             } elseif ($item instanceof FieldInterface) {
-                // map() returns the FormFieldNode body {key, component, props};
-                // prepend the node discriminator.
-                $nodes[] = ['kind' => 'field'] + $this->mapper->map($item->toDefinition());
+                $body = $this->mapper->map($item->toDefinition());
+                $nodes[] = new FormFieldNode($body['key'], FormComponent::from($body['component']), $body['props']);
             }
         }
 
         return $nodes;
+    }
+
+    /**
+     * Rebuild a section label from its serialized form (Section exposes only
+     * `labelData()`): a literal string, a Translatable payload or null.
+     *
+     * @param null|array<string, mixed>|string $data
+     */
+    private function sectionLabel(array|string|null $data): string|Translatable|null
+    {
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        return Translatable::of((string) $data['key'], (string) $data['domain'], (array) ($data['params'] ?? []));
     }
 
     /**
