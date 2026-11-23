@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Http;
 
+use InvalidArgumentException;
 use Middag\Framework\Http\ValidationErrorSerializer;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\FallbackTranslator;
@@ -140,5 +141,27 @@ final class ValidationErrorSerializerTest extends TestCase
             json_encode($serializer->serialize($map), JSON_THROW_ON_ERROR),
             json_encode($serializer->formErrors($map), JSON_THROW_ON_ERROR),
         );
+    }
+
+    #[Test]
+    public function rejectsListParamsInTheBody(): void
+    {
+        // params are keyed by placeholder name; a list cannot encode as the
+        // JSON object FieldMessage requires.
+        $this->expectException(InvalidArgumentException::class);
+
+        (new ValidationErrorSerializer(new FallbackTranslator()))->serialize([
+            'title' => new TranslatableMessage('validation.custom', 'validators', ['x'], 'Bad.'),
+        ]);
+    }
+
+    #[Test]
+    public function rejectsListParamsInTheFlashedErrors(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new ValidationErrorSerializer(new FallbackTranslator()))->formErrors([
+            'title' => [new TranslatableMessage('validation.custom', 'validators', ['x'], 'Bad.')],
+        ]);
     }
 }
