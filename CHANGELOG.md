@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.21.0](https://github.com/middag-io/middag-php-framework/compare/v1.20.5...v1.21.0) (2026-11-23)
+
+
+### Features
+
+* **form:** emit form schema value objects from the Inertia renderer ([1241977](https://github.com/middag-io/middag-php-framework/commit/12419775f9f2349bff1b38e081b4620185446ebd))
+
+
+### Bug Fixes
+
+* **deps:** raise the floor of doctrine/dbal to 4.1 ([456aea0](https://github.com/middag-io/middag-php-framework/commit/456aea0267533afb319111606575c1aae4343fce))
+
+
+### Documentation
+
+* align SECURITY.md with the uniform library policy ([402c48a](https://github.com/middag-io/middag-php-framework/commit/402c48a49d6742e81cce2d0266379252356722b1))
+* apply the version-family support policy ([4a20804](https://github.com/middag-io/middag-php-framework/commit/4a2080426bb9319b7a394fd9df12a7ef89f360ad))
+* link the exact adapter repositories in the README ([d0efff9](https://github.com/middag-io/middag-php-framework/commit/d0efff9f93cc06e2686c794897f8fb5525ec5c91))
+* state the 3.0 platform floor intent ([f9ff770](https://github.com/middag-io/middag-php-framework/commit/f9ff7709973e46e2075af2395973c99b991fe0fa))
+* state the version family rule without internal references ([7140688](https://github.com/middag-io/middag-php-framework/commit/7140688b8eba53123def82d9fb21d0cdeb0d6e02))
+
 ## [1.20.5](https://github.com/middag-io/middag-php-framework/compare/v1.20.4...v1.20.5) (2026-11-23)
 
 
