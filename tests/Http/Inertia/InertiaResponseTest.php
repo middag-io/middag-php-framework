@@ -331,6 +331,37 @@ final class InertiaResponseTest extends TestCase
     }
 
     #[Test]
+    public function sharedPropResolvingToNullIsDiscardedAndClosureStaysLazy(): void
+    {
+        $calls = 0;
+        InertiaManager::share('auth', function () use (&$calls): ?array {
+            ++$calls;
+
+            return null;
+        });
+        InertiaManager::share('locale', null);
+        InertiaManager::share('kept', 'yes');
+
+        $request = Request::create('/dashboard', 'GET', server: ['HTTP_X_INERTIA' => 'true']);
+        $props = $this->props((new InertiaResponse('Dashboard', [], $request))->toResponse());
+
+        self::assertSame(1, $calls);
+        self::assertArrayNotHasKey('auth', $props);
+        self::assertArrayNotHasKey('locale', $props);
+        self::assertSame('yes', $props['kept']);
+    }
+
+    #[Test]
+    public function localNullPropIsKept(): void
+    {
+        $request = Request::create('/dashboard', 'GET', server: ['HTTP_X_INERTIA' => 'true']);
+        $props = $this->props((new InertiaResponse('Dashboard', ['note' => null], $request))->toResponse());
+
+        self::assertArrayHasKey('note', $props);
+        self::assertNull($props['note']);
+    }
+
+    #[Test]
     public function getSharedReturnsRawUnresolvedValues(): void
     {
         InertiaManager::share('lazy', fn (): string => 'resolved');

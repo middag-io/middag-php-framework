@@ -510,7 +510,9 @@ class HttpKernel implements HttpKernelInterface
         // Inertia error bags: when the originating request scoped its form to a
         // named bag (X-Inertia-Error-Bag), nest the field map under it so the
         // client's useForm(bag) reads its own errors. Absent the header the
-        // shape stays flat (the common single-form / API case).
+        // shape stays flat (the common single-form / API case). The shared
+        // `errors` slot (ui FormErrors) does not model this nesting: the bag
+        // is an edge concern handled here, outside that slot's contract.
         $errorBag = $request->headers->get('X-Inertia-Error-Bag');
         $inBag = static fn (array $map): array => is_string($errorBag) && $errorBag !== ''
             ? [$errorBag => $map]

@@ -163,7 +163,7 @@ final class InertiaAdapterTest extends TestCase
             /** @return array<string, mixed> */
             public function jsonSerialize(): array
             {
-                return ['version' => '1', 'kind' => 'table'];
+                return ['version' => '2', 'kind' => 'table'];
             }
         };
 

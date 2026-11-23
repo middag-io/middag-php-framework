@@ -40,7 +40,7 @@ final class InertiaFactoryTest extends TestCase
             /** @return array<string, mixed> */
             public function jsonSerialize(): array
             {
-                return ['version' => '1', 'shell' => 'product', 'marker' => 'PAGE'];
+                return ['version' => '2', 'shell' => 'product', 'marker' => 'PAGE'];
             }
         };
 
@@ -58,7 +58,7 @@ final class InertiaFactoryTest extends TestCase
             /** @return array<string, mixed> */
             public function jsonSerialize(): array
             {
-                return ['version' => '1', 'kind' => 'table'];
+                return ['version' => '2', 'kind' => 'table'];
             }
         };
 
