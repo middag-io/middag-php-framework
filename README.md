@@ -107,8 +107,8 @@ Full API reference, guides and examples live in the hub: **https://docs.middag.d
 | Target | How |
 |---|---|
 | **Standalone** | Implement `Middag\Framework\Kernel\Contract\BootstrapInterface`, build the container with `ContainerFactory::build()`, build the HTTP kernel with `HttpKernelFactory`, and serve through `StandaloneKernel`. |
-| **Moodle** | The OSS [`middag-io/moodle`](https://github.com/middag-io) adapter (`MoodleBootstrap` plus the bridge contracts). |
-| **WordPress** | The OSS [`middag-io/wordpress`](https://github.com/middag-io) adapter (in build-out). |
+| **Moodle** | The OSS [`middag-io/moodle`](https://github.com/middag-io/middag-php-moodle) adapter (`MoodleBootstrap` plus the bridge contracts). |
+| **WordPress** | The OSS [`middag-io/wordpress`](https://github.com/middag-io/middag-php-wordpress) adapter (`WpBootstrap` plus the bridge contracts). |
 
 An adapter is a thin layer that implements the bridge contracts (`BootstrapInterface`, `ConfigResolverInterface`, `ConnectionAdapterInterface`, `HostEventBridgeInterface`, `UserContextResolverInterface`, `TranslatorInterface`, `FormRendererInterface`). The framework ships a default OSS implementation of each, so it runs standalone with no adapter at all.
 
