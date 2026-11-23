@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.5](https://github.com/middag-io/middag-php-framework/compare/v1.20.4...v1.20.5) (2026-11-23)
+
+
+### Documentation
+
+* point the security contact to security@middag.io ([2d32f14](https://github.com/middag-io/middag-php-framework/commit/2d32f14ba863a1f920d524c4ca5ff5668deb3dd3))
+* point the security contact to security@middag.io ([1522e31](https://github.com/middag-io/middag-php-framework/commit/1522e31b105a5932a91673717319998fb22b2363))
+
 ## [1.20.4](https://github.com/middag-io/middag-php-framework/compare/v1.20.3...v1.20.4) (2026-11-16)
 
 
