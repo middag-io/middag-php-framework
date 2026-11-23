@@ -1,0 +1,56 @@
+{
+    "schema": [
+        {
+            "kind": "field",
+            "key": "type",
+            "component": "text",
+            "props": {
+                "label": "",
+                "required": false
+            }
+        },
+        {
+            "kind": "field",
+            "key": "detail",
+            "component": "text",
+            "props": {
+                "label": "",
+                "required": false,
+                "visible_when": {
+                    "field": "type",
+                    "operator": "equals",
+                    "value": "x"
+                },
+                "hidden_when": {
+                    "field": "type",
+                    "operator": "in",
+                    "value": [
+                        "y",
+                        "z"
+                    ]
+                },
+                "required_when": {
+                    "field": "type",
+                    "operator": "not_equals",
+                    "value": "3"
+                },
+                "disabled_when": {
+                    "field": "type",
+                    "operator": "not_in",
+                    "value": [
+                        "1",
+                        "2"
+                    ]
+                }
+            }
+        }
+    ],
+    "values": {
+        "type": "x",
+        "title": "Hi"
+    },
+    "errors": {
+        "title": "bad"
+    },
+    "meta": []
+}

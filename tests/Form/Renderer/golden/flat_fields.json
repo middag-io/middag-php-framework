@@ -1,0 +1,38 @@
+{
+    "schema": [
+        {
+            "kind": "field",
+            "key": "title",
+            "component": "text",
+            "props": {
+                "label": "Title",
+                "required": false
+            }
+        },
+        {
+            "kind": "field",
+            "key": "body",
+            "component": "textarea",
+            "props": {
+                "label": "",
+                "required": false
+            }
+        },
+        {
+            "kind": "field",
+            "key": "flag",
+            "component": "checkbox",
+            "props": {
+                "label": "",
+                "required": false
+            }
+        }
+    ],
+    "values": {
+        "title": "Hi"
+    },
+    "errors": {
+        "title": "bad"
+    },
+    "meta": []
+}

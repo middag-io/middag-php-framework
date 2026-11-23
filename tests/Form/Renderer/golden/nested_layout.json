@@ -1,0 +1,72 @@
+{
+    "schema": [
+        {
+            "kind": "section",
+            "id": "outer",
+            "label": "Outer",
+            "children": [
+                {
+                    "kind": "field",
+                    "key": "a",
+                    "component": "text",
+                    "props": {
+                        "label": "",
+                        "required": false
+                    }
+                },
+                {
+                    "kind": "group",
+                    "id": "row",
+                    "children": [
+                        {
+                            "kind": "field",
+                            "key": "b",
+                            "component": "text",
+                            "props": {
+                                "label": "",
+                                "required": false
+                            }
+                        },
+                        {
+                            "kind": "section",
+                            "id": "inner",
+                            "label": "Inner",
+                            "children": [
+                                {
+                                    "kind": "field",
+                                    "key": "c",
+                                    "component": "int",
+                                    "props": {
+                                        "label": "",
+                                        "required": false
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "kind": "group",
+            "id": "empty",
+            "children": []
+        },
+        {
+            "kind": "field",
+            "key": "loose",
+            "component": "text",
+            "props": {
+                "label": "",
+                "required": false
+            }
+        }
+    ],
+    "values": {
+        "title": "Hi"
+    },
+    "errors": {
+        "title": "bad"
+    },
+    "meta": []
+}

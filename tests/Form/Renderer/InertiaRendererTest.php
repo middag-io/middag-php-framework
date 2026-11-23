@@ -17,7 +17,6 @@ use Middag\Framework\Form\Renderer\InertiaFieldMapper;
 use Middag\Framework\Form\Renderer\InertiaRenderer;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Block\Section;
-use Middag\Ui\Form\Contract\FormInterface;
 use Middag\Ui\Form\FormState;
 use Middag\Ui\Form\Group;
 use Middag\Ui\Shared\Enum\RenderTarget;
@@ -129,49 +128,5 @@ final class InertiaRendererTest extends TestCase
         self::assertSame('custom', $schema[0]['id']);
         self::assertCount(1, $schema[0]['children']);
         self::assertSame('field', $schema[0]['children'][0]['kind']);
-    }
-}
-
-/**
- * Minimal FormInterface double carrying a fixed schema and state.
- *
- * @internal
- */
-final readonly class RendererFakeForm implements FormInterface
-{
-    /** @param array<int, mixed> $schema */
-    public function __construct(private array $schema, private FormState $formState) {}
-
-    /** @return array<int, mixed> */
-    public function schema(): array
-    {
-        return $this->schema;
-    }
-
-    /** @param array<string, mixed> $input */
-    public function hydrate(array $input): void {}
-
-    public function validate(): void {}
-
-    public function isSubmittedAndValid(): bool
-    {
-        return false;
-    }
-
-    /** @return array<string, mixed> */
-    public function validated(): array
-    {
-        return [];
-    }
-
-    /** @return array<string, string|string[]> */
-    public function errors(): array
-    {
-        return $this->formState->errors();
-    }
-
-    public function state(): FormState
-    {
-        return $this->formState;
     }
 }
