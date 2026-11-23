@@ -36,7 +36,7 @@
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-pdo": "*",
-    "middag-io/ui": "^1.13",
+    "middag-io/ui": "^1.14",
     "monolog/monolog": "^3.0",
     "nyholm/psr7": "^1.8",
     "psr/clock": "^1.0",
@@ -77,6 +77,9 @@
     "rector/rector": "2.8.4",
     "symfony/doctrine-messenger": "^7.4 || ^8.1",
     "sentry/sentry": "^4.0"
+  },
+  "conflict": {
+    "middag-io/moodle": "<1.23"
   },
   "suggest": {
     "doctrine/dbal": "DbalSchemaBuilderAdapter — standalone schema/migrations via DBAL (^4.1)",

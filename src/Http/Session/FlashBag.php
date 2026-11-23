@@ -14,6 +14,8 @@ namespace Middag\Framework\Http\Session;
 
 use Middag\Framework\Http\Contract\SessionInterface;
 use Middag\Framework\Http\Middleware\ShareFlashMiddleware;
+use Middag\Ui\Form\FormErrorBags;
+use Middag\Ui\Form\FormErrors;
 
 /**
  * One-shot flash store for the post-redirect-get cycle.
@@ -27,7 +29,10 @@ use Middag\Framework\Http\Middleware\ShareFlashMiddleware;
  *
  * Two buckets, because the client binds them differently: free-form flash
  * messages (`success`, `error`, …) vs the field→message validation map that
- * `useForm().errors` consumes.
+ * `useForm().errors` consumes. The errors bucket has one writer
+ * ({@see self::setErrors()}) and one reader ({@see self::pullErrors()}), and
+ * holds a single envelope (`bag` and the serialized `errors` map), so a bag
+ * name never outlives the errors it scoped.
  *
  * @api
  */
@@ -54,15 +59,20 @@ final readonly class FlashBag
     /**
      * Queue field-level validation errors for the next request.
      *
-     * Usually a flat field→message map in the ui `FormErrors` shape (each
-     * value one message string or a list of strings), but may be nested one level under a
-     * named error bag (`[bag => [field => message]]`) for Inertia error bags.
+     * Without a bag the next request reads them back as a flat
+     * {@see FormErrors}. With a bag name (the `X-Inertia-Error-Bag` header of
+     * the request that failed) it reads them back as a {@see FormErrorBags}
+     * holding that one bag. The errors are stored in their serialized form, so
+     * the session never holds objects.
      *
-     * @param array<string, mixed> $errors
+     * @param ?string $bag Inertia error bag name; null or '' for the flat map
      */
-    public function setErrors(array $errors): void
+    public function setErrors(FormErrors $errors, ?string $bag = null): void
     {
-        $this->session->set(self::ERRORS_KEY, $errors);
+        $this->session->set(self::ERRORS_KEY, [
+            'bag' => $bag === '' ? null : $bag,
+            'errors' => (array) $errors->jsonSerialize(),
+        ]);
     }
 
     /**
@@ -81,14 +91,29 @@ final readonly class FlashBag
     /**
      * Read and clear the queued validation errors.
      *
-     * @return array<string, mixed>
+     * Returns a {@see FormErrorBags} with the one bag when the errors were
+     * queued under a bag name, a {@see FormErrors} otherwise. Nothing queued,
+     * or a session value that is not an envelope written by
+     * {@see self::setErrors()}, reads as an empty {@see FormErrors}.
      */
-    public function pullErrors(): array
+    public function pullErrors(): FormErrorBags|FormErrors
     {
-        $errors = $this->bucket(self::ERRORS_KEY);
+        $envelope = $this->bucket(self::ERRORS_KEY);
         $this->session->remove(self::ERRORS_KEY);
 
-        return $errors;
+        $errors = $envelope['errors'] ?? null;
+
+        if (!is_array($errors)) {
+            return new FormErrors();
+        }
+
+        /** @var array<string, mixed> $errors */
+        $formErrors = new FormErrors($errors);
+        $bag = $envelope['bag'] ?? null;
+
+        return is_string($bag) && $bag !== ''
+            ? new FormErrorBags([$bag => $formErrors])
+            : $formErrors;
     }
 
     /**

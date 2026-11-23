@@ -493,47 +493,47 @@ class HttpKernel implements HttpKernelInterface
      * Build the response for a failed validation.
      *
      * JSON/XHR/API clients get a 422 with the field-level error map
-     * (`{message, errors:{field:[…]}}` — consumed by API clients directly).
+     * (`{message, errors:{field:…}}`, each structured message in the ui
+     * `FieldMessage` shape), consumed by API clients directly.
      *
      * Browser/Inertia clients complete the post-redirect-get loop when a
-     * {@see FlashBag} is bound: the errors are flashed to the session and the
-     * request is redirected back (303) where {@see ShareFlashMiddleware}
-     * re-shares them as the `errors` prop for `useForm().errors`, in the ui
-     * `FormErrors` shape (field -> message string or list). With no flash
-     * store bound the kernel falls back to the 422 — the platform-agnostic
-     * contract, valid for stateless API hosts.
+     * {@see FlashBag} is bound: the errors are flashed to the session as a ui
+     * `FormErrors` and the request is redirected back (303), where
+     * {@see ShareFlashMiddleware} re-shares them as the `errors` prop for
+     * `useForm().errors`. With no flash store bound the kernel falls back to
+     * the 422, the platform-agnostic contract, valid for stateless API hosts.
      */
     private function createValidationResponse(MiddagValidationException $exception, Request $request, bool $isJson): Response
     {
         $serializer = new ValidationErrorSerializer($this->resolveTranslator());
 
-        // Inertia error bags: when the originating request scoped its form to a
-        // named bag (X-Inertia-Error-Bag), nest the field map under it so the
-        // client's useForm(bag) reads its own errors. Absent the header the
-        // shape stays flat (the common single-form / API case). The shared
-        // `errors` slot (ui FormErrors) does not model this nesting: the bag
-        // is an edge concern handled here, outside that slot's contract.
-        $errorBag = $request->headers->get('X-Inertia-Error-Bag');
-        $inBag = static fn (array $map): array => is_string($errorBag) && $errorBag !== ''
-            ? [$errorBag => $map]
-            : $map;
+        // Inertia error bags: the originating request may scope its form to a
+        // named bag (X-Inertia-Error-Bag) so the client's useForm(bag) reads
+        // its own errors. Absent the header the shape stays flat (the common
+        // single-form / API case).
+        $header = $request->headers->get('X-Inertia-Error-Bag');
+        $errorBag = is_string($header) && $header !== '' ? $header : null;
 
         $flash = $this->container->has(FlashBag::class) ? $this->container->get(FlashBag::class) : null;
 
         if (!$isJson && $flash instanceof FlashBag) {
-            // Flashed errors follow the ui FormErrors wire shape: field -> message
-            // string or list of message strings.
-            $flash->setErrors($inBag($serializer->formErrors($exception->errors())->jsonSerialize()));
+            // The FlashBag keeps the bag name next to the map; the next request
+            // reads it back as FormErrorBags (bag) or FormErrors (no bag).
+            $flash->setErrors($serializer->formErrors($exception->errors()), $errorBag);
             $flash->add('error', $exception->getMessage());
 
             return new RedirectResponse($request->headers->get('referer') ?: '/', Response::HTTP_SEE_OTHER);
         }
 
+        // The 422 body sits outside the ui schemas; a request that named a bag
+        // gets its field map nested under the bag name here.
+        $errors = $serializer->serialize($exception->errors());
+
         return new JsonResponse([
             'success' => false,
             'error' => 'validation_failed',
             'message' => $exception->getMessage(),
-            'errors' => $inBag($serializer->serialize($exception->errors())),
+            'errors' => $errorBag !== null ? [$errorBag => $errors] : $errors,
         ], $exception->getStatusCode());
     }
 
