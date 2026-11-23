@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.1](https://github.com/middag-io/middag-php-framework/compare/v1.24.0...v1.24.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* give addIndex() the table-qualified index name createTable() uses ([6f31acb](https://github.com/middag-io/middag-php-framework/commit/6f31acbc50184634596245112c9f5612f18c02be))
+* name an unnamed index in addIndex() the way createTable() does ([dc9426b](https://github.com/middag-io/middag-php-framework/commit/dc9426b9a6aa234151fddc4a8a7db2076e4a218e))
+
 ## [1.24.0](https://github.com/middag-io/middag-php-framework/compare/v1.23.0...v1.24.0) (2026-11-23)
 
 
