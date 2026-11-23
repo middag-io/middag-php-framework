@@ -1,36 +1,25 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-The 1.x line is pre-stable and unsupported: it gets no backports or security fixes, and the move to 2.0.0 is a clean cut.
+The `1.x` line is pre-stable and unsupported: it gets no backports or security fixes, and the move to `2.0.0` is a clean cut.
 
-Support starts at `2.0.0`, the first supported release. The support rules of
-the library family are on
-[Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility);
-the public surface is listed in [`API-STABILITY.md`](API-STABILITY.md).
+From `2.0.0`, `middag-io/framework` is part of the `middag-php-*` version family ([Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility)). Security fixes go to the latest MINOR of the current MAJOR.
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-If you discover a security vulnerability, please report it **privately by email**
-to **security@middag.io**.
+Do not open public issues, pull requests or discussions for security problems.
 
-**Do not open public GitHub issues, pull requests, or discussions for security
-problems.** Public disclosure before a fix is available puts all users at risk.
+Report privately through either:
 
-Please include as much detail as you can:
+- GitHub private vulnerability reporting: **Report a vulnerability** under the repository's **Security** tab, or
+- email to **security@middag.io**.
 
-- A description of the vulnerability and its potential impact.
-- Steps to reproduce, or a proof of concept.
-- Affected version(s) and any relevant environment details.
+Include a description and its impact, steps to reproduce or a proof of concept, and the affected versions.
 
-### What to expect
+## What to expect
 
-- **Acknowledgement:** We aim to acknowledge your report within a few business days.
-- **Coordinated disclosure:** We follow responsible (coordinated) disclosure. We
-  will work with you to understand and address the issue before any public
-  disclosure, and we ask that you keep the report confidential until a fix has
-  been released.
-- **Credit:** If you would like recognition for your report, we are happy to
-  credit you once the issue is resolved. Let us know your preference.
-
-Thank you for helping keep `middag-io/framework` and its users safe.
+- **Acknowledgement** within 5 business days.
+- **Triage:** we confirm whether the report is accepted and share our plan for a fix. There is no fixed deadline for the fix.
+- **Coordinated disclosure:** please keep the report confidential until a fix is released.
+- **Credit:** we credit reporters who want it once the issue is resolved.
