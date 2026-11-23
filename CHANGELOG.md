@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.21.1](https://github.com/middag-io/middag-php-framework/compare/v1.21.0...v1.21.1) (2026-11-23)
+
+
+### Documentation
+
+* describe the shared-MAJOR family in the README ([b4de618](https://github.com/middag-io/middag-php-framework/commit/b4de6185d388bed491a28f6bdbda92fe9f60db0d))
+
+### Consumer impact
+
+No consumer impact: documentation-only release.
+
 ## [1.21.0](https://github.com/middag-io/middag-php-framework/compare/v1.20.5...v1.21.0) (2026-11-23)
 
 
