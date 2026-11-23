@@ -1,0 +1,30 @@
+{
+    "schema": [
+        {
+            "kind": "section",
+            "id": "t",
+            "label": {
+                "key": "sec_t",
+                "domain": "core"
+            },
+            "children": [
+                {
+                    "kind": "field",
+                    "key": "x",
+                    "component": "text",
+                    "props": {
+                        "label": "",
+                        "required": false
+                    }
+                }
+            ]
+        }
+    ],
+    "values": {
+        "title": "Hi"
+    },
+    "errors": {
+        "title": "bad"
+    },
+    "meta": []
+}

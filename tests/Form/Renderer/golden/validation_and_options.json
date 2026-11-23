@@ -1,0 +1,111 @@
+{
+    "schema": [
+        {
+            "kind": "field",
+            "key": "code",
+            "component": "text",
+            "props": {
+                "label": "",
+                "required": true,
+                "placeholder": "ph_code",
+                "helpText": "help_code",
+                "validation": {
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z]+$"
+                }
+            }
+        },
+        {
+            "kind": "field",
+            "key": "notes",
+            "component": "textarea",
+            "props": {
+                "label": "",
+                "required": false,
+                "rows": 5,
+                "validation": {
+                    "minLength": 1,
+                    "maxLength": 500
+                }
+            }
+        },
+        {
+            "kind": "field",
+            "key": "qty",
+            "component": "int",
+            "props": {
+                "label": "",
+                "required": false,
+                "readOnly": true,
+                "min": 1,
+                "max": 10,
+                "step": 1
+            }
+        },
+        {
+            "kind": "field",
+            "key": "kind",
+            "component": "select",
+            "props": {
+                "label": "",
+                "required": false,
+                "options": [
+                    {
+                        "value": "a",
+                        "label": "Alpha"
+                    },
+                    {
+                        "value": "b",
+                        "label": "Beta"
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "field",
+            "key": "lazy",
+            "component": "select",
+            "props": {
+                "label": "",
+                "required": false,
+                "options": [
+                    {
+                        "value": "1",
+                        "label": "One"
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "field",
+            "key": "doc",
+            "component": "file",
+            "props": {
+                "label": "",
+                "required": false,
+                "accept": "image/*,.pdf",
+                "maxSize": 1024
+            }
+        },
+        {
+            "kind": "field",
+            "key": "owner",
+            "component": "entity_picker",
+            "props": {
+                "label": "",
+                "required": false,
+                "entityDisplayField": "name",
+                "autocompleteHref": "/api/users",
+                "autocompleteMinChars": 2
+            }
+        }
+    ],
+    "values": {
+        "title": "Hi"
+    },
+    "errors": {
+        "title": "bad"
+    },
+    "meta": []
+}
