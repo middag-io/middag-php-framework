@@ -110,6 +110,46 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
     }
 
     #[Test]
+    public function existenceProbesAreScopedToTheCurrentSchema(): void
+    {
+        $connection = new class implements ConnectionInterface {
+            /** @var string[] */
+            public array $probes = [];
+
+            public function execute(string $sql, array $params = []): int
+            {
+                return 0;
+            }
+
+            public function fetch(string $sql, array $params = []): ?array
+            {
+                $this->probes[] = $sql;
+
+                return null;
+            }
+
+            public function fetchAll(string $sql, array $params = []): array
+            {
+                return [];
+            }
+
+            public function transaction(callable $work): mixed
+            {
+                return $work();
+            }
+        };
+        $adapter = new MysqlSchemaBuilderAdapter($connection);
+
+        $adapter->tableExists('job');
+        $adapter->columnExists('job', 'status');
+
+        self::assertCount(2, $connection->probes);
+        foreach ($connection->probes as $sql) {
+            self::assertStringContainsString('table_schema = DATABASE()', $sql);
+        }
+    }
+
+    #[Test]
     public function createTableEmitsIndexFromFieldsKey(): void
     {
         $connection = $this->capturingConnection();
