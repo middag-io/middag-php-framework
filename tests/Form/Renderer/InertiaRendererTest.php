@@ -60,7 +60,7 @@ final class InertiaRendererTest extends TestCase
         self::assertInstanceOf(RendererOutput::class, $output);
         self::assertSame(RenderTarget::Props, $output->target);
 
-        $schema = $output->props['schema'];
+        $schema = $this->wire($output->props['schema']);
         self::assertCount(3, $schema);
 
         self::assertSame('section', $schema[0]['kind']);
@@ -121,12 +121,22 @@ final class InertiaRendererTest extends TestCase
 
         $form = new RendererFakeForm([$custom], new FormState([], [], false));
 
-        $schema = (new InertiaRenderer(new InertiaFieldMapper()))->render($form)->props['schema'];
+        $schema = $this->wire((new InertiaRenderer(new InertiaFieldMapper()))->render($form)->props['schema']);
 
         self::assertCount(1, $schema);
         self::assertSame('group', $schema[0]['kind']);
         self::assertSame('custom', $schema[0]['id']);
         self::assertCount(1, $schema[0]['children']);
         self::assertSame('field', $schema[0]['children'][0]['kind']);
+    }
+
+    /**
+     * Schema nodes are value objects; assert against their serialized wire.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function wire(mixed $schema): array
+    {
+        return json_decode(json_encode($schema, JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
     }
 }
