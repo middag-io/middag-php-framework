@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Database\Schema;
 
 use Middag\Framework\Database\Contract\ConnectionInterface;
+use Middag\Framework\Database\Contract\IndexIntrospectionInterface;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use Throwable;
@@ -30,7 +31,7 @@ use Throwable;
  *
  * @api
  */
-final readonly class MysqlSchemaBuilderAdapter implements SchemaBuilderAdapterInterface
+final readonly class MysqlSchemaBuilderAdapter implements IndexIntrospectionInterface, SchemaBuilderAdapterInterface
 {
     public function __construct(private ConnectionInterface $connection) {}
 
@@ -149,6 +150,29 @@ final readonly class MysqlSchemaBuilderAdapter implements SchemaBuilderAdapterIn
         } catch (Throwable) {
             return false;
         }
+    }
+
+    /**
+     * Reports whether $tableName has an index over exactly $columns, in order.
+     *
+     * Reads information_schema.statistics scoped to the current schema. A probe
+     * failure is propagated rather than read as "absent": a wrong "absent"
+     * would make the caller issue a duplicate CREATE INDEX.
+     */
+    public function indexExistsOnColumns(string $tableName, array $columns): bool
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT index_name AS index_name, column_name AS column_name FROM information_schema.statistics '
+            . 'WHERE table_schema = DATABASE() AND table_name = ? ORDER BY index_name, seq_in_index',
+            [$tableName]
+        );
+
+        $byIndex = [];
+        foreach ($rows as $row) {
+            $byIndex[$row['index_name']][] = $row['column_name'];
+        }
+
+        return in_array($columns, $byIndex, true);
     }
 
     /** @param array<string, mixed> $col */

@@ -192,6 +192,25 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
         self::assertSame(['ALTER TABLE grows DROP COLUMN slug'], $connection->queries);
     }
 
+    public function testIndexExistsOnColumnsMatchesTheOrderedColumnSet(): void
+    {
+        $adapter = $this->adapter();
+        $adapter->createTable([
+            'name' => 'grows',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'a', 'type' => 'int'],
+                ['name' => 'b', 'type' => 'int'],
+            ],
+            'indexes' => [['name' => 'ab', 'fields' => ['a', 'b']]],
+        ]);
+
+        self::assertTrue($adapter->indexExistsOnColumns('grows', ['a', 'b']));
+        self::assertFalse($adapter->indexExistsOnColumns('grows', ['b', 'a']));
+        self::assertFalse($adapter->indexExistsOnColumns('grows', ['a']));
+        self::assertFalse($adapter->indexExistsOnColumns('absent', ['a']));
+    }
+
     public function testDropIndexEmitsDropIndexIfExists(): void
     {
         $connection = $this->capturingConnection();

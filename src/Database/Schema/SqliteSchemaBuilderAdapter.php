@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Database\Schema;
 
 use Middag\Framework\Database\Contract\ConnectionInterface;
+use Middag\Framework\Database\Contract\IndexIntrospectionInterface;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use Throwable;
@@ -26,7 +27,7 @@ use Throwable;
  *
  * @api
  */
-final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterInterface
+final readonly class SqliteSchemaBuilderAdapter implements IndexIntrospectionInterface, SchemaBuilderAdapterInterface
 {
     public function __construct(private ConnectionInterface $connection) {}
 
@@ -116,6 +117,24 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
             );
 
             return $row !== null;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    public function indexExistsOnColumns(string $tableName, array $columns): bool
+    {
+        try {
+            foreach ($this->connection->fetchAll(sprintf('PRAGMA index_list(%s)', $tableName)) as $index) {
+                $info = $this->connection->fetchAll(sprintf('PRAGMA index_info(%s)', $index['name']));
+                usort($info, static fn (array $a, array $b): int => $a['seqno'] <=> $b['seqno']);
+
+                if (array_column($info, 'name') === $columns) {
+                    return true;
+                }
+            }
+
+            return false;
         } catch (Throwable) {
             return false;
         }

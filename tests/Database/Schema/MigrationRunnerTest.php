@@ -83,6 +83,117 @@ final class MigrationRunnerTest extends TestCase
         self::assertTrue($adapter->tableExists('tags'), 'absent table created during upgrade');
     }
 
+    public function testUpgradeAddsDescriptorIndexMissingFromAnExistingTable(): void
+    {
+        $connection = $this->connection();
+        $adapter = new SqliteSchemaBuilderAdapter($connection);
+        $adapter->createTable($this->itemsDescriptor());
+
+        $builder = (new SchemaBuilder())->register($this->indexedItemsDescriptor());
+
+        $this->runner($builder, $adapter, $connection)->upgrade(0);
+
+        self::assertSame(['items_idx_items_name'], $this->indexNames($connection, 'items'));
+    }
+
+    public function testUpgradeIndexConvergenceIsIdempotent(): void
+    {
+        $connection = $this->connection();
+        $adapter = new SqliteSchemaBuilderAdapter($connection);
+        $adapter->createTable($this->itemsDescriptor());
+
+        $runner = $this->runner((new SchemaBuilder())->register($this->indexedItemsDescriptor()), $adapter, $connection);
+
+        $runner->upgrade(0);
+        $runner->upgrade(0);
+
+        self::assertCount(1, $this->indexNames($connection, 'items'));
+    }
+
+    public function testUpgradeDoesNotAddAnIndexWhoseColumnSetAlreadyHasALiveIndex(): void
+    {
+        $connection = $this->connection();
+        $adapter = new SqliteSchemaBuilderAdapter($connection);
+        $adapter->createTable($this->itemsDescriptor());
+        // Same ordered column set, different name: must be left alone.
+        $adapter->addIndex('items', ['name' => 'legacy_name', 'fields' => ['name']]);
+
+        $this->runner((new SchemaBuilder())->register($this->indexedItemsDescriptor()), $adapter, $connection)->upgrade(0);
+
+        self::assertSame(['items_legacy_name'], $this->indexNames($connection, 'items'));
+    }
+
+    public function testUpgradeMatchesIndexesOnTheOrderedColumnSet(): void
+    {
+        $connection = $this->connection();
+        $adapter = new SqliteSchemaBuilderAdapter($connection);
+        $adapter->createTable($this->itemsDescriptor());
+        $adapter->addColumn('items', ['name' => 'scope', 'type' => 'varchar', 'length' => 16]);
+        $adapter->addIndex('items', ['name' => 'scope_name', 'fields' => ['scope', 'name']]);
+
+        $descriptor = $this->itemsDescriptor();
+        $descriptor['columns'][] = ['name' => 'scope', 'type' => 'varchar', 'length' => 16];
+        $descriptor['indexes'] = [['name' => 'name_scope', 'fields' => ['name', 'scope']]];
+
+        $this->runner((new SchemaBuilder())->register($descriptor), $adapter, $connection)->upgrade(0);
+
+        self::assertCount(2, $this->indexNames($connection, 'items'), 'reversed column order is a different index');
+    }
+
+    public function testUpgradeSkipsIndexSyncForAdaptersThatCannotIntrospectIndexes(): void
+    {
+        $connection = $this->connection();
+        $sqlite = new SqliteSchemaBuilderAdapter($connection);
+        $sqlite->createTable($this->itemsDescriptor());
+
+        $added = [];
+        $adapter = new class($sqlite, $added) implements SchemaBuilderAdapterInterface {
+            /** @param list<array<string, mixed>> $added */
+            public function __construct(private readonly SqliteSchemaBuilderAdapter $inner, private array &$added) {}
+
+            public function createTable(array $descriptor): void
+            {
+                $this->inner->createTable($descriptor);
+            }
+
+            public function dropTable(string $tableName): void
+            {
+                $this->inner->dropTable($tableName);
+            }
+
+            public function addColumn(string $tableName, array $column): void
+            {
+                $this->inner->addColumn($tableName, $column);
+            }
+
+            public function dropColumn(string $tableName, string $columnName): void
+            {
+                $this->inner->dropColumn($tableName, $columnName);
+            }
+
+            public function addIndex(string $tableName, array $index): void
+            {
+                $this->added[] = $index;
+            }
+
+            public function dropIndex(string $tableName, string $indexName, array $fields = []): void {}
+
+            public function tableExists(string $tableName): bool
+            {
+                return $this->inner->tableExists($tableName);
+            }
+
+            public function columnExists(string $tableName, string $columnName): bool
+            {
+                return $this->inner->columnExists($tableName, $columnName);
+            }
+        };
+
+        $this->runner((new SchemaBuilder())->register($this->indexedItemsDescriptor()), $adapter, $connection)->upgrade(0);
+
+        self::assertSame([], $added);
+    }
+
     public function testGetAndSetInstalledVersionDelegateToTheTracker(): void
     {
         $connection = $this->connection();
@@ -150,6 +261,23 @@ final class MigrationRunnerTest extends TestCase
                 ['name' => 'name', 'type' => 'varchar', 'length' => 64],
             ],
         ];
+    }
+
+    /** @return list<string> */
+    private function indexNames(ConnectionInterface $connection, string $table): array
+    {
+        $rows = $connection->fetchAll(
+            "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND sql IS NOT NULL ORDER BY name",
+            [$table],
+        );
+
+        return array_map(static fn (array $row): string => $row['name'], $rows);
+    }
+
+    /** @return array<string, mixed> */
+    private function indexedItemsDescriptor(): array
+    {
+        return [...$this->itemsDescriptor(), 'indexes' => [['name' => 'idx_items_name', 'fields' => ['name']]]];
     }
 
     /** @return array<string, mixed> */
