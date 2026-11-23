@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.24.1](https://github.com/middag-io/middag-php-framework/compare/v1.24.0...v1.24.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* give addIndex() the table-qualified index name createTable() uses ([6f31acb](https://github.com/middag-io/middag-php-framework/commit/6f31acbc50184634596245112c9f5612f18c02be))
+* name an unnamed index in addIndex() the way createTable() does ([dc9426b](https://github.com/middag-io/middag-php-framework/commit/dc9426b9a6aa234151fddc4a8a7db2076e4a218e))
+
+### Consumer impact
+
+- No signature change. On `DbalSchemaBuilderAdapter`, an index added by `addIndex()` is now named `<table>_<name>`, like one created by `createTable()`, and an unnamed index gets the name DBAL generates in `createTable()` (before, it failed with a syntax error). `MigrationRunner` finds existing indexes by column set, so upgraded tables do not get a duplicate index.
+- `dropIndex()` on the DBAL and SQLite adapters accepts the short name and resolves it to the table-qualified one, falling back to the short name for indexes added before this release. The SQLite adapter only drops an index that belongs to the given table.
+
 ## [1.24.0](https://github.com/middag-io/middag-php-framework/compare/v1.23.0...v1.24.0) (2026-11-23)
 
 
