@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/middag-io/middag-php-framework/compare/v1.21.1...v1.22.0) (2026-11-23)
+
+
+### Features
+
+* share typed flash and errors, drop null shared props ([cea5eb9](https://github.com/middag-io/middag-php-framework/commit/cea5eb947d2937176394d036d4824183d2f2a4b1))
+
 ## [1.21.1](https://github.com/middag-io/middag-php-framework/compare/v1.21.0...v1.21.1) (2026-11-23)
 
 
