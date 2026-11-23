@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.22.0](https://github.com/middag-io/middag-php-framework/compare/v1.21.1...v1.22.0) (2026-11-23)
+
+
+### Features
+
+* share typed flash and errors, drop null shared props ([cea5eb9](https://github.com/middag-io/middag-php-framework/commit/cea5eb947d2937176394d036d4824183d2f2a4b1))
+
+### Consumer impact
+
+Requires `middag-io/ui` ^1.13. The shared `flash` prop is built with `FlashMessages::fromArray()`: keys outside `success`, `error`, `info` and `warning`, and non-string values, no longer reach the client through it. The `errors` prop is a `FormErrors`. Empty flash and errors serialize as `{}`. A shared prop that resolves to null is no longer emitted. The `errors` slot does not cover the `X-Inertia-Error-Bag` header.
+
 ## [1.21.1](https://github.com/middag-io/middag-php-framework/compare/v1.21.0...v1.21.1) (2026-11-23)
 
 
