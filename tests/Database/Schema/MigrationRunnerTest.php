@@ -140,16 +140,24 @@ final class MigrationRunnerTest extends TestCase
         self::assertCount(2, $this->indexNames($connection, 'items'), 'reversed column order is a different index');
     }
 
-    public function testUpgradeSkipsIndexSyncForAdaptersThatCannotIntrospectIndexes(): void
+    public function testUpgradeAsksTheAdapterForEachDescriptorIndexOfAnExistingTable(): void
     {
         $connection = $this->connection();
         $sqlite = new SqliteSchemaBuilderAdapter($connection);
         $sqlite->createTable($this->itemsDescriptor());
 
         $added = [];
-        $adapter = new class($sqlite, $added) implements SchemaBuilderAdapterInterface {
-            /** @param list<array<string, mixed>> $added */
-            public function __construct(private readonly SqliteSchemaBuilderAdapter $inner, private array &$added) {}
+        $asked = [];
+        $adapter = new class($sqlite, $added, $asked) implements SchemaBuilderAdapterInterface {
+            /**
+             * @param list<array<string, mixed>>        $added
+             * @param list<array{string, list<string>}> $asked
+             */
+            public function __construct(
+                private readonly SqliteSchemaBuilderAdapter $inner,
+                private array &$added,
+                private array &$asked,
+            ) {}
 
             public function createTable(array $descriptor): void
             {
@@ -187,11 +195,19 @@ final class MigrationRunnerTest extends TestCase
             {
                 return $this->inner->columnExists($tableName, $columnName);
             }
+
+            public function indexExistsOnColumns(string $tableName, array $columns): bool
+            {
+                $this->asked[] = [$tableName, $columns];
+
+                return false;
+            }
         };
 
         $this->runner((new SchemaBuilder())->register($this->indexedItemsDescriptor()), $adapter, $connection)->upgrade(0);
 
-        self::assertSame([], $added);
+        self::assertSame([['items', ['name']]], $asked);
+        self::assertSame([['name' => 'idx_items_name', 'fields' => ['name']]], $added);
     }
 
     public function testGetAndSetInstalledVersionDelegateToTheTracker(): void

@@ -136,7 +136,6 @@ Every type tagged `@api` in `src/`, by concern. `tests/Tooling/ApiStabilityListT
 - `Middag\Framework\Database\Attribute\Table`
 - `Middag\Framework\Database\Contract\ConnectionAdapterInterface`
 - `Middag\Framework\Database\Contract\ConnectionInterface`
-- `Middag\Framework\Database\Contract\IndexIntrospectionInterface`
 - `Middag\Framework\Database\Contract\RecordConnectionInterface`
 - `Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface`
 - `Middag\Framework\Database\Contract\SqlDialectInterface`
