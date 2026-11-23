@@ -40,7 +40,7 @@ If a type has neither annotation, treat it as `@internal`.
 
 If you need behaviour exposed only by an `@internal` symbol, open an issue to
 have it promoted rather than reaching in. Promoting a symbol to `@api` is an
-additive change for a family MINOR.
+additive change that ships in a MINOR.
 
 ## Lifecycle
 
@@ -53,65 +53,31 @@ additive change for a family MINOR.
 
 ## Versioning from `2.0.0`
 
-The framework belongs to the **MIDDAG PHP library version family**. Every
-library of the family shares MAJOR.MINOR; PATCH is free per library.
+From `2.0.0`, the open-source `middag-php-*` libraries (`ui`, `framework`, `moodle`, `wordpress` and the `demo-standalone` example) share the MAJOR version. MINOR and PATCH releases are per library. Each library requires its siblings with `^2.N`, where `N` is the lowest MINOR it needs, so Composer installs a compatible set. Require each package you import with `^2.0`, or with the MINOR whose features you use.
 
 | Part | May carry |
 |---|---|
 | PATCH | Fixes only, per library. Never a change to the `@api` surface. |
-| MINOR | Additive `@api` changes (new contracts, new optional parameters, promoted symbols), released as a family MINOR in every library. Never a break. |
-| MAJOR | Breaking `@api` changes, released as a family MAJOR. A removal is first deprecated in a MINOR, with a runtime notice. |
+| MINOR | Additive `@api` changes (new contracts, new optional parameters, promoted symbols). Never a break. |
+| MAJOR | Breaking `@api` changes, following [Deprecation](#deprecation). |
+
+A PATCH carries fixes only. A MINOR carries additive `@api` changes. A MAJOR carries breaking `@api` changes, following [Deprecation](#deprecation).
 
 ### The family rule
 
-From `2.0.0`, **every library of the family is required with the same
-`^2.N`** — the same caret range, with the same `N`, for every `middag-io/*`
-library you depend on. Minor upgrades inside that range do not break.
+Only the MAJOR is shared across the libraries. A platform floor (the lowest PHP version or the lowest Symfony line) rises only in a MAJOR. Support for a new PHP version or a new Symfony LTS line is added in a MINOR.
 
-## How releases are cut
+## Deprecation
 
-Releases are cut **exclusively** by
-[release-please](https://github.com/googleapis/release-please) from
-[Conventional Commits](https://www.conventionalcommits.org/). There are no
-manual tags. A family MINOR or MAJOR is a coordinated `Release-As: X.Y.0`
-commit on `main` of every library of the family; the product owner decides
-each one.
+A removal or incompatible change of an `@api` element ships only in a MAJOR. Where possible it is announced first in a MINOR of the current MAJOR: the element carries `@deprecated` naming its replacement, the changelog lists it, and code that still runs emits an `E_USER_DEPRECATED` notice where PHP can raise one. A change that cannot be deprecated in place, such as a new abstract method on an interface or a changed signature, ships in a MAJOR with an entry in `UPGRADING.md`.
 
-## The family window check
+## Support
 
-Every pull request runs the **Version family** workflow (status check
-`php-version-family-check / check`). It reads the PR title and every non-merge
-commit of the PR (the header type and any `BREAKING CHANGE:` /
-`BREAKING-CHANGE:` footer) against the organization variable
-`PHP_LIBS_OPEN_RELEASE`, which is set and cleared on the order of the product
-owner:
+Fixes go to the latest MINOR of the current MAJOR, as PATCH releases. When the next MAJOR ships, the last MINOR of the previous MAJOR receives critical and high severity security fixes only, from an `N.x` branch opened at the cut, for 6 months or until the end of life of the PHP or host version that motivated the new MAJOR, whichever comes first. Releases before `2.0.0` are unsupported.
 
-| `PHP_LIBS_OPEN_RELEASE` | Window |
-|---|---|
-| empty | closed |
-| `X.Y` with `Y > 0` | family minor window |
-| `X.0` | family major window (the `2.0.0` cut is window `2.0`) |
+## Releases and contributing
 
-- `!` before the colon, or a `BREAKING CHANGE:` footer, fails unless a family
-  major window is open.
-- `feat` fails unless a window is open, but only once the version in
-  `.release-please-manifest.json` on the base branch is `2.0.0` or later.
-- A `Release-As:` footer fails unless a window is open and the footer names
-  `X.Y.0` for that window.
-
-To pass, give each commit the type that matches the change; do not relabel a
-feature as `fix:` or `refactor:`. A feature PR that waits for a window stays
-open and is kept current by **merging `main` into it** — never by rebase or
-force-push. When the window opens, re-run the check.
-
-- A window counts as open only when it is ahead of this library's current
-  version and the PR targets `main`; a value left set after its family release
-  reads as closed.
-- While a window is open, this library's Release PR is merged only at the
-  coordinated `X.Y.0`.
-- A re-run reads the base of the original event. After the `2.0.0` cut, a PR
-  opened before the cut must merge `main` into it so that the check reads the
-  new version.
+Releases are cut by release-please from Conventional Commits. The contributor rules, the version check included, are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## The public surface
 
@@ -402,8 +368,8 @@ to. They follow the same versioning rules as the rest of the `@api` surface.
 ## Depending on the framework safely
 
 - Depend only on `@api` types.
-- From `2.0.0`, require the framework and every other `middag-io/*` library
-  of the family with the same `^2.N` range.
+- From `2.0.0`, require the framework with `^2.0`, or with the MINOR whose
+  features you use. Only the MAJOR is shared across the libraries.
 - The dependency direction only ever points downward: the framework never
   imports the proprietary layer, and OSS adapters never import the
   proprietary core namespace.
