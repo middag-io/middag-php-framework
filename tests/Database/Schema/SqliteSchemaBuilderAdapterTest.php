@@ -137,6 +137,49 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
         self::assertContains('invoices_status', $names);
     }
 
+    public function testDropIndexResolvesTheShortName(): void
+    {
+        $pdo = $this->pdo();
+        $adapter = new SqliteSchemaBuilderAdapter(new PdoConnectionAdapter($pdo));
+        $adapter->createTable([
+            'name' => 'orders',
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'status', 'type' => 'int'],
+            ],
+            'indexes' => [['name' => 'status', 'columns' => ['status']]],
+        ]);
+
+        $adapter->dropIndex('orders', 'status');
+
+        $names = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'index'")->fetchAll(PDO::FETCH_COLUMN);
+        self::assertNotContains('orders_status', $names);
+    }
+
+    public function testDropIndexLeavesAnotherTablesIndexAlone(): void
+    {
+        $pdo = $this->pdo();
+        $adapter = new SqliteSchemaBuilderAdapter(new PdoConnectionAdapter($pdo));
+
+        foreach (['orders', 'invoices'] as $table) {
+            $adapter->createTable([
+                'name' => $table,
+                'columns' => [
+                    ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                    ['name' => 'status', 'type' => 'int'],
+                ],
+            ]);
+        }
+
+        // An index with the bare name that belongs to another table.
+        $pdo->exec('CREATE INDEX status ON invoices (status)');
+
+        $adapter->dropIndex('orders', 'status');
+
+        $names = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'index'")->fetchAll(PDO::FETCH_COLUMN);
+        self::assertContains('status', $names);
+    }
+
     public function testCreateTableEmitsCompositePrimaryKeyFromKeys(): void
     {
         $pdo = $this->pdo();
@@ -211,13 +254,13 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
         self::assertFalse($adapter->indexExistsOnColumns('absent', ['a']));
     }
 
-    public function testDropIndexEmitsDropIndexIfExists(): void
+    public function testDropIndexIsNoOpWhenTheTableHasNoSuchIndex(): void
     {
         $connection = $this->capturingConnection();
         (new SqliteSchemaBuilderAdapter($connection))->dropIndex('grows', 'idx_slug');
 
-        // SQLite (unlike MySQL) honours IF EXISTS on DROP INDEX, keeping it idempotent.
-        self::assertSame(['DROP INDEX IF EXISTS idx_slug'], $connection->queries);
+        // Neither grows_idx_slug nor idx_slug belongs to the table: nothing is dropped.
+        self::assertSame([], $connection->queries);
     }
 
     public function testAddIndexAutoGeneratesTableQualifiedNameWhenUnnamed(): void
