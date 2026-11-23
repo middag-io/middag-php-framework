@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Database\Schema;
 
+use Middag\Framework\Database\Contract\IndexIntrospectionInterface;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Database\Contract\VersionTrackerInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
@@ -60,9 +61,13 @@ abstract class MigrationRunner
     /**
      * Upgrade schema from the given version to the current state.
      *
-     * The base implementation adds columns that exist in descriptors but are
-     * absent from the live schema. Subclasses may override for more complex
-     * upgrade logic (e.g. index changes, renames).
+     * The base implementation adds columns and indexes that exist in
+     * descriptors but are absent from the live schema. It is additive and
+     * idempotent: it never drops or alters an existing column or index. An
+     * index counts as present when the live table has any index over the same
+     * ordered column set, whatever its name. Indexes are only converged when
+     * the adapter implements {@see IndexIntrospectionInterface}. Subclasses may
+     * override for more complex upgrade logic (e.g. renames).
      *
      * @param int $oldVersion the previously installed version number
      *
@@ -84,6 +89,8 @@ abstract class MigrationRunner
                     $this->adapter->addColumn($table, $column);
                 }
             }
+
+            $this->addMissingIndexes($table, $descriptor['indexes'] ?? []);
         }
 
         $this->onUpgrade($oldVersion);
@@ -115,4 +122,25 @@ abstract class MigrationRunner
      * @param int $oldVersion the version before this upgrade began
      */
     protected function onUpgrade(int $oldVersion): void {}
+
+    /**
+     * Add the descriptor indexes that have no live index over the same ordered
+     * column set. No-op when the adapter cannot introspect indexes.
+     *
+     * @param list<array<string, mixed>> $indexes index descriptors of the table
+     */
+    private function addMissingIndexes(string $table, array $indexes): void
+    {
+        if (!$this->adapter instanceof IndexIntrospectionInterface) {
+            return;
+        }
+
+        foreach ($indexes as $index) {
+            $columns = array_values($index['fields'] ?? $index['columns'] ?? []);
+
+            if (!$this->adapter->indexExistsOnColumns($table, $columns)) {
+                $this->adapter->addIndex($table, $index);
+            }
+        }
+    }
 }

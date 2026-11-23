@@ -69,6 +69,15 @@ Only the MAJOR is shared across the libraries. A platform floor (the lowest PHP 
 
 The next MAJOR (`3.0`) raises the Symfony floor to the next Symfony LTS line once it is released, and drops the PHP versions that no longer receive security support.
 
+### Enum evolution
+
+Not every `@api` enum can grow in a MINOR. It depends on what code does with a value it does not know. This mirrors the policy of
+[`middag-io/ui`](https://github.com/middag-io/middag-php-ui/blob/main/API-STABILITY.md).
+
+- **Control enums** drive behavior or are matched exhaustively, and the framework rejects an unknown value instead of guessing. Adding a value to one is a **MAJOR** change. The framework's `@api` enums are all control enums: `Database\Enum\Capability`, `Logging\Enum\LogLevel` (the PSR-3 level set), `Security\Enum\SignatureEncoding`, `Shared\Enum\DebugMode` and `Shared\Enum\Operator` (compiled to SQL; an unknown operator is refused).
+- **Open enums** reach a consumer that falls back to a safe default for a value it does not know. Adding a value to one is a **MINOR** change. The framework exposes no open `@api` enum today. A new one must say so in its docblock.
+- **Removing or renaming a value** of any enum is always a **MAJOR** change.
+
 ## Deprecation
 
 A removal or incompatible change of an `@api` element ships only in a MAJOR. Where possible it is announced first in a MINOR of the current MAJOR: the element carries `@deprecated` naming its replacement, the changelog lists it, and code that still runs emits an `E_USER_DEPRECATED` notice where PHP can raise one. A change that cannot be deprecated in place, such as a new abstract method on an interface or a changed signature, ships in a MAJOR with an entry in `UPGRADING.md`.
@@ -127,6 +136,7 @@ Every type tagged `@api` in `src/`, by concern. `tests/Tooling/ApiStabilityListT
 - `Middag\Framework\Database\Attribute\Table`
 - `Middag\Framework\Database\Contract\ConnectionAdapterInterface`
 - `Middag\Framework\Database\Contract\ConnectionInterface`
+- `Middag\Framework\Database\Contract\IndexIntrospectionInterface`
 - `Middag\Framework\Database\Contract\RecordConnectionInterface`
 - `Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface`
 - `Middag\Framework\Database\Contract\SqlDialectInterface`

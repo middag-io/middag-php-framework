@@ -81,6 +81,18 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         self::assertFalse($schemaManager->introspectTable('middag_widget')->hasIndex('idx_widget_active'));
     }
 
+    public function testIndexExistsOnColumnsMatchesTheOrderedColumnSet(): void
+    {
+        $this->adapter->createTable($this->descriptor());
+        $this->adapter->addColumn('middag_widget', ['name' => 'note', 'type' => 'text']);
+        $this->adapter->addIndex('middag_widget', ['name' => 'idx_pair', 'fields' => ['title', 'active']]);
+
+        self::assertTrue($this->adapter->indexExistsOnColumns('middag_widget', ['title', 'active']));
+        self::assertFalse($this->adapter->indexExistsOnColumns('middag_widget', ['active', 'title']));
+        self::assertFalse($this->adapter->indexExistsOnColumns('middag_widget', ['note']));
+        self::assertFalse($this->adapter->indexExistsOnColumns('absent_table', ['title']));
+    }
+
     public function testDropTable(): void
     {
         $this->adapter->createTable($this->descriptor());
