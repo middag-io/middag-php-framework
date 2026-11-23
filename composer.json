@@ -68,7 +68,7 @@
   },
   "require-dev": {
     "deptrac/deptrac": "^3.0",
-    "doctrine/dbal": "^4.0",
+    "doctrine/dbal": "^4.1",
     "fakerphp/faker": "^1.23",
     "friendsofphp/php-cs-fixer": "^3.0",
     "league/flysystem": "^3.0",
@@ -79,7 +79,7 @@
     "sentry/sentry": "^4.0"
   },
   "suggest": {
-    "doctrine/dbal": "DbalSchemaBuilderAdapter — standalone schema/migrations via DBAL (^4.0)",
+    "doctrine/dbal": "DbalSchemaBuilderAdapter — standalone schema/migrations via DBAL (^4.1)",
     "ext-curl": "Recommended transport extension for Symfony HttpClient in production.",
     "illuminate/database": "Laravel-flavoured query builder/Capsule behind ConnectionAdapterInterface for standalone DB (no shipped integration) (^11.0 || ^12.0)",
     "league/flysystem": "FlysystemFilesystem — FilesystemInterface impl for cloud/abstract storage (^3.0)",

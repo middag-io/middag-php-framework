@@ -77,3 +77,32 @@ jobs:
           unset-platform-php: "true"
           expect-majors: symfony/dependency-injection:8, symfony/http-kernel:8
           audit-blocking-severities: critical, high
+
+  # Third run of the same composite: removes the platform pin and resolves
+  # the lowest dependency versions on PHP 8.3, then runs the tests.
+  # expect-majors fails the job unless the Symfony components resolved to
+  # 7.x, so a green run proves the 7.x floor of the ^7.4 || ^8.1 range and
+  # the declared PHP and extension floors. The static checks already run in
+  # the locked job.
+  php-library-check-lowest:
+    name: check (PHP 8.3, lowest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the library at the lowest dependency versions
+        uses: middag-io/actions/php-library-check@php-library-check-v1
+        with:
+          php-version: "8.3"
+          php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
+          static-checks: "false"
+          dependency-versions: lowest
+          unset-platform-php: "true"
+          expect-majors: symfony/dependency-injection:7, symfony/http-kernel:7
+          audit-blocking-severities: critical, high
