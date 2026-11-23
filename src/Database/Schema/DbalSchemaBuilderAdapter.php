@@ -114,10 +114,11 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     {
         $schemaManager = $this->connection->createSchemaManager();
         $current = $schemaManager->introspectTable($tableName);
-        // Same naming rule as createTable(): a fresh install and an upgrade
-        // must end up with the same index name, and a short name reused by
-        // two tables must not collide on schema-wide index namespaces.
-        $new = new Index($this->qualifiedIndexName($tableName, $index), $this->indexFields($index), !empty($index['unique']));
+        $new = $this->indexToAdd($current, $index);
+
+        if (!$new instanceof Index) {
+            return;
+        }
 
         $schemaManager->alterTable(new TableDiff($current, addedIndexes: [$new]));
     }
@@ -244,6 +245,45 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
         $name = (string) ($index['name'] ?? '');
 
         return $name === '' ? null : $tableName . '_' . $name;
+    }
+
+    /**
+     * Build the index addIndex() adds, named by the same rule as createTable():
+     * a fresh install and an upgrade end up with the same index name, and a
+     * short name reused by two tables does not collide on schema-wide index
+     * namespaces. An unnamed index gets the name DBAL generates in
+     * createTable(), by adding it to a copy of the introspected table.
+     *
+     * @param array<string, mixed> $index
+     *
+     * @return null|Index null when DBAL considers the index already covered
+     */
+    private function indexToAdd(Table $current, array $index): ?Index
+    {
+        $fields = $this->indexFields($index);
+        $unique = !empty($index['unique']);
+        $name = $this->qualifiedIndexName($current->getName(), $index);
+
+        if ($name !== null) {
+            return new Index($name, $fields, $unique);
+        }
+
+        $probe = clone $current;
+        $existing = array_keys($probe->getIndexes());
+
+        if ($unique) {
+            $probe->addUniqueIndex($fields);
+        } else {
+            $probe->addIndex($fields);
+        }
+
+        foreach ($probe->getIndexes() as $key => $candidate) {
+            if (!in_array($key, $existing, true)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -125,6 +125,27 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         );
     }
 
+    public function testUnnamedIndexGetsTheSameNameOnFreshInstallAndUpgrade(): void
+    {
+        $index = ['fields' => ['status']];
+        $columns = [
+            ['name' => 'id', 'type' => 'int', 'sequence' => true],
+            ['name' => 'status', 'type' => 'int'],
+        ];
+
+        $this->adapter->createTable(['name' => 'jobs', 'columns' => $columns, 'indexes' => [$index]]);
+        $fresh = $this->secondaryIndexNames($this->connection->createSchemaManager()->introspectTable('jobs')->getIndexes());
+        $this->adapter->dropTable('jobs');
+
+        $this->adapter->createTable(['name' => 'jobs', 'columns' => $columns]);
+        $this->adapter->addIndex('jobs', $index);
+
+        $upgraded = $this->secondaryIndexNames($this->connection->createSchemaManager()->introspectTable('jobs')->getIndexes());
+
+        self::assertCount(1, $fresh);
+        self::assertSame($fresh, $upgraded);
+    }
+
     public function testDropIndexStillDropsAnIndexThatCarriesTheShortName(): void
     {
         // Indexes added by addIndex() before the name was table-qualified
