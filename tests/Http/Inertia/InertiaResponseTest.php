@@ -24,6 +24,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use RuntimeException;
+use stdClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -66,6 +67,28 @@ final class InertiaResponseTest extends TestCase
         $page = json_decode((string) $response->getContent(), true);
         self::assertSame(5, $page['props']['count']);
         self::assertSame('hi', $page['props']['label']);
+    }
+
+    #[Test]
+    public function emptyObjectsStayJsonObjectsAtAnyDepth(): void
+    {
+        $request = Request::create('/dashboard', 'GET');
+        $request->headers->set('X-Inertia', 'true');
+        $request->headers->set('X-Inertia-Version', 'v2');
+
+        $props = [
+            'scope' => new stdClass(),
+            'theme' => ['strings' => new stdClass()],
+            'filled' => (object) ['a' => new stdClass(), 'b' => 1],
+            'list' => [],
+        ];
+
+        $response = (new InertiaResponse('Dashboard', $props, $request))->toResponse();
+
+        self::assertStringContainsString(
+            '"scope":{},"theme":{"strings":{}},"filled":{"a":{},"b":1},"list":[]',
+            (string) $response->getContent(),
+        );
     }
 
     #[Test]
