@@ -19,6 +19,15 @@
 
 * add enum evolution policy to API-STABILITY ([4c57a90](https://github.com/middag-io/middag-php-framework/commit/4c57a90e6948915dd92a96ebde5fcf0e996a908f))
 
+### Consumer impact
+
+- `SchemaBuilderAdapterInterface` gains `indexExistsOnColumns(string $tableName, array $columns): bool`. Custom adapters must implement it: true when the table has an index of any name or uniqueness over exactly the given ordered columns, false for an absent table.
+- `IndexIntrospectionInterface` is removed. Type against `SchemaBuilderAdapterInterface`.
+- `MigrationRunner::upgrade()` now adds descriptor indexes that are missing on existing tables, on every adapter. It never drops or alters an index.
+- `composer.json` declares `"conflict": {"middag-io/moodle": "<1.22"}`. Moodle hosts need `middag-io/moodle` 1.22 or later.
+- Inertia props: an empty `stdClass` now encodes as `{}` instead of `[]` (affects `scope`, `errors`, `theme.strings` and other object props).
+- MySQL table and column probes are scoped to the current schema, so a same-named table in another schema no longer counts.
+
 ## [1.22.0](https://github.com/middag-io/middag-php-framework/compare/v1.21.1...v1.22.0) (2026-11-23)
 
 
