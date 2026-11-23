@@ -17,6 +17,7 @@ use Middag\Framework\Form\Renderer\InertiaFieldMapper;
 use Middag\Framework\Form\Renderer\InertiaRenderer;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Block\Section;
+use Middag\Ui\Form\FieldMessage;
 use Middag\Ui\Form\FormState;
 use Middag\Ui\Form\Group;
 use Middag\Ui\Shared\Enum\RenderTarget;
@@ -81,6 +82,22 @@ final class InertiaRendererTest extends TestCase
         self::assertSame(['title' => 'Hi'], $output->props['values']);
         self::assertSame(['title' => 'bad'], $output->props['errors']);
         self::assertSame([], $output->props['meta']);
+    }
+
+    #[Test]
+    public function structuredErrorsReachThePropsInTheFieldMessageShape(): void
+    {
+        $form = new RendererFakeForm(
+            [new TextField('title')],
+            new FormState([], ['title' => new FieldMessage('Too short.', 'validation.length.too_short', 'validators', ['limit' => 3])], true),
+        );
+
+        $output = (new InertiaRenderer(new InertiaFieldMapper()))->render($form);
+
+        self::assertSame(
+            '{"title":{"message":"Too short.","key":"validation.length.too_short","domain":"validators","params":{"limit":3}}}',
+            json_encode($output->props['errors'], JSON_THROW_ON_ERROR),
+        );
     }
 
     #[Test]

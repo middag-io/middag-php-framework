@@ -12,11 +12,14 @@ declare(strict_types=1);
 
 namespace Middag\Framework\Tests\Http;
 
+use JsonSerializable;
 use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Http\HttpKernel;
 use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
 use Middag\Framework\Translation\TranslatableMessage;
+use Middag\Ui\Form\FormErrorBags;
+use Middag\Ui\Form\FormErrors;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -24,6 +27,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use stdClass;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Component\Routing\RequestContext;
@@ -31,9 +35,11 @@ use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * Contract: the validation errors the kernel flashes to the session match the
- * `FormErrors` / `FieldError` definitions of the middag-io/ui wire contract
- * (`schema/page-contract.json`, shipped with the `middag-io/ui` dependency).
+ * Contract: the validation errors the kernel flashes to the session, as the
+ * middleware shares them, match the `errors` slot of the middag-io/ui shared
+ * props (`SharedProps.properties.errors` in `schema/page-contract.json`,
+ * shipped with the `middag-io/ui` dependency): a `FormErrors` map, or a
+ * `FormErrorBags` map when the request named an error bag.
  *
  * @internal
  */
@@ -43,28 +49,31 @@ final class FlashedErrorsContractTest extends TestCase
     private const string UI_SCHEMA = __DIR__ . '/../../vendor/middag-io/ui/schema/page-contract.json';
 
     #[Test]
-    public function flashedErrorsValidateAgainstTheUiFormErrorsSchema(): void
+    public function flashedErrorsValidateAgainstTheUiErrorsSlot(): void
     {
         $flash = $this->submitInvalidForm([
             'title' => new TranslatableMessage('validation.not_blank', 'validators', [], 'This value should not be blank.'),
-            'tags' => ['Too many tags', new TranslatableMessage('validation.unique', 'validators', [], 'Tags must be unique.')],
+            'tags' => ['Too many tags', new TranslatableMessage('validation.unique', 'validators', ['limit' => 3], 'Tags must be unique.')],
             'address.zip' => 'Invalid zip',
             '_' => 'The form could not be saved.',
         ]);
 
         $errors = $flash->pullErrors();
 
-        $this->assertSame([
-            'title' => 'This value should not be blank.',
-            'tags' => ['Too many tags', 'Tags must be unique.'],
-            'address.zip' => 'Invalid zip',
-            '_' => 'The form could not be saved.',
-        ], $errors);
+        $this->assertInstanceOf(FormErrors::class, $errors);
+        $this->assertSame(
+            '{"title":{"message":"This value should not be blank.","key":"validation.not_blank","domain":"validators"},'
+            . '"tags":["Too many tags",{"message":"Tags must be unique.","key":"validation.unique","domain":"validators","params":{"limit":3}}],'
+            . '"address.zip":"Invalid zip",'
+            . '"_":"The form could not be saved."}',
+            json_encode($errors, JSON_THROW_ON_ERROR),
+        );
+        $this->assertMatchesErrorsSlot($errors);
         $this->assertMatchesUiDefinition('FormErrors', $errors);
     }
 
     #[Test]
-    public function eachInertiaErrorBagHoldsAUiFormErrorsMap(): void
+    public function errorsFlashedUnderAnInertiaErrorBagValidateAgainstTheUiErrorsSlot(): void
     {
         $flash = $this->submitInvalidForm(
             ['title' => new TranslatableMessage('validation.not_blank', 'validators', [], 'This value should not be blank.')],
@@ -73,8 +82,42 @@ final class FlashedErrorsContractTest extends TestCase
 
         $errors = $flash->pullErrors();
 
-        $this->assertSame(['createTask' => ['title' => 'This value should not be blank.']], $errors);
-        $this->assertMatchesUiDefinition('FormErrors', $errors['createTask']);
+        $this->assertInstanceOf(FormErrorBags::class, $errors);
+        $this->assertSame(
+            '{"createTask":{"title":{"message":"This value should not be blank.","key":"validation.not_blank","domain":"validators"}}}',
+            json_encode($errors, JSON_THROW_ON_ERROR),
+        );
+        $this->assertMatchesErrorsSlot($errors);
+        $this->assertMatchesUiDefinition('FormErrorBags', $errors);
+    }
+
+    #[Test]
+    public function anEmptyErrorMapValidatesAgainstTheUiErrorsSlot(): void
+    {
+        $errors = $this->submitInvalidForm([])->pullErrors();
+
+        $this->assertSame('{}', json_encode($errors, JSON_THROW_ON_ERROR));
+        $this->assertMatchesErrorsSlot($errors);
+    }
+
+    #[Test]
+    public function theMiniValidatorRejectsAMalformedErrorsSlot(): void
+    {
+        $schema = $this->uiSchema();
+        $slot = $schema['$defs']['SharedProps']['properties']['errors'];
+
+        $defs = $schema['$defs'];
+
+        $this->assertNotSame([], $this->validate($slot, $this->decode('{"b":{"f":42}}'), $defs, '$'));
+        $this->assertNotSame([], $this->validate($slot, $this->decode('{"f":{"message":"m","params":{"a":1}}}'), $defs, '$'));
+        $this->assertNotSame([], $this->validate($slot, $this->decode('[]'), $defs, '$'));
+        $this->assertSame([], $this->validate($slot, $this->decode('{}'), $defs, '$'));
+
+        $fieldMessage = $defs['FieldMessage'];
+        $this->assertSame([], $this->validate($fieldMessage, $this->decode('{"message":"m","key":"k","domain":"d","params":{"a":1}}'), $defs, '$'));
+        $this->assertNotSame([], $this->validate($fieldMessage, $this->decode('{"message":"m","key":"k"}'), $defs, '$'));
+        $this->assertNotSame([], $this->validate($fieldMessage, $this->decode('{"message":"m","key":"k","domain":"d","extra":"x"}'), $defs, '$'));
+        $this->assertNotSame([], $this->validate($fieldMessage, $this->decode('{"message":"m","key":"k","domain":"d","params":[]}'), $defs, '$'));
     }
 
     /**
@@ -101,21 +144,62 @@ final class FlashedErrorsContractTest extends TestCase
         return $flash;
     }
 
-    private function assertMatchesUiDefinition(string $definition, mixed $value): void
+    private function assertMatchesErrorsSlot(JsonSerializable $value): void
     {
-        $this->assertFileExists(self::UI_SCHEMA);
-        $schema = json_decode((string) file_get_contents(self::UI_SCHEMA), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertIsArray($schema);
+        $schema = $this->uiSchema();
+        $this->assertArrayHasKey('errors', $schema['$defs']['SharedProps']['properties']);
+
+        $violations = $this->validate(
+            $schema['$defs']['SharedProps']['properties']['errors'],
+            $this->decode(json_encode($value, JSON_THROW_ON_ERROR)),
+            $schema['$defs'],
+            '$',
+        );
+
+        $this->assertSame([], $violations, 'Flashed errors do not match the ui SharedProps errors slot.');
+    }
+
+    private function assertMatchesUiDefinition(string $definition, JsonSerializable $value): void
+    {
+        $schema = $this->uiSchema();
         $this->assertArrayHasKey($definition, $schema['$defs']);
 
-        $violations = $this->validate($schema['$defs'][$definition], $value, $schema['$defs'], '$');
+        $violations = $this->validate(
+            $schema['$defs'][$definition],
+            $this->decode(json_encode($value, JSON_THROW_ON_ERROR)),
+            $schema['$defs'],
+            '$',
+        );
 
         $this->assertSame([], $violations, 'Flashed errors do not match the ui ' . $definition . ' schema.');
     }
 
     /**
-     * Minimal validator for the keywords the FormErrors/FieldError definitions
-     * use: $ref, oneOf, type (object|array|string), additionalProperties, items.
+     * @return array{$defs: array<string, mixed>}
+     */
+    private function uiSchema(): array
+    {
+        $this->assertFileExists(self::UI_SCHEMA);
+        $schema = json_decode((string) file_get_contents(self::UI_SCHEMA), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertIsArray($schema);
+        $this->assertArrayHasKey('$defs', $schema);
+
+        return $schema;
+    }
+
+    /**
+     * Decode keeping JSON objects as objects, so `{}` and `[]` stay distinct.
+     */
+    private function decode(string $json): mixed
+    {
+        return json_decode($json, false, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Minimal validator for the keywords the errors slot definitions use:
+     * $ref, anyOf, oneOf, type (object|array|string), properties, required,
+     * additionalProperties (schema or boolean), items. Objects are decoded
+     * JSON objects ({@see stdClass}), arrays are lists.
      *
      * @param array<string, mixed> $node
      * @param array<string, mixed> $defs
@@ -129,6 +213,16 @@ final class FlashedErrorsContractTest extends TestCase
             $this->assertArrayHasKey($name, $defs, 'Unknown $ref ' . $node['$ref']);
 
             return $this->validate($defs[$name], $value, $defs, $path);
+        }
+
+        if (isset($node['anyOf'])) {
+            foreach ($node['anyOf'] as $branch) {
+                if ($this->validate($branch, $value, $defs, $path) === []) {
+                    return [];
+                }
+            }
+
+            return [$path . ': expected at least one anyOf branch to match'];
         }
 
         if (isset($node['oneOf'])) {
@@ -156,7 +250,7 @@ final class FlashedErrorsContractTest extends TestCase
      */
     private function validateList(array $node, mixed $value, array $defs, string $path): array
     {
-        if (!is_array($value) || !array_is_list($value)) {
+        if (!is_array($value)) {
             return [$path . ': expected array'];
         }
 
@@ -177,14 +271,32 @@ final class FlashedErrorsContractTest extends TestCase
      */
     private function validateObject(array $node, mixed $value, array $defs, string $path): array
     {
-        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
+        if (!$value instanceof stdClass) {
             return [$path . ': expected object'];
         }
 
+        $members = get_object_vars($value);
         $violations = [];
 
-        foreach ($value as $key => $item) {
-            $violations = [...$violations, ...$this->validate($node['additionalProperties'], $item, $defs, $path . '.' . $key)];
+        foreach ($node['required'] ?? [] as $required) {
+            if (!array_key_exists($required, $members)) {
+                $violations[] = $path . ': missing required ' . $required;
+            }
+        }
+
+        $properties = $node['properties'] ?? [];
+        $additional = $node['additionalProperties'] ?? true;
+
+        foreach ($members as $key => $item) {
+            $itemPath = $path . '.' . $key;
+
+            if (array_key_exists($key, $properties)) {
+                $violations = [...$violations, ...$this->validate($properties[$key], $item, $defs, $itemPath)];
+            } elseif ($additional === false) {
+                $violations[] = $itemPath . ': unexpected property';
+            } elseif (is_array($additional)) {
+                $violations = [...$violations, ...$this->validate($additional, $item, $defs, $itemPath)];
+            }
         }
 
         return $violations;

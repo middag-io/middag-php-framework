@@ -20,6 +20,7 @@ use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Ui\Form\Contract\FieldInterface;
 use Middag\Ui\Form\FieldConstraints;
 use Middag\Ui\Form\FieldDefinition;
+use Middag\Ui\Form\FieldMessage;
 use Middag\Ui\Form\Group;
 use Middag\Ui\Shared\Enum\ConditionOperator;
 use Middag\Ui\Shared\Enum\FieldType;
@@ -45,6 +46,35 @@ final class FormValidatorTest extends TestCase
         $errors = $this->validator()->validate([(new TextField('name'))->required()], []);
 
         self::assertArrayHasKey('name', $errors);
+    }
+
+    #[Test]
+    public function oneViolationIsOneStructuredMessage(): void
+    {
+        $errors = $this->validator()->validate([(new TextField('name'))->required()], []);
+
+        $message = $errors['name'];
+        self::assertInstanceOf(FieldMessage::class, $message);
+        self::assertSame('This value should not be blank.', $message->message);
+        self::assertSame('validation.not_blank', $message->key);
+        self::assertSame('validators', $message->domain);
+    }
+
+    #[Test]
+    public function severalViolationsAreAListOfStructuredMessagesWithParams(): void
+    {
+        $errors = $this->validator()->validate(
+            [(new TextField('code'))->max(3)->rule(new Assert\EqualTo('abc'))],
+            ['code' => 'abcd'],
+        );
+
+        $messages = $errors['code'];
+        self::assertIsArray($messages);
+        self::assertCount(2, $messages);
+        self::assertContainsOnlyInstancesOf(FieldMessage::class, $messages);
+        self::assertSame('validators', $messages[0]->domain);
+        self::assertArrayHasKey('limit', $messages[0]->params);
+        self::assertStringContainsString('"params":{', json_encode($messages[0], JSON_THROW_ON_ERROR));
     }
 
     #[Test]
@@ -164,10 +194,14 @@ final class FormValidatorTest extends TestCase
         $validator = new FormValidator(new ConditionEvaluator(), $translator);
 
         // A required-but-empty field still errors; the translator-backed builder
-        // resolves the (passthrough) message.
+        // resolves the (passthrough) message, which becomes the fallback.
         $errors = $validator->validate([(new TextField('name'))->required()], []);
 
         self::assertArrayHasKey('name', $errors);
+        $message = $errors['name'];
+        self::assertInstanceOf(FieldMessage::class, $message);
+        self::assertSame('This value should not be blank.', $message->message);
+        self::assertSame('validation.not_blank', $message->key);
     }
 
     #[Test]

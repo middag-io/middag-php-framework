@@ -16,17 +16,20 @@ use Middag\Framework\Exception\MiddagValidationException;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\TranslatableMessage;
 use Middag\Ui\Form\FieldError;
+use Middag\Ui\Form\FieldMessage;
 use Middag\Ui\Form\FormErrors;
 
 /**
  * Resolves a {@see MiddagValidationException} error
- * map to its wire form: each {@see TranslatableMessage} becomes
- * `{message, key, domain, params}` (RFC 9457 / Symfony-violation shape), with
- * `message` resolved through the bound translator and falling back to the
- * message's English `defaultMessage`. Raw strings pass through unchanged.
+ * map to its wire form: each {@see TranslatableMessage} becomes a ui
+ * {@see FieldMessage} `{message, key, domain, params?}` (RFC 9457 /
+ * Symfony-violation shape), with `message` resolved through the bound
+ * translator and falling back to the message's English `defaultMessage`.
+ * `params` is omitted when empty. Raw strings pass through unchanged.
  *
- * {@see self::formErrors()} resolves the same map to the ui `FormErrors` shape
- * (message strings only) for the session-flashed errors.
+ * {@see self::serialize()} gives the array form for the 422 body;
+ * {@see self::formErrors()} gives the same messages as a ui `FormErrors` for
+ * the session-flashed errors.
  *
  * @internal
  */
@@ -55,10 +58,11 @@ final readonly class ValidationErrorSerializer
     }
 
     /**
-     * Resolve the error map to the ui `FormErrors` wire shape: each field maps
-     * to one message string or a list of message strings ({@see FieldError}).
-     * Used for the errors flashed to the session, which the client reads as
-     * `useForm().errors`.
+     * Resolve the error map to the ui `FormErrors` value object: each field
+     * maps to one message or a list of messages ({@see FieldError}), where a
+     * {@see TranslatableMessage} becomes a {@see FieldMessage} and a string
+     * stays a string. Used for the errors flashed to the session, which the
+     * client reads as `useForm().errors`.
      *
      * @param array<string, list<string|TranslatableMessage>|string|TranslatableMessage> $errors
      */
@@ -68,8 +72,8 @@ final readonly class ValidationErrorSerializer
 
         foreach ($errors as $field => $value) {
             $out[$field] = is_array($value)
-                ? array_map($this->message(...), $value)
-                : $this->message($value);
+                ? array_map($this->fieldMessage(...), $value)
+                : $this->fieldMessage($value);
         }
 
         return new FormErrors($out);
@@ -80,16 +84,18 @@ final readonly class ValidationErrorSerializer
      */
     private function entry(string|TranslatableMessage $error): array|string
     {
+        $message = $this->fieldMessage($error);
+
+        return is_string($message) ? $message : $message->jsonSerialize();
+    }
+
+    private function fieldMessage(string|TranslatableMessage $error): FieldMessage|string
+    {
         if (is_string($error)) {
             return $error;
         }
 
-        return [
-            'message' => $this->message($error),
-            'key' => $error->key,
-            'domain' => $error->domain,
-            'params' => $error->params,
-        ];
+        return new FieldMessage($this->message($error), $error->key, $error->domain, $error->params);
     }
 
     private function message(string|TranslatableMessage $error): string

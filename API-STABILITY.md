@@ -376,6 +376,28 @@ to. They follow the same versioning rules as the rest of the `@api` surface.
 | `Middag\Framework\Kernel\Contract\ComponentNameResolverInterface` | Resolves the native component identifier (Moodle frankenstyle / WordPress plugin slug) that owns the running boot cycle. |
 | `Middag\Framework\Bus\Contract\SignalDispatcherInterface` | Canonical publish-side entry point for dispatching signals. No OSS implementation ships here; it is fulfilled by `middag-io/core` or a host adapter. |
 
+## Validation errors on the wire
+
+The framework produces validation errors in the `middag-io/ui` shapes
+(`FieldMessage`, `FormErrors`, `FormErrorBags`):
+
+- `FormValidatorInterface::validate()` and `AbstractForm::errors()` map each
+  field to one message or a list of messages. A message is a string or a
+  structured `Middag\Ui\Form\FieldMessage` (or its serialized array). The
+  default `FormValidator` emits `FieldMessage`s with the same key, domain and
+  params as the request validation path.
+- `FlashBag` has one writer and one reader for validation errors:
+  `setErrors(FormErrors $errors, ?string $bag = null)` and
+  `pullErrors(): FormErrors|FormErrorBags`. Errors queued under a bag name
+  (the `X-Inertia-Error-Bag` header) read back as a `FormErrorBags` with that
+  one bag; otherwise as a `FormErrors`. Nothing queued reads as an empty
+  `FormErrors`.
+- `ShareFlashMiddleware` shares what `pullErrors()` returns as the `errors`
+  prop, which matches the ui `SharedProps` `errors` slot in both cases.
+- In the 422 body and in the flashed errors, a structured message is
+  `{message, key, domain, params?}`; `params` is omitted when empty and is a
+  JSON object when present.
+
 ## Depending on the framework safely
 
 - Depend only on `@api` types.

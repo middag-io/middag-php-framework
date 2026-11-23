@@ -13,15 +13,18 @@ declare(strict_types=1);
 namespace Middag\Framework\Form;
 
 use Middag\Framework\Form\Contract\FormValidatorInterface;
+use Middag\Framework\Http\Request\ValidationErrorBag;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\SymfonyTranslatorAdapter;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Condition\Condition;
 use Middag\Ui\Form\Contract\FieldInterface;
 use Middag\Ui\Form\FieldDefinition;
+use Middag\Ui\Form\FieldMessage;
 use Middag\Ui\Shared\Enum\FieldType;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -38,8 +41,11 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * own treatment of null/empty for length and regex constraints and keeping
  * comparison constraints from firing on an empty string.
  *
- * Returns per-field errors: a string when there is exactly one error, or a
- * string[] when several constraints are violated.
+ * Returns per-field errors as ui {@see FieldMessage}s: one when there is
+ * exactly one error, or a list when several constraints are violated. Each
+ * carries the violation message (already translated when a translator is
+ * configured) next to the same key, domain and params the request validation
+ * path emits ({@see ValidationErrorBag::messageFor()}).
  *
  * @internal
  */
@@ -48,6 +54,7 @@ final readonly class FormValidator implements FormValidatorInterface
     public function __construct(
         private ConditionEvaluator $evaluator,
         private ?TranslatorInterface $translator = null,
+        private ValidationErrorBag $errorBag = new ValidationErrorBag(),
     ) {}
 
     /**
@@ -56,7 +63,7 @@ final readonly class FormValidator implements FormValidatorInterface
      * @param array<int, FieldInterface|LayoutElementInterface> $schema
      * @param array<string, mixed>                              $values
      *
-     * @return array<string, string|string[]>
+     * @return array<string, FieldMessage|list<FieldMessage>>
      */
     public function validate(array $schema, array $values): array
     {
@@ -88,13 +95,25 @@ final readonly class FormValidator implements FormValidatorInterface
             $messages = [];
 
             foreach ($violations as $violation) {
-                $messages[] = (string) $violation->getMessage();
+                $messages[] = $this->fieldMessage($violation);
             }
 
             $errors[$def->name] = count($messages) === 1 ? $messages[0] : $messages;
         }
 
         return $errors;
+    }
+
+    /**
+     * The violation as a structured message: the resolved violation message as
+     * the fallback, with the key, domain and params of the request validation
+     * path.
+     */
+    private function fieldMessage(ConstraintViolationInterface $violation): FieldMessage
+    {
+        $translatable = $this->errorBag->messageFor($violation);
+
+        return new FieldMessage((string) $violation->getMessage(), $translatable->key, $translatable->domain, $translatable->params);
     }
 
     /**

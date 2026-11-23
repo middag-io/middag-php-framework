@@ -15,6 +15,7 @@ namespace Middag\Framework\Form\Contract;
 use Middag\Framework\Form\AbstractForm;
 use Middag\Ui\Block\Contract\LayoutElementInterface;
 use Middag\Ui\Form\Contract\FieldInterface;
+use Middag\Ui\Form\FieldMessage;
 
 /**
  * Validates submitted form values against a form schema.
@@ -33,8 +34,11 @@ interface FormValidatorInterface
      * @param array<int, FieldInterface|LayoutElementInterface> $schema
      * @param array<string, mixed>                              $values
      *
-     * @return array<string, string|string[]> per-field errors: one message, or a
-     *                                        list when several rules fail; empty when valid
+     * Each field maps to one message or a list when several rules fail; a
+     * message is a string or a structured {@see FieldMessage} (or its
+     * serialized array). Empty when valid.
+     *
+     * @return array<string, array{message: string, key: string, domain: string, params?: array<string, mixed>}|FieldMessage|list<array{message: string, key: string, domain: string, params?: array<string, mixed>}|FieldMessage|string>|string>
      */
     public function validate(array $schema, array $values): array;
 }

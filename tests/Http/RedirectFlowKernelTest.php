@@ -18,6 +18,8 @@ use Middag\Framework\Http\Session\ArraySession;
 use Middag\Framework\Http\Session\FlashBag;
 use Middag\Framework\Translation\Contract\TranslatorInterface;
 use Middag\Framework\Translation\TranslatableMessage;
+use Middag\Ui\Form\FormErrorBags;
+use Middag\Ui\Form\FormErrors;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -25,6 +27,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use stdClass;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -105,7 +108,28 @@ final class RedirectFlowKernelTest extends TestCase
 
         $this->assertSame(303, $response->getStatusCode());
         $this->assertSame('/tasks/create', $response->getHeaderLine('Location'));
-        $this->assertSame(['title' => 'Title is required'], $flash->pullErrors());
+        $errors = $flash->pullErrors();
+        $this->assertInstanceOf(FormErrors::class, $errors);
+        $this->assertSame('{"title":"Title is required"}', json_encode($errors, JSON_THROW_ON_ERROR));
+    }
+
+    #[Test]
+    public function validationWithNoErrorsFlashesAnEmptyMapAndRedirectsBack(): void
+    {
+        $flash = new FlashBag(new ArraySession());
+
+        $routes = new RouteCollection();
+        $routes->add('store', (new Route('/tasks', ['_controller' => static function (): never {
+            throw new MiddagValidationException('Validation failed');
+        }]))->setMethods(['POST']));
+
+        $response = $this->kernel($routes, $flash)->handle(
+            (new ServerRequest('POST', '/tasks'))->withHeader('Referer', '/tasks/create'),
+        );
+
+        $this->assertSame(303, $response->getStatusCode());
+        $this->assertSame('{}', json_encode($flash->pullErrors(), JSON_THROW_ON_ERROR));
+        $this->assertSame(['error' => 'Validation failed'], $flash->pull());
     }
 
     #[Test]
@@ -126,7 +150,9 @@ final class RedirectFlowKernelTest extends TestCase
 
         $this->assertSame(303, $response->getStatusCode());
         // useForm('createTask') reads its own scoped errors.
-        $this->assertSame(['createTask' => ['title' => 'Title is required']], $flash->pullErrors());
+        $errors = $flash->pullErrors();
+        $this->assertInstanceOf(FormErrorBags::class, $errors);
+        $this->assertSame('{"createTask":{"title":"Title is required"}}', json_encode($errors, JSON_THROW_ON_ERROR));
     }
 
     #[Test]
@@ -189,8 +215,32 @@ final class RedirectFlowKernelTest extends TestCase
         $this->assertArrayHasKey('message', $first);
         $this->assertArrayHasKey('key', $first);
         $this->assertSame('validators', $first['domain']);
-        $this->assertArrayHasKey('params', $first);
+        // params, if present, is an object; empty params are omitted.
+        $this->assertArrayNotHasKey('params', $first);
         $this->assertStringStartsWith('validation.', $first['key']);
+    }
+
+    #[Test]
+    public function validationErrorParamsEncodeAsAJsonObject(): void
+    {
+        $routes = new RouteCollection();
+        $routes->add('store', (new Route('/tasks', ['_controller' => static function (): never {
+            throw new MiddagValidationException('Validation failed', [
+                'tags' => [new TranslatableMessage('validation.count_max', 'validators', ['limit' => 3], 'Too many tags.')],
+            ]);
+        }]))->setMethods(['POST']));
+
+        $response = $this->kernel($routes)->handle(
+            (new ServerRequest('POST', '/tasks'))->withHeader('Accept', 'application/json'),
+        );
+
+        $this->assertSame(422, $response->getStatusCode());
+        $payload = json_decode((string) $response->getBody(), false, 512, JSON_THROW_ON_ERROR);
+        $this->assertIsObject($payload);
+
+        $entry = $payload->errors->tags[0];
+        $this->assertInstanceOf(stdClass::class, $entry->params);
+        $this->assertSame(3, $entry->params->limit);
     }
 
     #[Test]
