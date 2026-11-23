@@ -17,6 +17,7 @@ use JsonSerializable;
 use Middag\Framework\Http\Contract\DeferrableInterface;
 use Middag\Framework\Http\Contract\IgnoreFirstLoadInterface;
 use Middag\Framework\Http\Contract\MergeableInterface;
+use stdClass;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -462,6 +463,13 @@ final class InertiaResponse
 
         if ($value instanceof JsonSerializable) {
             return $value->jsonSerialize();
+        }
+
+        // A stdClass is how a value object marks a JSON object, `{}` when
+        // empty. The object normalizer would turn it into an array, and an
+        // empty array encodes as `[]`, so keep it an object.
+        if ($value instanceof stdClass) {
+            return (object) array_map(fn (mixed $v): mixed => $this->normalize($v), get_object_vars($value));
         }
 
         if (is_object($value)) {
