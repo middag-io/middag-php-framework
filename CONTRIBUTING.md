@@ -90,8 +90,8 @@ Longer body when the "why" isn't obvious.
 - One scope per commit, lowercase — the `commit-msg` hook rejects
   comma-separated multi-scope subjects.
 - Do **not** mark a breaking change with `!` or a `BREAKING CHANGE:` footer
-  outside a family major window: the hook accepts both, but the family window
-  check refuses them (see [Versioning](#versioning-release-please)).
+  outside a MAJOR release: the hook accepts both, but the version check
+  can refuse them (see [Versioning](#versioning-release-please)).
 - **Never** add `Co-Authored-By` trailers.
 - The branch base is **`main`**.
 
@@ -100,34 +100,38 @@ Longer body when the "why" isn't obvious.
 Releases are cut **exclusively** by `release-please` — never by a manual tag.
 It reads the commit history to compute the next version and the CHANGELOG. The
 framework is on the **`1.x`** line and belongs to the MIDDAG PHP library
-version family, which crosses `2.0.0` together
-when the product owner decides the cut:
+version family, whose libraries share only the MAJOR version (from `2.0.0`);
+MINOR and PATCH releases are per library:
 
 | Commit | On `1.x` | From `2.0.0` |
 | ------ | -------- | ------------ |
 | `fix:` | PATCH | PATCH |
-| `feat:` | MINOR | waits for a family MINOR window |
-| `!` or `BREAKING CHANGE:` | not allowed | only in a family MAJOR window, after a deprecation in an earlier MINOR |
+| `feat:` | MINOR | MINOR, per library |
+| `!` or `BREAKING CHANGE:` | not allowed | only in a MAJOR, announced by a deprecation in an earlier MINOR where possible |
 
 - **`1.x` is pre-stable and unsupported.** It carries no compatibility
   promise, no backports and no security fixes; a break may ship in a minor, as
   a `feat:` commit, never as `fix:`, `refactor:` or `chore:`. The cut to
   `2.0.0` is clean, with no upgrade path from `1.x`.
-- **From `2.0.0`.** Every library of the family shares MAJOR.MINOR and is
-  required with the same `^2.N`. A patch carries fixes only. A family minor or major is a coordinated `Release-As`
-  in every library, decided by the product owner.
-- **Family window check.** Every PR runs `php-version-family-check / check`
-  against the organization variable `PHP_LIBS_OPEN_RELEASE` (empty = closed,
-  `X.Y` = family minor window, `X.0` = family major window). Give each commit
-  the type that matches the change. A feature PR waiting for a window stays
-  open and is kept current by merging `main` into it — never by rebase or
-  force-push; re-run the check when the window opens. A window counts as open
-  only when it is ahead of the current version; a stale value reads as closed.
-  While a window is open, merge the Release PR only at the coordinated
-  `X.Y.0`. After the `2.0.0` cut, a PR opened before it must merge `main` in
-  so that the check reads the new version.
+- **From `2.0.0`.** The libraries share the MAJOR. Each library requires its
+  siblings with `^2.N`, where `N` is the lowest MINOR it needs. A patch carries
+  fixes only; a MINOR carries additive changes; a MAJOR is a coordinated
+  `Release-As: X.0.0` in every library of the family.
+- **Version check.** Every PR runs `php-version-family-check / check`, which
+  reads the PR title and every non-merge commit (the header type and any
+  `BREAKING CHANGE:` / `BREAKING-CHANGE:` footer) against the organization
+  variable `PHP_LIBS_OPEN_RELEASE`. The family no longer has a shared MINOR
+  window; the check and its ruleset are being aligned with that policy, so
+  follow the status it reports until then. Give each commit the type that
+  matches the change; do not relabel a feature as `fix:` or `refactor:`. A PR
+  that waits on the check stays open and is kept current by merging `main`
+  into it, never by rebase or force-push; re-run the check afterwards. A
+  re-run reads the base of the original event, so a PR opened before a
+  release must merge `main` in so that the check reads the new version.
+- **Releases.** Releases are cut by release-please from Conventional
+  Commits, never by a manual tag.
 
-The public surface and the check rules live in
+The public surface and the versioning rules live in
 [`API-STABILITY.md`](API-STABILITY.md); the family support rules live on
 [Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility).
 

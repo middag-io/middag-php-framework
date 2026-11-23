@@ -4,7 +4,7 @@
 
 The `1.x` line is pre-stable and unsupported: it gets no backports or security fixes, and the move to `2.0.0` is a clean cut.
 
-From `2.0.0`, `middag-io/framework` is part of the `middag-php-*` version family ([Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility)). Security fixes go to the latest MINOR of the current MAJOR.
+From `2.0.0`, `middag-io/framework` is part of the `middag-php-*` version family ([Versioning and compatibility](https://docs.middag.dev/libraries/reference/versioning-and-compatibility)). Security fixes go to the latest MINOR of the current MAJOR. When the next MAJOR ships, the last MINOR of the previous MAJOR receives critical and high severity security fixes for 6 months, or until the end of life of the PHP or host version that motivated the new MAJOR, whichever comes first.
 
 ## Reporting a vulnerability
 
