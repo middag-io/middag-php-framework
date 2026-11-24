@@ -99,6 +99,14 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
         $name = $explicit !== ''
             ? IndexName::qualified($tableName, $explicit, IndexName::POSTGRESQL_MAX_BYTES)
             : sprintf('idx_%s_%s', $tableName, str_replace(', ', '_', $cols));
+
+        // An index stored under the full name before names were fitted is the
+        // same index: IF NOT EXISTS only checks the fitted name, so skip it
+        // here rather than create a duplicate.
+        if ($explicit !== '' && $this->hasLegacyFullName($tableName, $explicit, $name)) {
+            return;
+        }
+
         $this->connection->execute(sprintf('CREATE %s INDEX IF NOT EXISTS %s ON %s (%s)', $unique, $name, $tableName, $cols));
     }
 
@@ -111,12 +119,7 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
         // qualified. SQLite index names are schema-wide: only an index that
         // belongs to $tableName is dropped.
         foreach (IndexName::dropCandidates($tableName, $indexName, IndexName::POSTGRESQL_MAX_BYTES) as $candidate) {
-            $row = $this->connection->fetch(
-                "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?",
-                [$tableName, $candidate],
-            );
-
-            if ($row !== null) {
+            if ($this->indexBelongsTo($tableName, $candidate)) {
                 $this->connection->execute(sprintf('DROP INDEX IF EXISTS %s', $candidate));
 
                 return;
@@ -170,6 +173,29 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
         } catch (Throwable) {
             return false;
         }
+    }
+
+    /**
+     * True when $tableName already has the index under its full qualified name
+     * and that name differs from the fitted one $fittedName.
+     */
+    private function hasLegacyFullName(string $tableName, string $indexName, string $fittedName): bool
+    {
+        $fullName = $tableName . '_' . $indexName;
+
+        if ($fullName === $fittedName) {
+            return false;
+        }
+
+        return $this->indexBelongsTo($tableName, $fullName);
+    }
+
+    private function indexBelongsTo(string $tableName, string $indexName): bool
+    {
+        return $this->connection->fetch(
+            "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?",
+            [$tableName, $indexName],
+        ) !== null;
     }
 
     /** @param array<string, mixed> $col */

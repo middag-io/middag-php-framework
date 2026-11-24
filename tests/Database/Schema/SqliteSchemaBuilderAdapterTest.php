@@ -194,6 +194,27 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
         self::assertSame([], $this->indexNames($pdo, $table));
     }
 
+    public function testRerunningCreateTableKeepsALegacyFullNameIndexWithoutADuplicate(): void
+    {
+        $table = 'middag_long_table_name_for_index_limit';
+        $index = 'idx_a_rather_long_descriptor_index_name';
+        $qualified = $table . '_' . $index;
+        $descriptor = $this->longDescriptor($table, [['name' => $index, 'columns' => ['status']]]);
+        $pdo = $this->pdo();
+        $adapter = new SqliteSchemaBuilderAdapter(new PdoConnectionAdapter($pdo));
+
+        // An install made before names were fitted: the full name is stored.
+        $adapter->createTable($this->longDescriptor($table, []));
+
+        $pdo->exec(sprintf('CREATE INDEX %s ON %s (status)', $qualified, $table));
+
+        $adapter->createTable($descriptor);
+        self::assertSame([$qualified], $this->indexNames($pdo, $table));
+
+        $adapter->dropIndex($table, $index);
+        self::assertSame([], $this->indexNames($pdo, $table));
+    }
+
     public function testDropIndexLeavesAnotherTablesIndexAlone(): void
     {
         $pdo = $this->pdo();
