@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Middag\Framework\Tests\Database\Schema;
 
 use Middag\Framework\Database\Contract\ConnectionInterface;
+use Middag\Framework\Database\Schema\IndexName;
 use Middag\Framework\Database\Schema\MysqlSchemaBuilderAdapter;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -28,6 +29,7 @@ use RuntimeException;
  * @internal
  */
 #[CoversClass(MysqlSchemaBuilderAdapter::class)]
+#[CoversClass(IndexName::class)]
 final class MysqlSchemaBuilderAdapterTest extends TestCase
 {
     #[Test]
@@ -320,6 +322,39 @@ final class MysqlSchemaBuilderAdapterTest extends TestCase
         (new MysqlSchemaBuilderAdapter($connection))->addIndex('demo', ['name' => 'idx_slug', 'fields' => ['slug']]);
 
         self::assertSame(['CREATE INDEX idx_slug ON demo (slug)'], $connection->queries);
+    }
+
+    #[Test]
+    public function aLongIndexNameIsFittedTheSameWayOnCreateAddAndDrop(): void
+    {
+        $long = 'idx_' . str_repeat('very_long_', 7);
+        $fitted = IndexName::fit($long, IndexName::MYSQL_MAX_BYTES);
+        self::assertGreaterThan(64, strlen($long));
+        self::assertLessThanOrEqual(64, strlen($fitted));
+
+        $connection = $this->capturingConnection();
+        $adapter = new MysqlSchemaBuilderAdapter($connection);
+        $adapter->createTable([
+            'name' => 'demo',
+            'columns' => [['name' => 'slug', 'type' => 'varchar']],
+            'indexes' => [['name' => $long, 'fields' => ['slug']]],
+        ]);
+        $adapter->addIndex('demo', ['name' => $long, 'fields' => ['slug']]);
+        $adapter->dropIndex('demo', $long);
+
+        self::assertStringContainsString(sprintf('INDEX %s (slug)', $fitted), $connection->queries[0]);
+        self::assertSame(sprintf('CREATE INDEX %s ON demo (slug)', $fitted), $connection->queries[1]);
+        self::assertSame(sprintf('DROP INDEX %s ON demo', $fitted), $connection->queries[2]);
+    }
+
+    #[Test]
+    public function aSixtyFourByteIndexNameIsKeptAsIs(): void
+    {
+        $name = str_repeat('i', 64);
+        $connection = $this->capturingConnection();
+        (new MysqlSchemaBuilderAdapter($connection))->addIndex('demo', ['name' => $name, 'fields' => ['slug']]);
+
+        self::assertSame(sprintf('CREATE INDEX %s ON demo (slug)', $name), $connection->queries[0]);
     }
 
     #[Test]

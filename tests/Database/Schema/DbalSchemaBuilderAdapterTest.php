@@ -14,8 +14,10 @@ namespace Middag\Framework\Tests\Database\Schema;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Index;
 use Middag\Framework\Database\Schema\DbalSchemaBuilderAdapter;
+use Middag\Framework\Database\Schema\IndexName;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +29,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  */
 #[CoversClass(DbalSchemaBuilderAdapter::class)]
+#[CoversClass(IndexName::class)]
 final class DbalSchemaBuilderAdapterTest extends TestCase
 {
     private Connection $connection;
@@ -158,6 +161,59 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         self::assertFalse(
             $this->connection->createSchemaManager()->introspectTable('middag_widget')->hasIndex('idx_legacy'),
         );
+    }
+
+    public function testALongIndexNameIsFittedOnCreateAndDroppedByTheSameName(): void
+    {
+        $table = 'middag_long_table_name_for_index_limit';
+        $index = 'idx_a_rather_long_descriptor_index_name';
+        $fitted = IndexName::qualified($table, $index, IndexName::POSTGRESQL_MAX_BYTES);
+        self::assertGreaterThan(63, strlen($table . '_' . $index));
+
+        $this->adapter->createTable($this->longDescriptor($table, [['name' => $index, 'fields' => ['status']]]));
+        $schemaManager = $this->connection->createSchemaManager();
+        self::assertSame([$fitted], $this->secondaryIndexNames($schemaManager->introspectTable($table)->getIndexes()));
+
+        $this->adapter->dropIndex($table, $index);
+        self::assertSame([], $this->secondaryIndexNames($schemaManager->introspectTable($table)->getIndexes()));
+
+        $this->adapter->addIndex($table, ['name' => $index, 'fields' => ['status']]);
+        self::assertSame([$fitted], $this->secondaryIndexNames($schemaManager->introspectTable($table)->getIndexes()));
+    }
+
+    public function testThePostgresqlDdlKeepsTheIndexNameWithin63Bytes(): void
+    {
+        // No PostgreSQL in CI: check the DDL DBAL's PostgreSQL platform emits
+        // for the table the adapter built, so the server has nothing to truncate.
+        $table = 'middag_long_table_name_for_index_limit';
+        $index = 'idx_a_rather_long_descriptor_index_name';
+        $this->adapter->createTable($this->longDescriptor($table, [['name' => $index, 'fields' => ['status']]]));
+        $built = $this->connection->createSchemaManager()->introspectTable($table);
+
+        $sql = implode(";\n", (new PostgreSQLPlatform())->getCreateTableSQL($built));
+
+        self::assertSame(1, preg_match('/CREATE INDEX (\S+) ON/', $sql, $match));
+        self::assertSame(IndexName::qualified($table, $index, IndexName::POSTGRESQL_MAX_BYTES), $match[1]);
+        self::assertLessThanOrEqual(63, strlen($match[1]));
+    }
+
+    public function testDropIndexDropsALongIndexStoredUnderALegacyName(): void
+    {
+        $table = 'middag_long_table_name_for_index_limit';
+        $index = 'idx_a_rather_long_descriptor_index_name';
+        $qualified = $table . '_' . $index;
+        $this->adapter->createTable($this->longDescriptor($table, []));
+        $schemaManager = $this->connection->createSchemaManager();
+
+        // The full name, as SQLite stored it before names were fitted.
+        $this->connection->executeStatement(sprintf('CREATE INDEX %s ON %s (status)', $qualified, $table));
+        $this->adapter->dropIndex($table, $index);
+        self::assertSame([], $this->secondaryIndexNames($schemaManager->introspectTable($table)->getIndexes()));
+
+        // The name clipped to 63 bytes, as PostgreSQL silently stored it.
+        $this->connection->executeStatement(sprintf('CREATE INDEX %s ON %s (status)', substr($qualified, 0, 63), $table));
+        $this->adapter->dropIndex($table, $index);
+        self::assertSame([], $this->secondaryIndexNames($schemaManager->introspectTable($table)->getIndexes()));
     }
 
     public function testIndexExistsOnColumnsMatchesTheOrderedColumnSet(): void
@@ -353,6 +409,23 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
             'indexes' => [
                 ['name' => 'idx_widget_title', 'fields' => ['title']],
             ],
+        ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $indexes
+     *
+     * @return array<string, mixed>
+     */
+    private function longDescriptor(string $table, array $indexes): array
+    {
+        return [
+            'name' => $table,
+            'columns' => [
+                ['name' => 'id', 'type' => 'int', 'sequence' => true],
+                ['name' => 'status', 'type' => 'int'],
+            ],
+            'indexes' => $indexes,
         ];
     }
 

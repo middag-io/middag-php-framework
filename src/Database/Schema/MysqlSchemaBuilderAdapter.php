@@ -60,7 +60,7 @@ final readonly class MysqlSchemaBuilderAdapter implements SchemaBuilderAdapterIn
         foreach ($descriptor['indexes'] ?? [] as $idx) {
             $unique = empty($idx['unique']) ? '' : 'UNIQUE ';
             $fields = implode(', ', $this->indexFields($idx));
-            $idxName = $idx['name'];
+            $idxName = IndexName::fit((string) $idx['name'], IndexName::MYSQL_MAX_BYTES);
             $cols[] = sprintf('%sINDEX %s (%s)', $unique, $idxName, $fields);
         }
 
@@ -88,7 +88,7 @@ final readonly class MysqlSchemaBuilderAdapter implements SchemaBuilderAdapterIn
     {
         $unique = empty($index['unique']) ? '' : 'UNIQUE ';
         $fields = implode(', ', $this->indexFields($index));
-        $name = $index['name'];
+        $name = IndexName::fit((string) $index['name'], IndexName::MYSQL_MAX_BYTES);
         $this->connection->execute(sprintf('CREATE %sINDEX %s ON %s (%s)', $unique, $name, $tableName, $fields));
     }
 
@@ -99,8 +99,13 @@ final readonly class MysqlSchemaBuilderAdapter implements SchemaBuilderAdapterIn
         // MySQL/MariaDB reject `IF EXISTS` on DROP INDEX (valid only on
         // DROP TABLE/DATABASE), so emit the bare statement and swallow the
         // "index does not exist" error to keep the call idempotent.
+        // The name is fitted to 64 bytes exactly as on create, so a long name
+        // resolves to the index createTable()/addIndex() emitted; MySQL never
+        // stored a longer name, so there is no legacy name to try.
+        $name = IndexName::fit($indexName, IndexName::MYSQL_MAX_BYTES);
+
         try {
-            $this->connection->execute(sprintf('DROP INDEX %s ON %s', $indexName, $tableName));
+            $this->connection->execute(sprintf('DROP INDEX %s ON %s', $name, $tableName));
         } catch (Throwable) {
             // Index already absent — nothing to drop.
         }
