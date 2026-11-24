@@ -92,10 +92,12 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
         // schema, so a bare name reused across tables (e.g. `status`, `userid`)
         // collides — and `CREATE INDEX IF NOT EXISTS` silently no-ops the
         // duplicate, dropping the second table's index. The auto-generated
-        // fallback is already table-qualified. Mirrors DbalSchemaBuilderAdapter.
+        // fallback is already table-qualified. Mirrors DbalSchemaBuilderAdapter,
+        // including the 63-byte fit: SQLite has no length limit, but the same
+        // descriptor then gets the same index name here and through DBAL.
         $explicit = (string) ($index['name'] ?? '');
         $name = $explicit !== ''
-            ? sprintf('%s_%s', $tableName, $explicit)
+            ? IndexName::qualified($tableName, $explicit, IndexName::POSTGRESQL_MAX_BYTES)
             : sprintf('idx_%s_%s', $tableName, str_replace(', ', '_', $cols));
         $this->connection->execute(sprintf('CREATE %s INDEX IF NOT EXISTS %s ON %s (%s)', $unique, $name, $tableName, $cols));
     }
@@ -104,10 +106,11 @@ final readonly class SqliteSchemaBuilderAdapter implements SchemaBuilderAdapterI
     {
         // Identifier-based adapter: SQLite drops by name; $fields is only
         // consumed by field-set adapters (Moodle xmldb). addIndex() stores the
-        // table-qualified name, so resolve the short name against this table
-        // first. SQLite index names are schema-wide: only an index that
+        // fitted table-qualified name, so resolve the short name against this
+        // table first, then the names stored before names were fitted or
+        // qualified. SQLite index names are schema-wide: only an index that
         // belongs to $tableName is dropped.
-        foreach ([$tableName . '_' . $indexName, $indexName] as $candidate) {
+        foreach (IndexName::dropCandidates($tableName, $indexName, IndexName::POSTGRESQL_MAX_BYTES) as $candidate) {
             $row = $this->connection->fetch(
                 "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?",
                 [$tableName, $candidate],

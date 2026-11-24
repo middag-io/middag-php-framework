@@ -127,13 +127,13 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     {
         // Identifier-based adapter: dbal resolves the index by name; $fields is
         // only consumed by field-set adapters (Moodle xmldb).
-        // The table-qualified name comes first (what createTable() and
-        // addIndex() emit); the short name still matches indexes added before
-        // addIndex() qualified it.
+        // The fitted table-qualified name comes first (what createTable() and
+        // addIndex() emit); the other candidates match names stored before
+        // names were fitted or qualified (see IndexName::dropCandidates()).
         $schemaManager = $this->connection->createSchemaManager();
         $current = $schemaManager->introspectTable($tableName);
 
-        foreach ([$tableName . '_' . $indexName, $indexName] as $candidate) {
+        foreach (IndexName::dropCandidates($tableName, $indexName, IndexName::POSTGRESQL_MAX_BYTES) as $candidate) {
             if ($current->hasIndex($candidate)) {
                 $schemaManager->alterTable(new TableDiff($current, droppedIndexes: [$current->getIndex($candidate)]));
 
@@ -235,7 +235,10 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
      * engines this adapter targets — PostgreSQL, SQLite — namespace indexes per
      * schema, so a bare name reused across tables (e.g. `status`, `userid`)
      * collides. Prefixing with the table keeps the descriptors engine-neutral
-     * while the DDL stays valid everywhere. Returns null when the descriptor
+     * while the DDL stays valid everywhere. The name is fitted to 63 bytes
+     * (PostgreSQL's limit, the lowest of the engines DBAL targets) with a short
+     * hash suffix, so the engine never truncates it behind our back and
+     * dropIndex() computes the same name. Returns null when the descriptor
      * names no index, letting DBAL auto-generate a unique name.
      *
      * @param array<string, mixed> $index
@@ -244,7 +247,7 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     {
         $name = (string) ($index['name'] ?? '');
 
-        return $name === '' ? null : $tableName . '_' . $name;
+        return $name === '' ? null : IndexName::qualified($tableName, $name, IndexName::POSTGRESQL_MAX_BYTES);
     }
 
     /**

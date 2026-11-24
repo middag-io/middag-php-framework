@@ -14,6 +14,7 @@ namespace Middag\Framework\Tests\Database\Schema;
 
 use Middag\Framework\Database\Contract\ConnectionInterface;
 use Middag\Framework\Database\PdoConnectionAdapter;
+use Middag\Framework\Database\Schema\IndexName;
 use Middag\Framework\Database\Schema\SqliteSchemaBuilderAdapter;
 use Middag\Framework\Exception\MiddagPersistenceException;
 use PDO;
@@ -25,6 +26,7 @@ use RuntimeException;
  * @internal
  */
 #[CoversClass(SqliteSchemaBuilderAdapter::class)]
+#[CoversClass(IndexName::class)]
 final class SqliteSchemaBuilderAdapterTest extends TestCase
 {
     public function testCreateTableEmitsSqliteAutoincrementForSequenceColumn(): void
@@ -154,6 +156,42 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
 
         $names = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'index'")->fetchAll(PDO::FETCH_COLUMN);
         self::assertNotContains('orders_status', $names);
+    }
+
+    public function testALongIndexNameIsFittedOnCreateAndDroppedByTheSameName(): void
+    {
+        $table = 'middag_long_table_name_for_index_limit';
+        $index = 'idx_a_rather_long_descriptor_index_name';
+        $pdo = $this->pdo();
+        $adapter = new SqliteSchemaBuilderAdapter(new PdoConnectionAdapter($pdo));
+        $fitted = IndexName::qualified($table, $index, IndexName::POSTGRESQL_MAX_BYTES);
+        self::assertGreaterThan(63, strlen($table . '_' . $index));
+
+        $adapter->createTable($this->longDescriptor($table, [['name' => $index, 'columns' => ['status']]]));
+        self::assertSame([$fitted], $this->indexNames($pdo, $table));
+
+        $adapter->dropIndex($table, $index);
+        self::assertSame([], $this->indexNames($pdo, $table));
+    }
+
+    public function testDropIndexDropsALongIndexStoredUnderALegacyName(): void
+    {
+        $table = 'middag_long_table_name_for_index_limit';
+        $index = 'idx_a_rather_long_descriptor_index_name';
+        $qualified = $table . '_' . $index;
+        $pdo = $this->pdo();
+        $adapter = new SqliteSchemaBuilderAdapter(new PdoConnectionAdapter($pdo));
+        $adapter->createTable($this->longDescriptor($table, []));
+
+        // The full name, as this adapter stored it before names were fitted.
+        $pdo->exec(sprintf('CREATE INDEX %s ON %s (status)', $qualified, $table));
+        $adapter->dropIndex($table, $index);
+        self::assertSame([], $this->indexNames($pdo, $table));
+
+        // The name clipped to 63 bytes, as PostgreSQL silently stores it.
+        $pdo->exec(sprintf('CREATE INDEX %s ON %s (status)', substr($qualified, 0, 63), $table));
+        $adapter->dropIndex($table, $index);
+        self::assertSame([], $this->indexNames($pdo, $table));
     }
 
     public function testDropIndexLeavesAnotherTablesIndexAlone(): void
@@ -494,6 +532,34 @@ final class SqliteSchemaBuilderAdapterTest extends TestCase
                 return $work();
             }
         };
+    }
+
+    /**
+     * @param list<array<string, mixed>> $indexes
+     *
+     * @return array<string, mixed>
+     */
+    private function longDescriptor(string $table, array $indexes): array
+    {
+        return [
+            'name' => $table,
+            'columns' => [
+                ['name' => 'id', 'type' => 'bigint', 'sequence' => true],
+                ['name' => 'status', 'type' => 'int'],
+            ],
+            'indexes' => $indexes,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function indexNames(PDO $pdo, string $table): array
+    {
+        $statement = $pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? ORDER BY name");
+        $statement->execute([$table]);
+
+        return array_values(array_map('strval', $statement->fetchAll(PDO::FETCH_COLUMN)));
     }
 
     private function pdo(): PDO
