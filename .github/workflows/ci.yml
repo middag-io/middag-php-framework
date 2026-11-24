@@ -17,8 +17,12 @@ jobs:
   # (8.3.0) kept: the static checks (composer validate, strict PSR-4, the
   # PHP 8.3 parse lint of `composer lint`, PHPStan, PHP-CS-Fixer, Rector and
   # the portability gate) run on 8.3, the floor; the audit and PHPUnit on
-  # every version. The tool caches live in .cache. Every dependency resolves
-  # from public Packagist; no credentials.
+  # every version. The 8.6 job, the ceiling, also runs composer validate,
+  # strict PSR-4 and PHPStan with .phpstan-ceiling.neon (phpVersion 80600),
+  # so a deprecation in the newest supported PHP fails CI; the lint,
+  # PHP-CS-Fixer, Rector and portability checks stay on the floor only. The
+  # tool caches live in .cache. Every dependency resolves from public
+  # Packagist; no credentials.
   php-library-check:
     name: check (PHP ${{ matrix.php }})
     runs-on: ubuntu-24.04
@@ -28,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.3', '8.4', '8.5']
+        php: ['8.3', '8.4', '8.5', '8.6']
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,9 +44,12 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           php-extensions: curl, intl, mbstring, pdo, pdo_sqlite, sqlite3
-          static-checks: ${{ matrix.php == '8.3' }}
-          lint-script: lint
-          composer-scripts: check:portability
+          static-checks: ${{ matrix.php == '8.3' || matrix.php == '8.6' }}
+          lint-script: ${{ matrix.php == '8.3' && 'lint' || '' }}
+          phpstan-script: ${{ matrix.php == '8.6' && 'check:stan:ceiling' || 'check:stan' }}
+          cs-fixer-script: ${{ matrix.php == '8.3' && 'check:style' || '' }}
+          rector-script: ${{ matrix.php == '8.3' && 'check:rector' || '' }}
+          composer-scripts: ${{ matrix.php == '8.3' && 'check:portability' || '' }}
           tool-cache-paths: .cache
           audit-blocking-severities: critical, high
 
@@ -60,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.4', '8.5']
+        php: ['8.4', '8.5', '8.6']
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

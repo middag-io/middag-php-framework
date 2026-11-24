@@ -1,0 +1,12 @@
+includes:
+    - .phpstan.neon
+
+parameters:
+    # Ceiling pass: the same analysis as .phpstan.neon, but against the newest
+    # PHP the library supports (8.6), so a deprecation or removal in the
+    # newest runtime fails CI. The floor pass (.phpstan.neon, phpVersion
+    # 80300) stays the reference for what the code may use. CI runs this
+    # config on the PHP 8.6 job through `composer check:stan:ceiling`. Its
+    # own tmpDir keeps the two result caches apart.
+    tmpDir: %currentWorkingDirectory%/.cache/phpstan-ceiling
+    phpVersion: 80600

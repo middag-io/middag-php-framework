@@ -35,7 +35,7 @@ We did not reinvent the wheel. Under the hood it is Symfony (dependency injectio
 
 ## Installation
 
-Requires PHP `^8.3` (8.3, 8.4 and 8.5) and the `intl`, `json`, `mbstring` and `pdo` extensions; `curl` is recommended for the HTTP client. Every Symfony component it depends on is required as `^7.4 || ^8.1`: PHP 8.3 resolves Symfony 7.4, PHP 8.4 and 8.5 can resolve 8.x. Runs standalone or behind a host adapter.
+Requires PHP `^8.3` (8.3, 8.4, 8.5 and 8.6) and the `intl`, `json`, `mbstring` and `pdo` extensions; `curl` is recommended for the HTTP client. Every Symfony component it depends on is required as `^7.4 || ^8.1`: PHP 8.3 resolves Symfony 7.4, PHP 8.4, 8.5 and 8.6 can resolve 8.x. Runs standalone or behind a host adapter.
 
 ```bash
 composer require middag-io/framework
@@ -127,12 +127,13 @@ Adopting the framework, building a custom adapter, or migrating a legacy plugin 
 ```bash
 composer test    # PHPUnit
 composer check   # PHPStan (level 6) + PHP-CS-Fixer + Rector, all dry-run
+composer check:stan:ceiling   # PHPStan against PHP 8.6, the newest supported version
 composer fix     # auto-fix style and Rector (composer fix:all re-settles formatting afterwards)
 composer lint         # parse every file on the local PHP (php -l), no Docker
 composer lint:php83   # the same lint on a real PHP 8.3 (Docker); fails without Docker
 ```
 
-CI runs the static checks, `composer lint` among them, on PHP 8.3, the floor, and the tests on 8.3, 8.4 and 8.5 with the platform pinned to 8.3.0. A `highest` job removes the pin, resolves the highest versions on 8.4 and 8.5 and fails unless Symfony resolved to 8.x.
+CI runs the static checks, `composer lint` among them, on PHP 8.3, the floor, and the tests on 8.3, 8.4, 8.5 and 8.6 with the platform pinned to 8.3.0. On 8.6, the ceiling, PHPStan runs again with `.phpstan-ceiling.neon` (`composer check:stan:ceiling`, `phpVersion` 80600). A `highest` job removes the pin, resolves the highest versions on 8.4, 8.5 and 8.6 and fails unless Symfony resolved to 8.x.
 
 Git hooks are wired automatically on install; the `commit-msg` hook enforces [Conventional Commits](https://www.conventionalcommits.org/), and releases are cut by [release-please](https://github.com/googleapis/release-please).
 
