@@ -50,4 +50,4 @@ The framework ships the generic reactive seam and nothing more. It defines a sig
 | Per-instance hook registry | test `tests/Kernel/Manager/HookManagerTest.php` (`testInstancesDoNotShareState`) | coded |
 | Callback exceptions are not swallowed | test `tests/Kernel/Manager/HookManagerTest.php` (`testDoActionDoesNotSwallowCallbackExceptions`, `testApplyFiltersDoesNotSwallowCallbackExceptions`) | coded |
 | Public and internal hook surface, descriptive tag-naming convention | doc `docs-middag-dev:docs/framework/reference/hooks-public-surface.md` | planned |
-| Legacy governed-engine mechanics, kept for reference | doc `docs-middag-dev:docs/framework/reference/signal-hook-legacy-mechanics.md` | coded |
+| Legacy governed-engine mechanics, kept for reference | doc [`docs-middag-dev:docs/framework/reference/signal-hook-legacy-mechanics.md`](https://github.com/middag-io/docs-middag-dev/blob/1d13c64383963d521a3f96ff2541d990bae4ddf2/docs/framework/reference/signal-hook-legacy-mechanics.md) (pinned; removed from the hub) | coded |

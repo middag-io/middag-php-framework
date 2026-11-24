@@ -65,4 +65,4 @@ their real floor.
 | No proprietary or unknown dependency | deptrac `--fail-on-uncovered` in `composer check:portability` | coded |
 | Zero violations, no allowlist | `composer check:portability` in CI (`composer check`) | coded |
 | Dependency direction across the ecosystem | doc `docs-middag-dev:docs/framework/explanation/architecture.md` (The four pillars) | coded |
-| Historical portability audit | doc `docs-middag-dev:docs/framework/reference/portability-audit-historical.md` | coded |
+| Historical portability audit | doc [`docs-middag-dev:docs/framework/reference/portability-audit-historical.md`](https://github.com/middag-io/docs-middag-dev/blob/1d13c64383963d521a3f96ff2541d990bae4ddf2/docs/framework/reference/portability-audit-historical.md) (pinned; removed from the hub) | coded |

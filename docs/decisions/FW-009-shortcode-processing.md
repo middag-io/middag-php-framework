@@ -45,4 +45,4 @@ Output is sanitized by default. A handler that has to emit trusted markup declar
 |---|---|---|
 | Adapters honour the marker | review in each adapter | planned |
 | No macro engine ships in the framework | review | planned |
-| Historical shortcode design, kept for reference | doc `docs-middag-dev:docs/framework/reference/shortcode-legacy-detail.md` | coded |
+| Historical shortcode design, kept for reference | doc [`docs-middag-dev:docs/framework/reference/shortcode-legacy-detail.md`](https://github.com/middag-io/docs-middag-dev/blob/1d13c64383963d521a3f96ff2541d990bae4ddf2/docs/framework/reference/shortcode-legacy-detail.md) (pinned; removed from the hub) | coded |
