@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.1](https://github.com/middag-io/middag-php-framework/compare/v1.25.0...v1.25.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* **schema:** fit index names to the engine identifier limit ([5c52b84](https://github.com/middag-io/middag-php-framework/commit/5c52b84947b861e36a2667cbf391a7c0529f1da8))
+* **schema:** keep a legacy full-name SQLite index instead of duplicating it ([defaa08](https://github.com/middag-io/middag-php-framework/commit/defaa08993fcfb108ec659ab5cc8249ff9d91983))
+
 ## [1.25.0](https://github.com/middag-io/middag-php-framework/compare/v1.24.1...v1.25.0) (2026-11-24)
 
 
