@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/middag-io/middag-php-framework/compare/v1.24.1...v1.25.0) (2026-11-24)
+
+
+### Features
+
+* support PHP 8.6 ([fe6963b](https://github.com/middag-io/middag-php-framework/commit/fe6963b6464ff89f73bbacfc5eeca7ff2989ead4))
+
 ## [1.24.1](https://github.com/middag-io/middag-php-framework/compare/v1.24.0...v1.24.1) (2026-11-23)
 
 
