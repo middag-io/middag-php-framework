@@ -50,4 +50,4 @@ The framework has its own persistence layer: an Active Record model for fast wri
 | Immutable query builder | test `tests/Persistence/Query/QueryBuilderTest.php` | coded |
 | No domain entity extends the model; one aggregate per transaction by default | static-analysis rule | planned |
 | Eloquent compatibility matrix | doc `docs-middag-dev:docs/framework/reference/active-record-eloquent-compatibility.md` | coded |
-| Persistence families and anti-patterns | doc `docs-middag-dev:docs/framework/reference/repository-persistence-families.md` | coded |
+| Persistence families and anti-patterns | doc [`docs-middag-dev:docs/framework/reference/repository-persistence-families.md`](https://github.com/middag-io/docs-middag-dev/blob/1d13c64383963d521a3f96ff2541d990bae4ddf2/docs/framework/reference/repository-persistence-families.md) (pinned; removed from the hub) | coded |
