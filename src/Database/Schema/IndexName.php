@@ -66,6 +66,25 @@ final class IndexName
     }
 
     /**
+     * The name DBAL generates for an index declared without one: `IDX_` (or
+     * `UNIQ_` for a unique index) plus the CRC32, in hex, of the table name
+     * and of each column, upper-cased and cut to $maxBytes. It repeats the
+     * rule of DBAL's deprecated Table::addIndex()/addUniqueIndex(), so an
+     * unnamed index keeps the name those methods gave it.
+     *
+     * @param list<string> $columns
+     */
+    public static function generated(string $tableName, array $columns, bool $unique, int $maxBytes): string
+    {
+        $hash = implode('', array_map(
+            static fn (string $part): string => dechex(crc32($part)),
+            [$tableName, ...$columns],
+        ));
+
+        return strtoupper(substr(($unique ? 'uniq' : 'idx') . '_' . $hash, 0, $maxBytes));
+    }
+
+    /**
      * Names to try, in order, when dropping the index a descriptor calls
      * $indexName on $tableName:
      *
