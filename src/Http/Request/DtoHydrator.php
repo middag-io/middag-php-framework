@@ -19,6 +19,7 @@ use Middag\Framework\Translation\TranslatableMessage;
 use ReflectionClass;
 use ReflectionNamedType;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Exception\PartialDenormalizationException;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
@@ -81,10 +82,7 @@ final readonly class DtoHydrator
             /** @var null|T $dto */
             $dto = is_object($data) ? $data : null;
 
-            // getErrors() spans the whole supported Symfony range (^7 || ^8); it
-            // is deprecated in 8.1 for getNotNormalizableValueErrors(), which does
-            // not exist before 8.1 — revisit when the version floor moves to ^9.
-            foreach ($partialDenormalizationException->getErrors() as $error) {
+            foreach ($this->denormalizationErrors($partialDenormalizationException) as $error) {
                 $bag->add($errors, $bag->fieldName($error->getPath()), $bag->denormalizationMessage());
             }
         }
@@ -156,6 +154,24 @@ final readonly class DtoHydrator
         }
 
         return $input;
+    }
+
+    /**
+     * The value errors the serializer collected. Symfony 8.1 deprecates
+     * getErrors() for getNotNormalizableValueErrors(), which Symfony 7.4 does
+     * not have, so the supported range (^7.4 || ^8.1) picks the accessor at
+     * runtime. The check is always true on Symfony 8.1+ and always false on
+     * 7.4, which static analysis reports on 8.1; it goes away with the 7.x
+     * range.
+     *
+     * @return array<NotNormalizableValueException>
+     */
+    private function denormalizationErrors(PartialDenormalizationException $exception): array
+    {
+        // @phpstan-ignore function.alreadyNarrowedType
+        $accessor = method_exists($exception, 'getNotNormalizableValueErrors') ? 'getNotNormalizableValueErrors' : 'getErrors';
+
+        return $exception->{$accessor}();
     }
 
     private function serializer(): Serializer
