@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0-rc.2](https://github.com/middag-io/middag-php-framework/compare/v2.0.0-rc.1...v2.0.0-rc.2) (2026-11-25)
+
+
+### Bug Fixes
+
+* **database:** build DBAL schema through the schema editors ([f5666f6](https://github.com/middag-io/middag-php-framework/commit/f5666f60cdd1542c13294ed18b324cb2944ff631))
+* **http:** read denormalization errors without the Symfony 8.1 deprecation ([69b6d34](https://github.com/middag-io/middag-php-framework/commit/69b6d3493a9157b082b4e1801f9fc9b002a2bedb))
+
+### Consumer impact
+
+- No public PHP signature change since 2.0.0-rc.1. `DbalSchemaBuilderAdapter` now builds schema through the doctrine/dbal schema editors and `introspectTableByUnquotedName()`, in place of the APIs that dbal 4.5 and 4.6 deprecate. `DtoHydrator` reads `getNotNormalizableValueErrors()` on Symfony 8.1+ and `getErrors()` on Symfony 7.4.
+- The emitted DDL and the index names are unchanged. An unnamed index keeps the name DBAL generated for it before, so existing databases see no rename.
+- New doctrine/dbal floor: `^4.4.5` (was `^4.1`). Consumers that require doctrine/dbal to use `DbalSchemaBuilderAdapter` must allow `^4.4.5`. Below 4.4.5, SQLite drops the existing indexes of a table altered after it was introspected by unquoted name.
+- Table lookups go through `introspectTableByUnquotedName()`, which folds the name the way the platform folds unquoted identifiers. Lower-case table names, the MIDDAG convention, are not affected.
+- The version family stays frozen: until 2.0.0 only fixes land, released as `2.0.0-rc.N`.
+
 ## [2.0.0-rc.1](https://github.com/middag-io/middag-php-framework/compare/v1.25.1...v2.0.0-rc.1) (2026-11-25)
 
 
