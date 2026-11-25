@@ -37,10 +37,11 @@ jobs:
       - name: Check the version family window
         uses: middag-io/actions/php-version-family-check@php-version-family-check-v1
         with:
-          # The family window is the organization variable PHP_LIBS_OPEN_RELEASE
-          # (empty = closed, X.Y = family MINOR window, X.0 = family MAJOR window).
+          # The family window is the repository variable PHP_LIBS_OPEN_RELEASE,
+          # set per repository and never on the organization (empty = closed,
+          # X.Y = family MINOR window, X.0 = family MAJOR window).
           window: ${{ vars.PHP_LIBS_OPEN_RELEASE }}
-          family-from: 2.0.0
+          family-from: 2.0.0-rc.1
           title: ${{ github.event.pull_request.title }}
           base-sha: ${{ github.event.pull_request.base.sha }}
           head-sha: ${{ github.event.pull_request.head.sha }}

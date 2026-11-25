@@ -2,6 +2,9 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "versioning": "prerelease",
+      "prerelease-type": "rc",
+      "prerelease": true,
       "changelog-sections": [
         {"type": "feat", "section": "Features"},
         {"type": "fix", "section": "Bug Fixes"},
