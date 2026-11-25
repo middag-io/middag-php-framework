@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-rc.2](https://github.com/middag-io/middag-php-framework/compare/v2.0.0-rc.1...v2.0.0-rc.2) (2026-11-25)
+
+
+### Bug Fixes
+
+* **database:** build DBAL schema through the schema editors ([f5666f6](https://github.com/middag-io/middag-php-framework/commit/f5666f60cdd1542c13294ed18b324cb2944ff631))
+* **http:** read denormalization errors without the Symfony 8.1 deprecation ([69b6d34](https://github.com/middag-io/middag-php-framework/commit/69b6d3493a9157b082b4e1801f9fc9b002a2bedb))
+
 ## [2.0.0-rc.1](https://github.com/middag-io/middag-php-framework/compare/v1.25.1...v2.0.0-rc.1) (2026-11-25)
 
 
