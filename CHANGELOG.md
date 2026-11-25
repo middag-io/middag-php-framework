@@ -7,6 +7,15 @@
 
 * cut the first 2.0 release candidate ([4d2cad9](https://github.com/middag-io/middag-php-framework/commit/4d2cad991ec47e1d68162cbf9fb2f6aec5c9562e))
 
+### Consumer impact
+
+- No PHP API change since 1.25.1: `src/` is that of 1.25.1.
+- Requires `middag-io/ui ^2.0.0-rc.1`. The ui candidate has no PHP API or wire change since ui 1.15.0. The Moodle and WordPress adapters are suggested at `^2.0`.
+- This is a release candidate. Composer installs it only when the root project allows the `rc` stability (for example `minimum-stability: dev` with `prefer-stable: true`) and the constraint names it, such as `^2.0.0-rc.1`. A root that does not allow prereleases stays on 1.x until 2.0.0.
+- 2.0.0 is the first supported release, and the cut from the unsupported 1.x line is clean: there is no deprecation cycle. A 1.x consumer applies the consumer impact entries of this changelog up to 1.25.1. The last breaking ones are 1.23.0 (`SchemaBuilderAdapterInterface::indexExistsOnColumns()` added, `IndexIntrospectionInterface` removed) and 1.24.0 (flashed errors are `FormErrors`/`FormErrorBags` value objects, validation errors use the ui `FieldMessage` form).
+- Depend only on `@api` types, as `API-STABILITY.md` states, and require `middag-io/framework` with `^2.0` once 2.0.0 is final.
+- From this candidate the version family is frozen: until 2.0.0 only fixes land, released as `2.0.0-rc.N`.
+
 ## [1.25.1](https://github.com/middag-io/middag-php-framework/compare/v1.25.0...v1.25.1) (2026-11-24)
 
 
