@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-rc.1](https://github.com/middag-io/middag-php-framework/compare/v1.25.1...v2.0.0-rc.1) (2026-11-25)
+
+
+### Miscellaneous
+
+* cut the first 2.0 release candidate ([4d2cad9](https://github.com/middag-io/middag-php-framework/commit/4d2cad991ec47e1d68162cbf9fb2f6aec5c9562e))
+
 ## [1.25.1](https://github.com/middag-io/middag-php-framework/compare/v1.25.0...v1.25.1) (2026-11-24)
 
 
