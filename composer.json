@@ -73,10 +73,11 @@
     "friendsofphp/php-cs-fixer": "^3.0",
     "league/flysystem": "^3.0",
     "phpstan/phpstan": "^2.0",
+    "phpstan/phpstan-deprecation-rules": "^2.0",
     "phpunit/phpunit": "^11.0",
     "rector/rector": "2.8.4",
-    "symfony/doctrine-messenger": "^7.4 || ^8.1",
-    "sentry/sentry": "^4.0"
+    "sentry/sentry": "^4.0",
+    "symfony/doctrine-messenger": "^7.4 || ^8.1"
   },
   "conflict": {
     "middag-io/moodle": "<1.23"

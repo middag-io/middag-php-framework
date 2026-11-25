@@ -5,6 +5,8 @@
          colors="true"
          cacheDirectory=".phpunit.cache"
          executionOrder="depends,defects"
+         failOnDeprecation="true"
+         failOnPhpunitDeprecation="true"
          failOnRisky="true"
          failOnWarning="true">
     <testsuites>
