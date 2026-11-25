@@ -15,9 +15,11 @@ namespace Middag\Framework\Database\Schema;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\Index\IndexedColumn;
+use Doctrine\DBAL\Schema\Index\IndexType;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
-use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Middag\Framework\Database\Contract\SchemaBuilderAdapterInterface;
 use Middag\Framework\Exception\MiddagPersistenceException;
@@ -31,7 +33,7 @@ use Middag\Framework\Exception\MiddagPersistenceException;
  * identity columns and boolean types instead of the MySQL-flavoured output of
  * {@see MysqlSchemaBuilderAdapter}.
  *
- * Opt-in: install `doctrine/dbal` (suggested) and bind a DBAL {@see Connection}.
+ * Opt-in: install `doctrine/dbal` ^4.4.5 (suggested) and bind a DBAL {@see Connection}.
  * The hand-rolled {@see MysqlSchemaBuilderAdapter}/{@see SqliteSchemaBuilderAdapter}
  * remain as zero-dependency fallbacks; bind this one on the same
  * {@see SchemaBuilderAdapterInterface} seam to gain multi-engine coverage.
@@ -49,11 +51,12 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
             return;
         }
 
-        $table = new Table((string) $descriptor['name']);
+        $tableName = (string) $descriptor['name'];
+        $editor = Table::editor()->setUnquotedName($tableName);
         $sequenceKey = null;
 
         foreach ($descriptor['columns'] ?? [] as $col) {
-            $table->addColumn((string) $col['name'], $this->mapType($col), $this->columnOptions($col));
+            $editor->addColumn($this->buildColumn($col));
 
             if (!empty($col['sequence'])) {
                 $sequenceKey = (string) $col['name'];
@@ -65,21 +68,16 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
         $primaryKey = $sequenceKey !== null ? [$sequenceKey] : $this->primaryKeyColumns($descriptor);
 
         if ($primaryKey !== []) {
-            $table->setPrimaryKey($primaryKey);
+            $editor->setPrimaryKeyConstraint(
+                PrimaryKeyConstraint::editor()->setUnquotedColumnNames(...$primaryKey)->create(),
+            );
         }
 
         foreach ($descriptor['indexes'] ?? [] as $index) {
-            $fields = $this->indexFields($index);
-            $name = $this->qualifiedIndexName((string) $descriptor['name'], $index);
-
-            if (empty($index['unique'])) {
-                $table->addIndex($fields, $name);
-            } else {
-                $table->addUniqueIndex($fields, $name);
-            }
+            $editor->addIndex($this->buildIndex($tableName, $index));
         }
 
-        $this->connection->createSchemaManager()->createTable($table);
+        $this->connection->createSchemaManager()->createTable($editor->create());
     }
 
     public function dropTable(string $tableName): void
@@ -92,16 +90,15 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     public function addColumn(string $tableName, array $column): void
     {
         $schemaManager = $this->connection->createSchemaManager();
-        $current = $schemaManager->introspectTable($tableName);
-        $new = new Column((string) $column['name'], Type::getType($this->mapType($column)), $this->columnOptions($column));
+        $current = $schemaManager->introspectTableByUnquotedName($tableName);
 
-        $schemaManager->alterTable(new TableDiff($current, addedColumns: [$new]));
+        $schemaManager->alterTable(new TableDiff($current, addedColumns: [$this->buildColumn($column)]));
     }
 
     public function dropColumn(string $tableName, string $columnName): void
     {
         $schemaManager = $this->connection->createSchemaManager();
-        $current = $schemaManager->introspectTable($tableName);
+        $current = $schemaManager->introspectTableByUnquotedName($tableName);
 
         if (!$current->hasColumn($columnName)) {
             return;
@@ -113,14 +110,9 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     public function addIndex(string $tableName, array $index): void
     {
         $schemaManager = $this->connection->createSchemaManager();
-        $current = $schemaManager->introspectTable($tableName);
-        $new = $this->indexToAdd($current, $index);
+        $current = $schemaManager->introspectTableByUnquotedName($tableName);
 
-        if (!$new instanceof Index) {
-            return;
-        }
-
-        $schemaManager->alterTable(new TableDiff($current, addedIndexes: [$new]));
+        $schemaManager->alterTable(new TableDiff($current, addedIndexes: [$this->buildIndex($tableName, $index)]));
     }
 
     public function dropIndex(string $tableName, string $indexName, array $fields = []): void
@@ -131,7 +123,7 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
         // addIndex() emit); the other candidates match names stored before
         // names were fitted or qualified (see IndexName::dropCandidates()).
         $schemaManager = $this->connection->createSchemaManager();
-        $current = $schemaManager->introspectTable($tableName);
+        $current = $schemaManager->introspectTableByUnquotedName($tableName);
 
         foreach (IndexName::dropCandidates($tableName, $indexName, IndexName::POSTGRESQL_MAX_BYTES) as $candidate) {
             if ($current->hasIndex($candidate)) {
@@ -157,8 +149,13 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
 
         $wanted = array_map('strtolower', $columns);
 
-        foreach ($schemaManager->introspectTable($tableName)->getIndexes() as $index) {
-            if (array_map('strtolower', $index->getColumns()) === $wanted) {
+        foreach ($schemaManager->introspectTableByUnquotedName($tableName)->getIndexes() as $index) {
+            $indexed = array_map(
+                static fn (IndexedColumn $column): string => strtolower($column->getColumnName()->getIdentifier()->getValue()),
+                $index->getIndexedColumns(),
+            );
+
+            if ($indexed === $wanted) {
                 return true;
             }
         }
@@ -171,7 +168,7 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
         $schemaManager = $this->connection->createSchemaManager();
 
         return $schemaManager->tableExists($tableName)
-            && $schemaManager->introspectTable($tableName)->hasColumn($columnName);
+            && $schemaManager->introspectTableByUnquotedName($tableName)->hasColumn($columnName);
     }
 
     /**
@@ -189,8 +186,10 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
             'text', 'longtext' => Types::TEXT,
             'float', 'number' => Types::FLOAT,
             'decimal', 'numeric' => Types::DECIMAL,
-            'datetime' => Types::DATETIME_MUTABLE,
-            'date' => Types::DATE_MUTABLE,
+            // The immutable types emit the same DDL as the mutable ones; the
+            // adapter only writes schema, it never converts values.
+            'datetime' => Types::DATETIME_IMMUTABLE,
+            'date' => Types::DATE_IMMUTABLE,
             'boolean', 'bool' => Types::BOOLEAN,
             'blob', 'binary' => Types::BLOB,
             default => Types::TEXT,
@@ -198,34 +197,33 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     }
 
     /**
-     * Build the DBAL column options from a MIDDAG column descriptor.
+     * Build the DBAL column from a MIDDAG column descriptor.
      *
      * @param array<string, mixed> $col
-     *
-     * @return array<string, mixed>
      */
-    private function columnOptions(array $col): array
+    private function buildColumn(array $col): Column
     {
-        $options = ['notnull' => !empty($col['notnull'])];
         $type = strtolower((string) ($col['type'] ?? 'text'));
+        $editor = Column::editor()
+            ->setUnquotedName((string) $col['name'])
+            ->setTypeName($this->mapType($col))
+            ->setNotNull(!empty($col['notnull']));
 
         if (!empty($col['sequence'])) {
-            $options['autoincrement'] = true;
-            $options['notnull'] = true;
+            $editor->setAutoincrement(true)->setNotNull(true);
         } elseif (array_key_exists('default', $col)) {
-            $options['default'] = $col['default'];
+            $editor->setDefaultValue($col['default']);
         }
 
         if (in_array($type, ['char', 'varchar'], true)) {
-            $options['length'] = (int) ($col['length'] ?? 255);
+            $editor->setLength((int) ($col['length'] ?? 255));
         }
 
         if (in_array($type, ['decimal', 'numeric'], true)) {
-            $options['precision'] = (int) ($col['length'] ?? 10);
-            $options['scale'] = (int) ($col['decimals'] ?? 2);
+            $editor->setPrecision((int) ($col['length'] ?? 10))->setScale((int) ($col['decimals'] ?? 2));
         }
 
-        return $options;
+        return $editor->create();
     }
 
     /**
@@ -239,7 +237,7 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
      * (PostgreSQL's limit, the lowest of the engines DBAL targets) with a short
      * hash suffix, so the engine never truncates it behind our back and
      * dropIndex() computes the same name. Returns null when the descriptor
-     * names no index, letting DBAL auto-generate a unique name.
+     * names no index.
      *
      * @param array<string, mixed> $index
      */
@@ -251,42 +249,27 @@ final readonly class DbalSchemaBuilderAdapter implements SchemaBuilderAdapterInt
     }
 
     /**
-     * Build the index addIndex() adds, named by the same rule as createTable():
-     * a fresh install and an upgrade end up with the same index name, and a
-     * short name reused by two tables does not collide on schema-wide index
-     * namespaces. An unnamed index gets the name DBAL generates in
-     * createTable(), by adding it to a copy of the introspected table.
+     * Build an index for $tableName from a descriptor entry, named by the same
+     * rule in createTable() and addIndex(): a fresh install and an upgrade end
+     * up with the same index name, and a short name reused by two tables does
+     * not collide on schema-wide index namespaces. An unnamed index gets the
+     * name DBAL generated for it before the adapter used the schema editors
+     * ({@see IndexName::generated()}), so indexes already deployed keep it.
      *
      * @param array<string, mixed> $index
-     *
-     * @return null|Index null when DBAL considers the index already covered
      */
-    private function indexToAdd(Table $current, array $index): ?Index
+    private function buildIndex(string $tableName, array $index): Index
     {
         $fields = $this->indexFields($index);
         $unique = !empty($index['unique']);
-        $name = $this->qualifiedIndexName($current->getName(), $index);
+        $name = $this->qualifiedIndexName($tableName, $index)
+            ?? IndexName::generated($tableName, $fields, $unique, IndexName::POSTGRESQL_MAX_BYTES);
 
-        if ($name !== null) {
-            return new Index($name, $fields, $unique);
-        }
-
-        $probe = clone $current;
-        $existing = array_keys($probe->getIndexes());
-
-        if ($unique) {
-            $probe->addUniqueIndex($fields);
-        } else {
-            $probe->addIndex($fields);
-        }
-
-        foreach ($probe->getIndexes() as $key => $candidate) {
-            if (!in_array($key, $existing, true)) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return Index::editor()
+            ->setUnquotedName($name)
+            ->setUnquotedColumnNames(...$fields)
+            ->setType($unique ? IndexType::UNIQUE : IndexType::REGULAR)
+            ->create();
     }
 
     /**

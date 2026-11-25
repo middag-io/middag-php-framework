@@ -149,6 +149,32 @@ final class DbalSchemaBuilderAdapterTest extends TestCase
         self::assertSame($fresh, $upgraded);
     }
 
+    public function testUnnamedIndexesKeepTheNamesDbalGeneratedForThem(): void
+    {
+        // The literal names DBAL's Table::addIndex()/addUniqueIndex() generated
+        // for these indexes: databases created before the adapter named them
+        // itself carry them, so a fresh install and an upgrade must match.
+        $expected = ['idx_a8936dc57b00651c', 'uniq_a8936dc5bf3967507b00651c'];
+        $columns = [
+            ['name' => 'id', 'type' => 'int', 'sequence' => true],
+            ['name' => 'status', 'type' => 'int'],
+        ];
+        $indexes = [['fields' => ['status']], ['fields' => ['id', 'status'], 'unique' => true]];
+
+        $this->adapter->createTable(['name' => 'jobs', 'columns' => $columns, 'indexes' => $indexes]);
+        $fresh = $this->secondaryIndexNames($this->connection->createSchemaManager()->introspectTable('jobs')->getIndexes());
+        $this->adapter->dropTable('jobs');
+
+        $this->adapter->createTable(['name' => 'jobs', 'columns' => $columns]);
+        foreach ($indexes as $index) {
+            $this->adapter->addIndex('jobs', $index);
+        }
+        $upgraded = $this->secondaryIndexNames($this->connection->createSchemaManager()->introspectTable('jobs')->getIndexes());
+
+        self::assertSame($expected, $fresh);
+        self::assertSame($expected, $upgraded);
+    }
+
     public function testDropIndexStillDropsAnIndexThatCarriesTheShortName(): void
     {
         // Indexes added by addIndex() before the name was table-qualified

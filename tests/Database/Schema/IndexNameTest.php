@@ -22,6 +22,23 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(IndexName::class)]
 final class IndexNameTest extends TestCase
 {
+    public function testGeneratedRepeatsTheNameDbalGivesAnUnnamedIndex(): void
+    {
+        self::assertSame('IDX_A8936DC57B00651C', IndexName::generated('jobs', ['status'], false, IndexName::POSTGRESQL_MAX_BYTES));
+        self::assertSame(
+            'UNIQ_A8936DC5BF3967507B00651C',
+            IndexName::generated('jobs', ['id', 'status'], true, IndexName::POSTGRESQL_MAX_BYTES),
+        );
+    }
+
+    public function testGeneratedIsCutToTheLimit(): void
+    {
+        $name = IndexName::generated('jobs', ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'], false, IndexName::POSTGRESQL_MAX_BYTES);
+
+        self::assertSame(63, strlen($name));
+        self::assertStringStartsWith('IDX_A8936DC5', $name);
+    }
+
     public function testANameAtTheLimitIsKeptAsIs(): void
     {
         $name = str_repeat('a', 63);
